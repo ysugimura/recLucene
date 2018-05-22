@@ -447,7 +447,7 @@ public interface RlField {
       }
       if (analyzerClass != null) 
         return cachedAnalyzer = this.injector.getInstance(analyzerClass);
-      return cachedAnalyzer = injector.getInstance(defaults.analyzerClass);
+      return cachedAnalyzer = injector.getInstance(Defaults.analyzerClass);
     }
   }
 }

@@ -12,7 +12,7 @@ import org.apache.lucene.analysis.util.*;
 import org.apache.lucene.util.*;
 import org.junit.*;
 
-import com.google.inject.*;
+
 
 import com.cm55.jpnutil.*;
 
@@ -23,13 +23,6 @@ import com.cm55.jpnutil.*;
  *
  */
 public class LuceneTokenizerTest {
-
-  Injector injector;
-  
-  @Before
-  public void before() {
-    injector = Guice.createInjector();    
-  }
   
   @Test
   public void NGramTokenizerの使い方() throws Exception {
@@ -107,7 +100,7 @@ public class LuceneTokenizerTest {
   @Test
   public void NormalTokenizerの使い方() throws Exception {
     // tokenizerを作成する
-    Tokenizer tok = injector.getInstance(NormalTokenizer.class);  
+    Tokenizer tok = new NormalTokenizer();  
     
     // 入力を指定する。reset()がこの順序で必要。
     tok.setReader(new StringReader("吾輩　ハ 猫ﾃﾞある\tの\n研究ab'"));
@@ -115,9 +108,9 @@ public class LuceneTokenizerTest {
 
     // 読み込み
     String s= read(tok);
-    //ystem.out.println("" + s);
+    System.out.println("" + s);
     assertEquals(
-      ":,吾輩:,は:,猫である:,の:,研究ＡＢ＇",
+      ":,吾輩:,は:,猫て゛ある:,の:,研究ＡＢ＇",
       s
     );
     
@@ -126,8 +119,6 @@ public class LuceneTokenizerTest {
   }
   
   public static class NormalTokenizer extends CharTokenizer {
-    
-    @Inject private Normalizer Normalizer;
     
     protected boolean isTokenChar(int c)
     {      

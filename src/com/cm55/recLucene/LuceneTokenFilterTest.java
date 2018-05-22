@@ -11,18 +11,7 @@ import org.apache.lucene.analysis.ngram.*;
 import org.apache.lucene.util.*;
 import org.junit.*;
 
-import com.google.inject.*;
-
 public class LuceneTokenFilterTest {
-  Injector injector;
-
-  JpnNormalizeFilter.Factory normalizeFilterFactory;
-  
-  @Before
-  public void before() {
-    injector = Guice.createInjector();    
-    normalizeFilterFactory = injector.getInstance(JpnNormalizeFilter.Factory.class);
-  }
   
   @Test
   public void NGramTokenizerの使い方() throws Exception {
@@ -30,7 +19,7 @@ public class LuceneTokenFilterTest {
     // tokenizerを作成する
     Tokenizer tokenizer = new WhitespaceTokenizer();  
     NGramTokenFilter filter = new NGramTokenFilter(
-        normalizeFilterFactory.create(tokenizer));
+        new JpnNormalizeFilter(tokenizer));
     
     // 入力を指定する。reset()がこの順序で必要。
     tokenizer.setReader(new StringReader("吾1ab輩 は 猫デある ﾉ 研究"));

@@ -191,14 +191,12 @@ public interface RlWriter {
     /** 書込み回数 */
     private int writtenCount;
 
-    @Inject private PerFieldAnalyzerCreator creator;
-    
     /** 初期化 */
     Impl setup(RlDatabase database) {
       
       this.database = database;
       try {                
-        config = new IndexWriterConfig(creator.create(database));
+        config = new IndexWriterConfig(PerFieldAnalyzerCreator.create(database));
         
         // クローズ時にコミットする
         assert config.getCommitOnClose();

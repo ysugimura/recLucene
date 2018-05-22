@@ -3,19 +3,15 @@ package com.cm55.recLucene;
 import java.util.*;
 
 import org.apache.lucene.analysis.*;
-import org.apache.lucene.analysis.Analyzer.*;
 import org.apache.lucene.analysis.miscellaneous.*;
-
-import com.google.inject.*;
 
 /**
  * 
  * @author ysugimura
  */
-@Singleton
 public class PerFieldAnalyzerCreator {
-
-  public Analyzer create(RlDatabase database) {
+  
+  public static Analyzer create(RlDatabase database) {
     Map<String, Analyzer> analyzerMap = new HashMap<String, Analyzer>();
     for (RlTable table: database.getTableSet().getTables()) {
       for (RlField f: table.getFields()) {

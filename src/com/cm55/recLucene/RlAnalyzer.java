@@ -127,8 +127,7 @@ public abstract class RlAnalyzer {
    * @author ysugimura
    */
   @Singleton
-  public static class JpnStandard extends RlAnalyzer {
-    @Inject private JpnNormalizeFilter.Factory normalizeFilterFactory;    
+  public static class JpnStandard extends RlAnalyzer { 
     @Override
     public TokenStreamComponents createComponents() {
       
@@ -136,7 +135,7 @@ public abstract class RlAnalyzer {
       Tokenizer tokenizer = new WhitespaceTokenizer();  
 
       // トークンストリーム
-      TokenStream tokenStream = normalizeFilterFactory.create(tokenizer);
+      TokenStream tokenStream = new JpnNormalizeFilter(tokenizer);
       
       // フィルタ
       NGramTokenFilter filter = new NGramTokenFilter(tokenStream);
