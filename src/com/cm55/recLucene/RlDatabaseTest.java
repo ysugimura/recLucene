@@ -2,23 +2,13 @@ package com.cm55.recLucene;
 
 import static org.junit.Assert.*;
 
-import java.io.*;
 import java.util.*;
 
 import org.junit.*;
 
-
-import com.google.inject.*;
-
 public class RlDatabaseTest {
 
-  RlDatabase.Factory databaseFactory;
-  
-  @Before
-  public void before() {
-    Injector i = Guice.createInjector();
-    databaseFactory = i.getInstance(RlDatabase.Factory.class);
-  }
+
   
   //@Test
   public void オープンテスト() {
@@ -50,7 +40,7 @@ public class RlDatabaseTest {
   
   //@Test
   public void アクセステスト() {
-    RlDatabase database = databaseFactory.createRam(Table3.class, Table4.class);
+    RlDatabase database = RlDatabase.Factory.createRam(Table3.class, Table4.class);
     
     RlWriter writer = database.createWriter();
     try {
@@ -122,7 +112,7 @@ public class RlDatabaseTest {
 
   @Test
   public void longTest() {
-    RlDatabase database = databaseFactory.createRam(LongTest.class);
+    RlDatabase database = RlDatabase.Factory.createRam(LongTest.class);
     RlWriter writer = database.createWriter();
     
     writer.write(new LongTest(10001, "test1"));

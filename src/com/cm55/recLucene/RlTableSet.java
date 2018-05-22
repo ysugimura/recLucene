@@ -2,7 +2,6 @@ package com.cm55.recLucene;
 
 import java.util.*;
 
-import com.google.inject.*;
 
 /**
  * テーブルの集合を扱う。
@@ -11,7 +10,6 @@ import com.google.inject.*;
  * </p>
  * @author ysugimura
  */
-@ImplementedBy(RlTableSet.Impl.class)
 public interface RlTableSet {
 
   /** 
@@ -38,27 +36,23 @@ public interface RlTableSet {
   public Collection<RlTable>getTables();
   
   /** {@link RlTableSet}のファクトリ */
-  @Singleton
   public static class Factory {
-    
-    @Inject private Provider<RlTableSet.Impl>provider;
-    @Inject private RlTable.Factory tableFactory;
-
+  
     /**
      * 複数の指定されたクラスから{@link RlTableSet}を作成する
      * @param classes
      * @return
      */
-    public RlTableSet create(Class<?>...classes) {
+    public static RlTableSet create(Class<?>...classes) {
       RlTable[]tables = new RlTable[classes.length];
       for (int i = 0; i < tables.length; i++) {
-        tables[i] = tableFactory.create(classes[i]);
+        tables[i] = RlTable.Factory.create(classes[i]);
       }
       return create(tables);
     }
     
-    public RlTableSet create(RlTable...tables) {
-      Impl impl = provider.get();
+    public static RlTableSet create(RlTable...tables) {
+      Impl impl = new Impl();
       impl.setup(tables);
       return impl;
     }

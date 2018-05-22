@@ -8,21 +8,7 @@ import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.junit.*;
 
-import com.google.inject.*;
-
 public class RlTableTest {
-
-  RlField.Factory fieldFactory;
-  RlTable.Factory tableFactory;
-  
-  @Before
-  public void before() {
-    Injector i = Guice.createInjector();
-    tableFactory = i.getInstance(RlTable.Factory.class); 
-    fieldFactory = i.getInstance(RlField.Factory.class);
-  }
-  
-
   
   public static class Table1 {    
   }
@@ -30,7 +16,7 @@ public class RlTableTest {
   @Test
   public void test2() {
     try {
-      tableFactory.create(Table2.class);
+      RlTable.Factory.create(Table2.class);
       fail();
     } catch (Exception ex) {
       assertTrue(ex.getMessage().startsWith("プライマリキー指定が複数あります"));
@@ -47,7 +33,7 @@ public class RlTableTest {
   @Test
   public void test3() {
     try {
-      tableFactory.create(Table3.class);
+      RlTable.Factory.create(Table3.class);
       fail();
     } catch (Exception ex) {
       assertTrue(ex.getMessage().startsWith("フィールドがString以外の場合には"));
@@ -63,7 +49,7 @@ public class RlTableTest {
  
   @Test
   public void test4() {
-    RlTable table = tableFactory.create(Table4.class);
+    RlTable table = RlTable.Factory.create(Table4.class);
     
     // フィールドの数と名称
     assertEquals(new HashSet<String>() {{
@@ -108,7 +94,7 @@ public class RlTableTest {
     doc.add(new StringField("id", "ID", Field.Store.YES));
     doc.add(new TextField("fld3", "FLD2", Field.Store.NO));
     
-    RlTable table = tableFactory.create(Table4.class);
+    RlTable table = RlTable.Factory.create(Table4.class);
     Table4 object = table.fromDocument(doc);
     
     assertEquals("id:ID,fld1:null,fld2:null", object.toString());
@@ -131,8 +117,8 @@ public class RlTableTest {
   @Test
   public void test6() {
     RlField aField, bField;
-    RlTable table = tableFactory.create(
-      aField = fieldFactory.create("a", new RlFieldAttr.Default() {
+    RlTable table = RlTable.Factory.create(
+      aField = RlField.Factory.create("a", new RlFieldAttr.Default() {
         @Override
         public boolean pk() {
           return true;
@@ -142,7 +128,7 @@ public class RlTableTest {
           return RlFieldConverter.IntConv.class;
         }
       }),
-      bField = fieldFactory.create("b", null)
+      bField = RlField.Factory.create("b", null)
     );
     
     RlValues values = new RlValues();

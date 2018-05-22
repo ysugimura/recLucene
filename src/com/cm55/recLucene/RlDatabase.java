@@ -6,7 +6,8 @@ import java.nio.file.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.*;
 
-import com.google.inject.*;
+
+
 
 /**
  * インデックスデータベース。
@@ -28,13 +29,10 @@ public interface RlDatabase {
    * {@link RlDatabase}のファクトリ
    * @author ysugimura
    */
-  @Singleton
   public static class Factory {
-    
-    @Inject private RlTableSet.Factory tableSetFactory;
-    
-    public RlDatabase createRam(Class<?>...classes) {
-      return createRam(tableSetFactory.create(classes));
+        
+    public static RlDatabase createRam(Class<?>...classes) {
+      return createRam(RlTableSet.Factory.create(classes));
     }
     
     /**
@@ -42,7 +40,7 @@ public interface RlDatabase {
      * @param tableSet テーブルセット
      * @return RAMデータベース
      */
-    public RlDatabase createRam(RlTableSet tableSet) {
+    public static RlDatabase createRam(RlTableSet tableSet) {
       Ram ram = new Ram();
       ram.setup(tableSet);
       return ram;
@@ -53,8 +51,8 @@ public interface RlDatabase {
      * @param tables データベースを構成するテーブル
      * @return RAMデータベース
      */
-    public RlDatabase createRam(RlTable...tables) {
-      return createRam(tableSetFactory.create(tables));
+    public static RlDatabase createRam(RlTable...tables) {
+      return createRam(RlTableSet.Factory.create(tables));
     }
 
     /**
@@ -64,7 +62,7 @@ public interface RlDatabase {
      * @return ディレクトリデータベース
      */
     public RlDatabase createDir(String dirName, Class<?>...classes) {
-      return createDir(dirName, tableSetFactory.create(classes));
+      return createDir(dirName, RlTableSet.Factory.create(classes));
     }
 
     /**
@@ -74,7 +72,7 @@ public interface RlDatabase {
      * @return ディレクトリデータベース
      */
     public RlDatabase createDir(String dirName, RlTable...tables) {
-      return createDir(dirName, tableSetFactory.create(tables));
+      return createDir(dirName, RlTableSet.Factory.create(tables));
     }
     
     /**

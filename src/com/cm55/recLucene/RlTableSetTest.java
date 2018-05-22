@@ -4,23 +4,14 @@ import static org.junit.Assert.*;
 
 import org.junit.*;
 
-import com.google.inject.*;
-
 public class RlTableSetTest {
 
-  RlTableSet.Factory tableSetFactory;
-  
-  @Before
-  public void before() {
-    Injector i = Guice.createInjector();
-    tableSetFactory = i.getInstance(RlTableSet.Factory.class);
-  }
-  
+
 
 
   @Test
   public void プライマリキー指定あり() {
-    RlTableSet tableSet = tableSetFactory.create(Table2.class);
+    RlTableSet tableSet = RlTableSet.Factory.create(Table2.class);
     /*
     LxField idField = tableSet.getFieldFromName("id");
     //ystem.out.println("" + idField);
@@ -30,7 +21,7 @@ public class RlTableSetTest {
   @Test
   public void フィールド名重複() {
     try {
-      tableSetFactory.create(Table2.class, Table3.class);
+      RlTableSet.Factory.create(Table2.class, Table3.class);
       fail();
     } catch (Exception ex) {
       assertTrue(ex.getMessage().startsWith("フィールド名が重複しています：testField"));

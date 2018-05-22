@@ -6,20 +6,15 @@ import java.util.*;
 
 import org.junit.*;
 
-import com.google.inject.*;
-
 public class RlWriterTest {
 
   RlDatabase database;
   
   @Before
   public void before() {
-    RlDatabase.Factory databaseFactory;
-    
-    Injector i = Guice.createInjector();
-    databaseFactory = i.getInstance(RlDatabase.Factory.class);
 
-    database = databaseFactory.createRam(Foo.class, Bar.class, FooBar.class);
+
+    database = RlDatabase.Factory.createRam(Foo.class, Bar.class, FooBar.class);
   }
   
   @Test

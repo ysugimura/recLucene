@@ -1,7 +1,5 @@
 package com.cm55.recLucene;
 
-import com.google.inject.*;
-
 /**
  * {@link RlFieldAttr#converter()}に指定されるクラス
  * <p>
@@ -64,7 +62,6 @@ public interface RlFieldConverter<T> {
    * ブール値コンバータ
    * @author ysugimura
    */
-  @Singleton
   public static class BooleanConv extends RlFieldConverter.Abstract<Boolean> {
 
     public BooleanConv() {
@@ -86,7 +83,6 @@ public interface RlFieldConverter<T> {
   /**
    * long値コンバータ
    */
-  @Singleton
   public static class LongConv extends RlFieldConverter.Abstract<Long> {
 
     public LongConv() {
@@ -105,7 +101,6 @@ public interface RlFieldConverter<T> {
     
   }
   
-  @Singleton
   public static class IntConv extends RlFieldConverter.Abstract<Integer> {
    
     public IntConv() {

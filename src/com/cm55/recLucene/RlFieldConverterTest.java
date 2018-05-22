@@ -1,27 +1,18 @@
 package com.cm55.recLucene;
 
+import static org.junit.Assert.*;
+
 import java.lang.reflect.*;
 
 import org.junit.*;
-import static org.junit.Assert.*;
-
-import com.google.inject.*;
 
 public class RlFieldConverterTest {
 
-  Injector injector;
-  RlField.Factory fieldFactory;
-  
-  @Before
-  public void before() {
-    injector = Guice.createInjector();
-    fieldFactory = injector.getInstance(RlField.Factory.class);
-  }
-  
+
   @Test
   public void test() throws Exception {
     Field field = Target.class.getDeclaredField("booleanValue");
-    RlField lxField = fieldFactory.create(field);
+    RlField lxField = RlField.Factory.create(field);
     Target target = new Target();
     assertEquals("0", lxField.getStringValue(target));
     lxField.setValue(target,  true);

@@ -7,7 +7,7 @@ import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 
-import com.google.inject.*;
+
 
 /**
  * LuceneのSearcherのラッパ
@@ -28,7 +28,6 @@ import com.google.inject.*;
  * 
  * @author ysugimura
  */
-@ImplementedBy(RlSearcher.Impl.class)
 public interface RlSearcher {
 
   /** 対象とするテーブルを取得する */

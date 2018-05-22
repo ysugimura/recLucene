@@ -1,9 +1,10 @@
 package com.cm55.recLucene;
 
-import org.junit.*;
 import static org.junit.Assert.*;
 
 import java.util.*;
+
+import org.junit.*;
 
 import com.cm55.recLucene.RlAnalyzer.*;
 

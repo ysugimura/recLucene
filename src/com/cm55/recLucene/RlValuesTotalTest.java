@@ -1,18 +1,18 @@
 package com.cm55.recLucene;
 
+import static org.junit.Assert.*;
+
 import java.util.*;
 
 import org.junit.*;
-import static org.junit.Assert.*;
 
 import com.cm55.recLucene.RlQuery.*;
-import com.google.inject.*;
 
 public class RlValuesTotalTest {
 
-  RlTable.Factory tableFactory;
-  RlField.Factory fieldFactory;
-  RlDatabase.Factory databaseFactory;
+
+
+
   
   private RlFieldAttr idAttr;
   private RlFieldAttr matchAttr;
@@ -23,10 +23,10 @@ public class RlValuesTotalTest {
   
   @Before
   public void before() {
-    Injector ij = Guice.createInjector();
-    tableFactory = ij.getInstance(RlTable.Factory.class);
-    fieldFactory = ij.getInstance(RlField.Factory.class);
-    databaseFactory = ij.getInstance(RlDatabase.Factory.class);
+
+
+
+
     
     idAttr = new RlFieldAttr.Default().setPk(true).setConverter(RlFieldConverter.LongConv.class);
     matchAttr = new RlFieldAttr.Default().setStore(false).setAnalyzer(RlAnalyzer.Newlines.class);
@@ -34,16 +34,16 @@ public class RlValuesTotalTest {
     
     List<RlField>fields = new ArrayList<RlField>();
 
-    fields.add(fieldFactory.create("id", idAttr));
+    fields.add(RlField.Factory.create("id", idAttr));
     for (int i = 0; i < 2; i++) {
-      fields.add(fieldFactory.create("match" + i, matchAttr));
+      fields.add(RlField.Factory.create("match" + i, matchAttr));
     }
     for (int i = 0; i < 2; i++) {
-      fields.add(fieldFactory.create("token" + i, tokenAttr));
+      fields.add(RlField.Factory.create("token" + i, tokenAttr));
     }
     
-    table = tableFactory.create(fields);
-    database = databaseFactory.createRam(table);    
+    table = RlTable.Factory.create(fields);
+    database = RlDatabase.Factory.createRam(table);    
   }
   
   @Test

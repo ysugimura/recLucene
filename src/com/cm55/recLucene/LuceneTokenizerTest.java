@@ -12,8 +12,6 @@ import org.apache.lucene.analysis.util.*;
 import org.apache.lucene.util.*;
 import org.junit.*;
 
-
-
 import com.cm55.jpnutil.*;
 
 

@@ -4,19 +4,17 @@ import java.io.*;
 
 import org.apache.lucene.index.*;
 
-import com.google.inject.*;
+
 
 /**
  * ライタ用のニアリアルタイムサーチャ
  */
 public class RlSearcherForWriter extends RlSearcher.Impl {
 
-  @Singleton
   public static class Factory {
-    @Inject private Provider<RlSearcherForWriter>provider;
-    
-    public RlSearcher create(RlTable table, RlWriter.Impl writer) {
-      return provider.get().setup(table,  writer);
+    public static RlSearcher create(RlTable table, RlWriter.Impl writer) {
+      RlSearcherForWriter w = new RlSearcherForWriter();
+      return w.setup(table,  writer);
     }
   }
   

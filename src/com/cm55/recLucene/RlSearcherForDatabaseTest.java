@@ -6,8 +6,6 @@ import java.util.*;
 
 import org.junit.*;
 
-import com.google.inject.*;
-
 public class RlSearcherForDatabaseTest {
 
 
@@ -15,15 +13,9 @@ public class RlSearcherForDatabaseTest {
   
   @Before
   public void before() {
-    RlTableSet.Factory tableSetFactory;
-    RlDatabase.Factory databaseFactory;
     RlTableSet tableSet;
-    
-    Injector i = Guice.createInjector();
-    tableSetFactory = i.getInstance(RlTableSet.Factory.class);
-    databaseFactory = i.getInstance(RlDatabase.Factory.class);
-    tableSet = tableSetFactory.create(Foo.class, Bar.class);
-    database = databaseFactory.createRam(tableSet);
+    tableSet = RlTableSet.Factory.create(Foo.class, Bar.class);
+    database = RlDatabase.Factory.createRam(tableSet);
   }
   
   @Test

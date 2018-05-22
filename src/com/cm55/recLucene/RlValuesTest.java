@@ -1,23 +1,16 @@
 package com.cm55.recLucene;
 
-import org.junit.*;
 import static org.junit.Assert.*;
 
-import com.google.inject.*;
+import org.junit.*;
 
 public class RlValuesTest {
 
-  RlField.Factory fieldFactory;
-  
-  @Before
-  public void before() {
-    Injector i = Guice.createInjector();
-    fieldFactory = i.getInstance(RlField.Factory.class);
-  }
+
   
   @Test
   public void test1() {
-    RlField field = fieldFactory.create("test",  null);
+    RlField field = RlField.Factory.create("test",  null);
     RlValues values = new RlValues();
     values.put("test",  "abc123");
     assertEquals("abc123", field.getValue(values));    
@@ -27,7 +20,7 @@ public class RlValuesTest {
   
   @Test
   public void test2() {
-    RlField field = fieldFactory.create("test",  new RlFieldAttr.Default() {
+    RlField field = RlField.Factory.create("test",  new RlFieldAttr.Default() {
       public Class<? extends RlFieldConverter<?>> converter() {
         return RlFieldConverter.LongConv.class;
       }

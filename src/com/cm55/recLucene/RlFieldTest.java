@@ -6,24 +6,15 @@ import java.lang.reflect.*;
 
 import org.junit.*;
 
-import com.google.inject.*;
-
 public class RlFieldTest {
 
-  RlField.Factory factory;
-  
-  @Before
-  public void before() {
-    Injector i = Guice.createInjector();
-    factory = i.getInstance(RlField.Factory.class);
-  }
   
   @Test
   public void test0() throws Exception {
     Class<?>clazz = Test0.class;
     Field field1 = clazz.getDeclaredField("value");
     try {
-      factory.create(field1);
+      RlField.Factory.create(field1);
       fail();
     } catch (Exception ex) {
       assertTrue(ex.getMessage().startsWith("フィールドがString以外の場合には"));
@@ -42,15 +33,15 @@ public class RlFieldTest {
     Field field2 = clazz.getDeclaredField("field2");
     Field field3 = clazz.getDeclaredField("field3");
     
-    RlField lxField1 = factory.create(field1);
+    RlField lxField1 = RlField.Factory.create(field1);
     assertTrue(lxField1.isPk());
     assertTrue(lxField1.isStore());
     
-    RlField lxField2 = factory.create(field2);
+    RlField lxField2 = RlField.Factory.create(field2);
     assertFalse(lxField2.isPk()); 
     assertFalse(lxField2.isStore());
 
-    RlField lxField3 = factory.create(field3);
+    RlField lxField3 = RlField.Factory.create(field3);
     assertFalse(lxField3.isPk());
     assertTrue(lxField3.isStore());
     
@@ -111,7 +102,7 @@ public class RlFieldTest {
   
   @Test
   public void testValues0() {
-    RlField field1 = factory.create("testField",  null);
+    RlField field1 = RlField.Factory.create("testField",  null);
     assertEquals(
       "java:none,type:java.lang.String,name:testField,pk:false,sto:false,tok:true,conv:none,analy:none", 
       field1.toString()

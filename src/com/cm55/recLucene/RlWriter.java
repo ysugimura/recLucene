@@ -2,12 +2,11 @@ package com.cm55.recLucene;
 
 import java.io.*;
 
-import org.apache.lucene.analysis.*;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 
-import com.google.inject.*;
+
 
 /**
  * <h1>インデックスライタ</h1>
@@ -44,7 +43,6 @@ import com.google.inject.*;
  * 
  * @author ysugimura
  */
-@ImplementedBy(RlWriter.Impl.class)
 public interface RlWriter {
 
   /**
@@ -218,8 +216,6 @@ public interface RlWriter {
     public <T> T getIndexWriterConfig() {
       return (T) config;
     }
-
-    @Inject private RlSearcherForWriter.Factory searcherFactory;
     
     /**
      * サーチャを取得する。
@@ -235,7 +231,7 @@ public interface RlWriter {
     
     public synchronized RlSearcher getSearcher(RlTable table) {
       if (table == null) throw new NullPointerException();
-      return searcherFactory.create(table, this);
+      return RlSearcherForWriter.Factory.create(table, this);
     }
 
     IndexReader getIndexReader() {

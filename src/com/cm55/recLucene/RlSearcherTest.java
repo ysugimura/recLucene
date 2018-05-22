@@ -7,25 +7,14 @@ import java.util.*;
 import org.junit.*;
 
 import com.cm55.recLucene.RlFieldConverter.*;
-import com.google.inject.*;
 
 public class RlSearcherTest {
 
-  Injector injector;
-  RlDatabase.Factory dbFactory;
-  RlTableSet.Factory setFactory;
-  
-  @Before
-  public void before() {
-    injector = Guice.createInjector();
-    dbFactory = injector.getInstance(RlDatabase.Factory.class);
-    setFactory = injector.getInstance(RlTableSet.Factory.class);
-  }
   
   @Test
   public void test() {
-    RlTableSet tableSet = setFactory.create(BookData.class);
-    RlDatabase database = dbFactory.createRam(tableSet);
+    RlTableSet tableSet = RlTableSet.Factory.create(BookData.class);
+    RlDatabase database = RlDatabase.Factory.createRam(tableSet);
     
     RlWriter writer = database.createWriter();
     for (BookData bookData: BOOK_DATA) {

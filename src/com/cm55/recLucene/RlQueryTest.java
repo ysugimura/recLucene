@@ -1,10 +1,10 @@
 package com.cm55.recLucene;
 
+import static org.junit.Assert.*;
+
 import org.junit.*;
 
 import com.cm55.recLucene.RlQuery.*;
-
-import static org.junit.Assert.*;
 
 public class RlQueryTest {
 

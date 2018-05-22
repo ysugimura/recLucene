@@ -1,5 +1,7 @@
 package com.cm55.recLucene;
 
+import static org.junit.Assert.*;
+
 import java.io.*;
 import java.util.*;
 
@@ -11,8 +13,6 @@ import org.apache.lucene.store.*;
 import org.junit.*;
 
 import com.cm55.recLucene.RlAnalyzer.*;
-
-import static org.junit.Assert.*;
 
 /**
  * 複数のレコードに重複したIDがある場合の検索

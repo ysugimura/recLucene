@@ -7,8 +7,6 @@ import org.apache.lucene.document.*;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.*;
 
-import com.google.inject.*;
-
 /**
  * アノテーション付きのJavaクラスを元にテーブルが作成される。
  * <ul>
@@ -75,18 +73,16 @@ public interface RlTable {
    * {@link RlTable}のファクトリ
    * @author ysugimura
    */
-  @Singleton
   public static class Factory {
-    
-    @Inject private Provider<Impl>provider;
     
     /**
      * レコードクラスを元に{@link RlTable}を作成する
      * @param recordClass レコードクラス
      * @return {@link RlTable}
      */
-    public RlTable create(Class<?> recordClass) {
-      return provider.get().setup(recordClass);
+    public static RlTable create(Class<?> recordClass) {
+      Impl impl = new Impl();
+      return impl.setup(recordClass);
     }
 
     /**
@@ -94,11 +90,12 @@ public interface RlTable {
      * @param fields フィールド定義配列
      * @return {@link RlTable}
      */
-    public RlTable create(RlField ...fields) {
-      return provider.get().setup(fields);
+    public static RlTable create(RlField ...fields) {
+      Impl impl = new Impl();
+      return impl.setup(fields);
     }
     
-    public RlTable create(List<RlField>fields) {
+    public static RlTable create(List<RlField>fields) {
       return create(fields.toArray(new RlField[0]));
     }
   }
@@ -117,8 +114,6 @@ public interface RlTable {
     
     /** プライマリキーフィールド 。プライマリキーの無い場合にはnull*/
     private RlField pkField;
-
-    @Inject private RlField.Factory fieldFactory;
     
     /**
      * クラスを指定してマッピングを作成する
@@ -145,7 +140,7 @@ public interface RlTable {
         }
 
         // このフィールドについてのLxFieldを作成して追加
-        fieldsFromClass.add(fieldFactory.create(javaField));
+        fieldsFromClass.add(RlField.Factory.create(javaField));
       });
       
       return setup(fieldsFromClass.toArray(new RlField[0]));

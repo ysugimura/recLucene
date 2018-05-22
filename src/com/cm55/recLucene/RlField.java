@@ -4,7 +4,7 @@ package com.cm55.recLucene;
 
 import org.apache.lucene.document.*;
 
-import com.google.inject.*;
+
 
 /**
  * フィールド定義
@@ -108,18 +108,16 @@ public interface RlField {
    * {@link RlField}のファクトリ
    * @author ysugimura
    */
-  @Singleton
   public static class Factory {
     
-    @Inject private Provider<Impl> provider;
-
     /**
      * Javaフィールドから{@link RlField}を作成する
      * @param field
      * @return
      */
-    public RlField create(java.lang.reflect.Field field) {
-      return provider.get().setup(field);
+    public static RlField create(java.lang.reflect.Field field) {
+      Impl impl = new Impl();
+      return impl.setup(field);
     }
     
     /**
@@ -128,8 +126,9 @@ public interface RlField {
      * @param type オブジェクトの型
      * @param fieldAttr フィールド属性。nullでもよい。
      */
-    public RlField create(String fieldName,  RlFieldAttr fieldAttr) {
-      return provider.get().setup(fieldName, fieldAttr);
+    public static RlField create(String fieldName,  RlFieldAttr fieldAttr) {
+      Impl impl = new Impl();
+      return impl.setup(fieldName, fieldAttr);
     }
   }
 
@@ -139,8 +138,6 @@ public interface RlField {
    * @author ysugimura
    */
   public static class Impl implements RlField {
-
-    @Inject private Injector injector;
     
     /** javaフィールド。自由形式の場合はnull */
     private java.lang.reflect.Field javaField;
@@ -164,6 +161,7 @@ public interface RlField {
     private Class<? extends RlFieldConverter<?>>converterClass;
     
     /** コンバータ　*/
+    @SuppressWarnings("rawtypes")
     private RlFieldConverter fieldConverter;
     
     /** analyzerクラス */
@@ -299,7 +297,11 @@ public interface RlField {
         converterClass = null;
       }
       if (converterClass != null) {
-        fieldConverter = injector.getInstance(converterClass);
+        try {
+          fieldConverter = converterClass.newInstance();
+        } catch (Exception ex) {
+          throw new RuntimeException(ex);
+        }
       }
     }
 
@@ -430,11 +432,12 @@ public interface RlField {
 
     
     /** フィールドコンバータを取得する */
+    @SuppressWarnings("rawtypes")
     private RlFieldConverter getFieldConverter() {
       return fieldConverter;
     }
     
-    @Inject private Defaults defaults;
+
     private RlAnalyzer cachedAnalyzer;
     
     @Override
@@ -445,9 +448,13 @@ public interface RlField {
       if (cachedAnalyzer != null) {
         return cachedAnalyzer;
       }
+      try {
       if (analyzerClass != null) 
-        return cachedAnalyzer = this.injector.getInstance(analyzerClass);
-      return cachedAnalyzer = injector.getInstance(Defaults.analyzerClass);
+        return cachedAnalyzer = analyzerClass.newInstance();
+      return cachedAnalyzer = Defaults.analyzerClass.newInstance();
+      } catch (Exception ex) {
+        throw new RuntimeException();
+      }
     }
   }
 }
