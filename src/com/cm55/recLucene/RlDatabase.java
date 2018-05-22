@@ -1,0 +1,269 @@
+package com.cm55.recLucene;
+
+import java.io.*;
+import java.nio.file.*;
+
+import org.apache.lucene.index.*;
+import org.apache.lucene.store.*;
+
+import com.google.inject.*;
+
+/**
+ * インデックスデータベース。
+ * <p>
+ * Luceneではインデックスと呼ばれているものを表す。現在のところRAMベース とディレクトリベースをサポートしている。
+ * </p>
+ * <p>
+ * 得にディレクトリデータベースの場合、同じディレクトリを指定して複数の{@link RlDatabase}を作成することが
+ * 可能だが、これは意味が無い。なぜなら、ある一つのデータベースに対する{@link RlWriter}はただ一つしか
+ * 存在できないからである。以前に取得した{@link RlWriter}をclose()しない限り、別の{@link RlWriter}
+ * を作成することはできない。
+ * </p>
+ * 
+ * @author ysugimura
+ */
+public interface RlDatabase {
+
+  /**
+   * {@link RlDatabase}のファクトリ
+   * @author ysugimura
+   */
+  @Singleton
+  public static class Factory {
+    
+    @Inject private Provider<Ram>ramProvider;
+    @Inject private Provider<Dir>dirProvider;
+    @Inject private RlTableSet.Factory tableSetFactory;
+    
+    public RlDatabase createRam(Class<?>...classes) {
+      return createRam(tableSetFactory.create(classes));
+    }
+    
+    /**
+     * RAMデータベースを作成する
+     * @param tableSet テーブルセット
+     * @return RAMデータベース
+     */
+    public RlDatabase createRam(RlTableSet tableSet) {
+      Ram ram = ramProvider.get();
+      ram.setup(tableSet);
+      return ram;
+    }
+
+    /**
+     * RAMデータベースを作成する
+     * @param tables データベースを構成するテーブル
+     * @return RAMデータベース
+     */
+    public RlDatabase createRam(RlTable...tables) {
+      return createRam(tableSetFactory.create(tables));
+    }
+
+    /**
+     * ディレクトリデータベースを作成する
+     * @param dirName ディレクトリ名称
+     * @param classes 対象レコードクラス配列
+     * @return ディレクトリデータベース
+     */
+    public RlDatabase createDir(String dirName, Class<?>...classes) {
+      return createDir(dirName, tableSetFactory.create(classes));
+    }
+
+    /**
+     * ディレクトリデータベースを作成する
+     * @param dirName ディレクトリ名称
+     * @param tables 対象テーブル配列
+     * @return ディレクトリデータベース
+     */
+    public RlDatabase createDir(String dirName, RlTable...tables) {
+      return createDir(dirName, tableSetFactory.create(tables));
+    }
+    
+    /**
+     * ディレクトリデータベースを作成する
+     * @param dirName ディレクトリ名称
+     * @param tableSet テーブルセット
+     * @return ディレクトリデータベース
+     */
+    public RlDatabase createDir(String dirName, RlTableSet tableSet) {
+      Dir dir = dirProvider.get();
+      dir.setup(tableSet, dirName);
+      return dir;
+    }
+  }
+  
+  /**
+   * このデータベースのテーブルセットを取得する
+   * @return テーブルセット
+   */
+  public RlTableSet getTableSet();
+
+  /** データベースをクローズする */
+  public void close();
+  
+  /** 
+   * このデータベースに対するライタを作成して返す。
+   * <p>
+   * ただし、一つのディレクトリデータベース対する、生きている(closeされていない){@link RlWriter}は、同時には
+   * ただ一つしか存在できないことに注意する。たとえ、そのディレクトリを指定して{@link RlDatabase}を
+   * 複数作成したとしても、ロックはファイルレベルで行われるため、複数の{@link RlWriter}を作成することは
+   * できない。
+   * </p>
+   * @return 新たなライタ
+   */
+  public RlWriter createWriter();
+
+  /**
+   * 指定したクラスオブジェクトのテーブルに対するサーチャを取得する。
+   * <p>
+   * ここで取得されるサーチャはライタの書き込みに追随しない。 たとえ、それがcommitやcloseされても反映されない。
+   * 反映するには、新たなサーチャをリオープンする必要がある。
+   * </p>
+   * @param recordClass レコードクラス
+   * @return サーチャ
+   */
+  public RlSearcher createSearcher(Class<?>recordClass);
+
+  /**
+   * 指定したテーブルに対するサーチャを取得する
+   * <p>
+   * ここで取得されるサーチャはライタの書き込みに追随しない。 たとえ、それがcommitやcloseされても反映されない。
+   * 反映するには、新たなサーチャをリオープンする必要がある。
+   * </p>
+   * @param table テーブル
+   * @return サーチャ
+   */
+  public RlSearcher createSearcher(RlTable table);
+  
+  /**
+   * テーブルのフィールド名からLxFieldを取得する。
+   * <p>
+   * フィールド名はデータベース中で一意であるので、フィールドも一意に決定する。
+   * </p>
+   */
+  public RlField getFieldFromName(String fieldName);
+  
+  /**
+   * LxDatabase実装
+   * 
+   * @author ysugimura
+   *
+   */
+  public abstract class AbstractImpl implements RlDatabase {
+
+    /** ディレクトリ */
+    protected Directory directory;
+    
+    /** テーブルセット */
+    protected RlTableSet tableSet;
+    
+    public AbstractImpl() {
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public RlTableSet getTableSet() {
+      return tableSet;
+    }
+    
+    /** IndexReaderを取得する */
+    synchronized IndexReader getIndexReader() {
+      try {
+        return DirectoryReader.open(directory);
+      } catch (IOException ex) {
+        throw new RlException(ex);
+      }
+    }
+
+    /** LuceneのDirectoryを取得する */
+    public Directory getDirectory() {
+      return directory;
+    }
+
+    @Override
+    public void close() {
+      try {
+        directory.close();
+      } catch (IOException ex) {
+        throw new RlException(ex);
+      }
+      directory = null;
+    }
+
+    /** サーチャファクトリ */
+    @Inject private RlSearcherForDatabase.Factory searcherFactory;
+    
+    /** このデータベース用のサーチャを取得する */
+    @Override
+    public synchronized RlSearcher createSearcher(Class<?>recordClass) {      
+      RlTable table = tableSet.getTable(recordClass);
+      if (table == null) throw new RlException("no table for " + recordClass);
+      return createSearcher(table);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public synchronized RlSearcher createSearcher(RlTable table) {
+      return searcherFactory.create(table,  this);
+    }
+
+    /** ライタファクトリ */
+    @Inject private RlWriter.Factory writerFactory;
+    
+    /** {@inheritDoc} */
+    @Override
+    public synchronized RlWriter createWriter() {
+      return writerFactory.create(this);
+    }
+
+    /** フィールド名からLxFieldを取得する */
+    @Override
+    public RlField getFieldFromName(String fieldName) {
+      return tableSet.getFieldByName(fieldName);
+    }
+  }
+
+  /**
+   * RAM上に作成されるデータベース
+   */
+  public static class Ram extends AbstractImpl {
+    
+    @Inject
+    public Ram() {
+      super();
+      this.directory = new RAMDirectory();
+    }
+
+    /**
+     * テーブルセットを指定する
+     * @param tableSet テーブルセット
+     */
+    private void setup(RlTableSet tableSet) {
+      this.tableSet = tableSet;
+    }
+  }
+
+  /**
+   * 物理ディレクトリ用のデータベース
+   */
+  public static class Dir extends AbstractImpl {
+
+    @Inject
+    public Dir() {}
+
+    /**
+     * テーブルセット、ディレクトリパスを指定する
+     * @param tableSet テーブルセット
+     * @param dirName ディレクトリパス
+     */
+    private void setup(RlTableSet tableSet, String dirName) {
+      this.tableSet = tableSet;
+      Path path = FileSystems.getDefault().getPath(dirName);
+      try {
+        this.directory = FSDirectory.open(path);
+      } catch (IOException ex) {
+        throw new RlException.IO(ex);
+      }
+    }
+  }
+}
