@@ -6,20 +6,11 @@ import static org.junit.Assert.*;
 import java.util.*;
 
 import com.cm55.recLucene.RlAnalyzer.*;
-import com.google.inject.*;
 
 public class RlAnalyzerTest {
-  
-  Injector injector;
-  
-  @Before
-  public void before() {
-    injector = Guice.createInjector();
-  }
-
   @Test
   public void jpnStandardのテスト() {
-    RlAnalyzer analyzer = injector.getInstance(JpnStandard.class);    
+    RlAnalyzer analyzer = new JpnStandard();    
     
     String[]expanded = analyzer.expandString(
       "ｺﾚﾊ 日本語　漢字カナ混じり\n" +
@@ -37,7 +28,7 @@ public class RlAnalyzerTest {
   
   @Test
   public void newlinesのテスト() {
-    RlAnalyzer analyzer = injector.getInstance(Newlines.class);
+    RlAnalyzer analyzer = new Newlines();
     String[]expanded = analyzer.expandString(
       "1テスト2\n" +
     "サンプルｶﾀｶﾅ");
@@ -54,7 +45,7 @@ public class RlAnalyzerTest {
   
   @Test
   public void 変更newlinesのテスト() {
-    RlAnalyzer analyzer = injector.getInstance(LowercaseNewlines.class);
+    RlAnalyzer analyzer = new LowercaseNewlines();
     String[]expanded = analyzer.expandString(
       "ABC@cm55.COM\n" +
     "SAMPLE@AaA.com");

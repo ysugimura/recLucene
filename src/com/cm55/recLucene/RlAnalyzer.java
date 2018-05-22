@@ -10,7 +10,6 @@ import org.apache.lucene.analysis.ngram.*;
 import org.apache.lucene.analysis.util.*;
 import org.apache.lucene.util.*;
 
-import com.google.inject.*;
 
 /**
  * アナライザ
@@ -92,7 +91,6 @@ public abstract class RlAnalyzer {
    * {@link Defaults}にあるアナライザを使用するためのマーカ
    * @author ysugimura
    */
-  @Singleton
   public static class Default extends RlAnalyzer {
     @Override
     public TokenStreamComponents createComponents() {
@@ -126,7 +124,6 @@ public abstract class RlAnalyzer {
    * </ul>
    * @author ysugimura
    */
-  @Singleton
   public static class JpnStandard extends RlAnalyzer { 
     @Override
     public TokenStreamComponents createComponents() {
@@ -166,7 +163,6 @@ public abstract class RlAnalyzer {
   /**
    * 改行による分割を行うアナライザ
    */
-  @Singleton
   public static class Newlines extends AbstractNewlines {
   }
   

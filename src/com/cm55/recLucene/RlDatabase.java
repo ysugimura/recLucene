@@ -31,8 +31,6 @@ public interface RlDatabase {
   @Singleton
   public static class Factory {
     
-    @Inject private Provider<Ram>ramProvider;
-    @Inject private Provider<Dir>dirProvider;
     @Inject private RlTableSet.Factory tableSetFactory;
     
     public RlDatabase createRam(Class<?>...classes) {
@@ -45,7 +43,7 @@ public interface RlDatabase {
      * @return RAMデータベース
      */
     public RlDatabase createRam(RlTableSet tableSet) {
-      Ram ram = ramProvider.get();
+      Ram ram = new Ram();
       ram.setup(tableSet);
       return ram;
     }
@@ -86,7 +84,7 @@ public interface RlDatabase {
      * @return ディレクトリデータベース
      */
     public RlDatabase createDir(String dirName, RlTableSet tableSet) {
-      Dir dir = dirProvider.get();
+      Dir dir = new Dir();
       dir.setup(tableSet, dirName);
       return dir;
     }
@@ -190,9 +188,6 @@ public interface RlDatabase {
       directory = null;
     }
 
-    /** サーチャファクトリ */
-    @Inject private RlSearcherForDatabase.Factory searcherFactory;
-    
     /** このデータベース用のサーチャを取得する */
     @Override
     public synchronized RlSearcher createSearcher(Class<?>recordClass) {      
@@ -204,16 +199,13 @@ public interface RlDatabase {
     /** {@inheritDoc} */
     @Override
     public synchronized RlSearcher createSearcher(RlTable table) {
-      return searcherFactory.create(table,  this);
+      return RlSearcherForDatabase.Factory.create(table,  this);
     }
-
-    /** ライタファクトリ */
-    @Inject private RlWriter.Factory writerFactory;
     
     /** {@inheritDoc} */
     @Override
     public synchronized RlWriter createWriter() {
-      return writerFactory.create(this);
+      return RlWriter.Factory.create(this);
     }
 
     /** フィールド名からLxFieldを取得する */
@@ -228,7 +220,6 @@ public interface RlDatabase {
    */
   public static class Ram extends AbstractImpl {
     
-    @Inject
     public Ram() {
       super();
       this.directory = new RAMDirectory();
@@ -248,7 +239,6 @@ public interface RlDatabase {
    */
   public static class Dir extends AbstractImpl {
 
-    @Inject
     public Dir() {}
 
     /**

@@ -51,10 +51,7 @@ public interface RlWriter {
    * {@link RlWriter}のファクトリ
    * @author ysugimura
    */
-  @Singleton
   public static class Factory {
-    @Inject private Provider<Impl>provider;
-    
     /**
      * データベースを指定してそのライタを作成する
      * <p>
@@ -65,8 +62,9 @@ public interface RlWriter {
      * @param database
      * @return
      */
-    public RlWriter create(RlDatabase database) {
-      return provider.get().setup(database);
+    public static RlWriter create(RlDatabase database) {
+      Impl impl = new Impl();
+      return impl.setup(database);
     }
   }
   
@@ -174,9 +172,6 @@ public interface RlWriter {
    * @author ysugimura
    */
   public class Impl implements RlWriter {
-
-    /** インジェクタ */
-    @Inject Injector injector;
 
     /** データベース */
     private RlDatabase database;

@@ -5,7 +5,6 @@ import java.io.*;
 import org.apache.lucene.index.*;
 
 import com.cm55.recLucene.RlDatabase.*;
-import com.google.inject.*;
 
 /**
  * データベース用のサーチャ
@@ -16,11 +15,10 @@ import com.google.inject.*;
 public class RlSearcherForDatabase extends RlSearcher.Impl
     implements RlSearcher {
 
-  @Singleton
   public static class Factory {
-    @Inject private Provider<RlSearcherForDatabase>provider;    
-    public RlSearcher create(RlTable table, AbstractImpl database) {
-      return provider.get().setup(table,  database);
+    public static RlSearcher create(RlTable table, AbstractImpl database) {
+      RlSearcherForDatabase searcher = new RlSearcherForDatabase();
+      return searcher.setup(table,  database);
     }
   }
   
@@ -29,7 +27,7 @@ public class RlSearcherForDatabase extends RlSearcher.Impl
   /** Luceneのインデックスリーダ */
   protected IndexReader indexReader;
 
-  @Inject
+
   public RlSearcherForDatabase() {
   }
   
