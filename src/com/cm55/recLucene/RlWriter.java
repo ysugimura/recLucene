@@ -93,7 +93,7 @@ public class RlWriter {
     }
 
     // ドキュメントを作成する
-    return table.getDocument(rec);
+    return table.getDocumentFromRecord(rec);
   }
   
   /**
@@ -103,7 +103,7 @@ public class RlWriter {
    * @return Luceneドキュメント
    */
   public Document getLuceneDocument(RlTable table, RlValues values) {
-    return table.getDocument(values);      
+    return table.getDocumentFromValues(values);      
   }  
   
   

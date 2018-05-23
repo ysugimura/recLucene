@@ -188,13 +188,21 @@ public class RlTable {
     return pkTerm;
   }
 
+  public <T>Document getDocumentFromRecord(T object) {
+    return getDocument(object);
+  }
+  
+  public Document getDocumentFromValues(RlValues values) {
+    return getDocument(values);
+  }
+  
   /**
    * 指定されたオブジェクトの内容から{@link Document}を作成する
    * 
    * @param object オブジェクト。クラスは{@link #recordClass}であること
    * @return luceneの{@link Document}
    */
-  public <T> Document getDocument(T object) {
+  private <T> Document getDocument(T object) {
     RlValues values;
     if (recordClass == null) {
       // レコードクラスが無い場合。自由形式
@@ -220,6 +228,14 @@ public class RlTable {
     return doc;
   }
 
+  public <T>T recordFromDocument(Document doc) {
+    return (T)fromDocument(doc);    
+  }
+
+  public RlValues valuesFromDocument(Document doc) {
+    return (RlValues)fromDocument(doc);
+  }
+  
   /**
    * Documentの内容からオブジェクトを作成する。自由形式の場合は{@link RlValues}を作成する
    * 
@@ -258,7 +274,6 @@ public class RlTable {
     if (recordClass == null)
       return (T) values;
     try {
-      @SuppressWarnings("unchecked")
       T object = (T) recordClass.newInstance();
       fieldMap.values().forEach(f -> {
         try {

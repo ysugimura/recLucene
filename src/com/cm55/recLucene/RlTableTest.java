@@ -72,7 +72,7 @@ public class RlTableTest {
     Table4 object = new Table4();
     object.id = "ID";
     object.fld1 = "FLD1";
-    Document doc = table.getDocument(object);
+    Document doc = table.getDocumentFromRecord(object);
     assertEquals(2, doc.getFields().size());
     assertEquals("ID", doc.get("id"));
     assertEquals("FLD1", doc.get("fld1"));
@@ -135,7 +135,7 @@ public class RlTableTest {
     values.put("a",  123);
     values.put("b",  "abc");
     
-    Document document = table.getDocument(values);
+    Document document = table.getDocumentFromValues(values);
     assertEquals("123", document.get("a")); // 文字列に変換されていることに注意
     assertEquals("abc", document.get("b"));
     
