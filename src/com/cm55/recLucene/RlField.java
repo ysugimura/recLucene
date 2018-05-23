@@ -100,17 +100,15 @@ public class RlField {
   }
 
   /**
-   * 指定されたオブジェクトの中の、このフィールドの値をLucene用のフィールドオブジェクトにして返す。 値がnullだった場合にはnullを返す。
+   * 値セットの中の、「この」フィールド値をLucene用のフィールドオブジェクトにして返す。 値がnullだった場合にはnullを返す。
    * 
    * @param object
    *          オブジェクト
    * @return Luecene用フィールド
-   */
-  @Deprecated
-  public <T> Field getLuceneField(T object) {
+   */  
+  public Field getLuceneField(RlValues object) {
     String value = getStringValue(object);
-    if (value == null)
-      return null;
+    if (value == null) return null;
     if (!tokenized) {
       // トークン化されない場合、StringFieldを使用する
       return new StringField(name, value, store ? Field.Store.YES : Field.Store.NO);
@@ -118,83 +116,6 @@ public class RlField {
       // トークン化される場合、TextFieldを使用する
       return new TextField(name, value, store ? Field.Store.YES : Field.Store.NO);
     }
-  }
-  
-  public <T> Field getLuceneField(RlValues object) {
-    String value = getStringValue(object);
-    if (value == null)
-      return null;
-    if (!tokenized) {
-      // トークン化されない場合、StringFieldを使用する
-      return new StringField(name, value, store ? Field.Store.YES : Field.Store.NO);
-    } else {
-      // トークン化される場合、TextFieldを使用する
-      return new TextField(name, value, store ? Field.Store.YES : Field.Store.NO);
-    }
-  }
-
-  /**
-   * 指定オブジェクト中の、「このフィールド」の値を取得する
-   * 
-   * @param object
-   *          オブジェクト
-   * @return フィールド値
-   */
-  @SuppressWarnings("unchecked")
-  @Deprecated
-  public <T, V> V getValue(T object) {
-    // 通常のオブジェクトの場合
-    if (javaField != null) {
-      if (object instanceof RlValues)
-        throw new RlException("不適当なオブジェクトです");
-      try {
-        return (V) this.javaField.get(object);
-      } catch (IllegalAccessException ex) {
-        throw new RlException(ex);
-      }
-    }
-
-    // 自由形式の場合
-    if (!(object instanceof RlValues))
-      throw new RlException("不適当なオブジェクトです");
-    return (V) ((RlValues) object).get(name);
-  }
-  
-  public <V>V getValue(RlValues values) {
-    return values.get(name);
-  }
-
-  /**
-   * 指定オブジェクトにある「このフィールド」の値を設定する
-   * 
-   * @param object
-   *          オブジェクト
-   * @param value
-   *          設定する値
-   */
-  @Deprecated
-  public <T, V> void setValue(T object, V value) {
-    // 通常のオブジェクトの場合
-    if (javaField != null) {
-      if (object instanceof RlValues)
-        throw new RlException("不適当なオブジェクトです");
-      try {
-        javaField.set(object, value);
-        return;
-      } catch (Exception ex) {
-        throw new RlException(ex);
-      }
-    }
-
-    // 自由形式の場合
-    if (!(object instanceof RlValues)) {
-      throw new RlException("不適当なオブジェクトです");
-    }
-    ((RlValues) object).put(name, value);
-  }
-  
-  public <T, V> void setValue(RlValues values, V value) {
-    values.put(name, value);
   }
 
   /**
@@ -223,35 +144,24 @@ public class RlField {
   }
 
   /**
-   * 指定されたオブジェクトの中の、「このフィールド」の値を取得する。
-   * 
-   * @param object
-   * @return
+   * 値セットの中の、「このフィールド」の値を文字列として取得する。
+   * @param values 値セット
+   * @return 文字列として取得した「このフィールド」の値
    */
-  @Deprecated
-  public <T> String getStringValue(T object) {
-    return toString(getValue(object));
-  }
-
   public <T>String getStringValue(RlValues values) {
-    return toString(getValue(values));
+    return toString(values.get(name));
   }
   
   /**
    * 指定されたオブジェクトの、このフィールドの値を設定する。 現在のところ値はString型のみをサポートしている。
    * 
-   * @param object
+   * @param values
    *          オブジェクト
    * @param value
    *          値
-   */
-  @Deprecated
-  public <T> void setStringValue(T object, String value) {
-    setValue(object, fromString(value));
-  }
-  
-  public <T> void setStringValue(RlValues object, String value) {
-    setValue(object, fromString(value));
+   */  
+  public <T> void setStringValue(RlValues values, String value) {
+    values.put(name, fromString(value));
   }
 
   /** アナライザを取得する */

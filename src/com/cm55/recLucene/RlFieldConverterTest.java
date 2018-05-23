@@ -16,7 +16,7 @@ public class RlFieldConverterTest {
     RlValues target = new RlValues();
     target.put("booleanValue",  false);
     assertEquals("0", rlField.getStringValue(target));
-    rlField.setValue(target,  true);
+    target.put("booleanValue", true);
     assertEquals("1", rlField.getStringValue(target));
     
     rlField.setStringValue(target,  "0");
