@@ -28,7 +28,7 @@ import org.apache.lucene.search.*;
  * 
  * @author ysugimura
  */
-public interface RlSearcher {
+public interface RlSearcher extends Closeable {
 
   /** 対象とするテーブルを取得する */
   public RlTable getTable();
@@ -91,30 +91,6 @@ public interface RlSearcher {
   /** サーチャをクローズする */
   public void close();
 
-  /** 一続きの文字列のクエリを取得 */
-  public RlQuery.Word wordQuery(String fieldName, String value);
-
-  /** 前方一致クエリ */
-  public RlQuery.Prefix prefixQuery(String fieldName, String value);
-
-  /** 完全一致クエリ */
-  public <T>RlQuery.Match matchQuery(String fieldName, T value);
-
-  /** 複数のNQueryをまとめてANDするクエリを取得 */
-  public RlQuery.And andQuery(RlQuery... queries);
-
-  /** 複数のNQueryをまとめてORするクエリを取得 */
-  public RlQuery.Or orQuery(RlQuery... queries);
-
-  /** 複数のNQueryをまとめてNOTするクエリを取得 */
-  public RlQuery.Not notQuery(RlQuery... queries);
-  
-  /** 範囲クエリ */
-  public <T>RlQuery.Range rangeQuery(String fieldName, T min, T max);
-
-  /** 範囲クエリ */
-  public <T>RlQuery.Range rangeQuery(String fieldName, T min, T max, boolean incMin, boolean incMax);
-  
   /**
    * インデックスサーチャ
    * 
@@ -347,58 +323,12 @@ public interface RlSearcher {
       
     }
 
-    
-    /** 文字列クエリを取得 */
-    @Override
-    public RlQuery.Word wordQuery(String fieldName, String value) {
-      return new RlQuery.Word(fieldName, value);
-    }
-
-    /** 前方一致クエリを取得 */
-    @Override
-    public RlQuery.Prefix prefixQuery(String fieldName, String value) {
-      return new RlQuery.Prefix(fieldName, value);
-    }
-
-    /** 完全一致クエリを取得 */
-    @Override
-    public <T>RlQuery.Match matchQuery(String fieldName, T value) {
-      return new RlQuery.Match(fieldName, value);
-    }
 
     private RlField getField(String fieldName) {
       RlField field = this.table.getFieldByName(fieldName);
       if (field == null) throw new RlException(fieldName + "というフィールドがありません");
       return field;
     }
-    
-    /** ANDクエリを取得 */
-    @Override
-    public RlQuery.And andQuery(RlQuery... queries) {
-      return new RlQuery.And(queries);
-    }
 
-    /** ORクエリを取得 */
-    @Override
-    public RlQuery.Or orQuery(RlQuery... queries) {
-      return new RlQuery.Or(queries);
-    }
-
-    /** NOTクエリを取得 */
-    @Override
-    public RlQuery.Not notQuery(RlQuery... queries) {
-      return new RlQuery.Not(queries);
-    }
-    
-    /** レンジクエリを取得 */
-    @Override
-    public <T>RlQuery.Range rangeQuery(String fieldName, T min, T max) {
-      return new RlQuery.Range(fieldName, min, max, true, true);
-    }
-    
-    @Override
-    public <T>RlQuery.Range rangeQuery(String fieldName, T min, T max, boolean incMin, boolean incMax) {
-      return new RlQuery.Range(fieldName, min, max, incMin, incMax);
-    }
   }
 }

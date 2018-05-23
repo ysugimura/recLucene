@@ -41,7 +41,7 @@ import org.apache.lucene.search.*;
  * 
  * @author ysugimura
  */
-public class RlWriter {
+public class RlWriter implements Closeable {
 
   /** データベース */
   private RlDatabase database;
@@ -314,6 +314,7 @@ public class RlWriter {
    * 書き込みをフラッシュし、ライタを終了する。 通常のデータベースシステムとは異なり、ロールバック操作は無いため、 書き込みをキャンセルする方法はない。
    * </p>
    */
+  @Override
   public synchronized void close() {
     if (indexWriter == null) return;
     try {

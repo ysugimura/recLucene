@@ -36,7 +36,7 @@ public class RlDatabaseTest {
     
     RlSearcher searcher = database.createSearcher(Table3.class);
     //List<Object>list = searcher.getAll(); //
-    List<Object>list = searcher.search(searcher.matchQuery("id3", "1"));
+    List<Object>list = searcher.search(new RlQuery.Match("id3", "1"));
     
     assertEquals(1, list.size());
     assertEquals(new Table3("1", null), list.get(0));
@@ -97,7 +97,7 @@ public class RlDatabaseTest {
     writer.commit();
     
     RlSearcher s = database.createSearcher(LongTest.class);
-    Set<Long>ids = s.searchFieldSet("id", s.andQuery(s.matchQuery("id", 10001L)));
+    Set<Long>ids = s.searchFieldSet("id", new RlQuery.And(new RlQuery.Match("id", 10001L)));
     //ystem.out.println("" + ids.size());
   }
   

@@ -123,14 +123,14 @@ public class RlWriterTest {
     assertEquals(3, s.getAllByField("id3").size());
     
     {
-      List<FooBar>list = s.search(s.wordQuery("value",  "sample"));
+      List<FooBar>list = s.search(new RlQuery.Word("value",  "sample"));
       assertEquals(2, list.size());
       assertEquals(new FooBar(100, null), list.get(0));
       assertEquals(new FooBar(100, null), list.get(1));
     }
     
     {
-      Set<Long>set = s.searchFieldSet("id3",  s.wordQuery("value",  "sample"));
+      Set<Long>set = s.searchFieldSet("id3",  new RlQuery.Word("value",  "sample"));
       assertEquals(new HashSet<Long>() {{
         add(100L);
       }}, set);

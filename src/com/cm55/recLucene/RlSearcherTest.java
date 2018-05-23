@@ -26,7 +26,7 @@ public class RlSearcherTest {
     
     // プライマリキーでの検索
     {
-      Set<Long>pkSet = searcher.searchPkSet(searcher.matchQuery("id",  1L));
+      Set<Long>pkSet = searcher.searchPkSet(new RlQuery.Match("id",  1L));
       assertEquals(new HashSet<Long>() {{
         add(1L);
       }}, pkSet);
@@ -34,7 +34,7 @@ public class RlSearcherTest {
     
     // 説明での検索
     {
-      Set<Long>pkSet = searcher.searchPkSet(searcher.wordQuery("desc", "wiki pedia"));
+      Set<Long>pkSet = searcher.searchPkSet(new RlQuery.Word("desc", "wiki pedia"));
       assertEquals(new HashSet<Long>() {{
         add(2L);
       }}, pkSet);
@@ -42,7 +42,7 @@ public class RlSearcherTest {
     
     // ページ数での検索 
     {
-      Set<Long>pkSet = searcher.searchPkSet(searcher.rangeQuery("pages",  100,  500));
+      Set<Long>pkSet = searcher.searchPkSet(new RlQuery.Range("pages",  100,  500));
       assertEquals(new HashSet<Long>() {{
         add(1L);
         add(2L);
