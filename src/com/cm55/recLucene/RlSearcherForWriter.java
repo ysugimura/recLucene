@@ -11,28 +11,19 @@ import org.apache.lucene.index.*;
  */
 public class RlSearcherForWriter extends RlSearcher.Impl {
 
-  public static class Factory {
-    public static RlSearcher create(RlTable table, RlWriter.Impl writer) {
-      RlSearcherForWriter w = new RlSearcherForWriter();
-      return w.setup(table,  writer);
-    }
-  }
   
-  private RlWriter.Impl writer;
+  private RlWriter writer;
   
   /** ライタの書き込み数 */
   private int writerWrittenCount;
 
   /** Luceneのインデックスリーダ */
   private IndexReader indexReader;
-
-  public RlSearcherForWriter() {
-  }
   
-  private RlSearcherForWriter setup(RlTable table, RlWriter.Impl writer) {
+  public RlSearcherForWriter(RlTable table, RlWriter writer) {
     this.writer = writer;
     this.table = table;
-    return this;
+   
   }
   
   /**

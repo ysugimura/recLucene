@@ -203,7 +203,7 @@ public interface RlDatabase {
     /** {@inheritDoc} */
     @Override
     public synchronized RlWriter createWriter() {
-      return RlWriter.Factory.create(this);
+      return new RlWriter(this);
     }
 
     /** フィールド名からRlFieldを取得する */

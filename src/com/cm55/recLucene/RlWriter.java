@@ -43,28 +43,8 @@ import org.apache.lucene.search.*;
  * 
  * @author ysugimura
  */
-public interface RlWriter {
+public class RlWriter {
 
-  /**
-   * {@link RlWriter}のファクトリ
-   * @author ysugimura
-   */
-  public static class Factory {
-    /**
-     * データベースを指定してそのライタを作成する
-     * <p>
-     * 現在のところ、既にオープン中のライタが存在する場合には、必ずエラーが発生する。
-     * つまり、一つのデータベースについては、たとえ{@link RlDatabase}を新たに作成したとしても
-     * {@link RlWriter}はただ一つしか稼働できない。
-     * </p>
-     * @param database
-     * @return
-     */
-    public static RlWriter create(RlDatabase database) {
-      Impl impl = new Impl();
-      return impl.setup(database);
-    }
-  }
   
   /**
    * レコードの内容を書き込む
@@ -75,25 +55,57 @@ public interface RlWriter {
    * @param record 書き込みレコード
    * @return このインデックスライタ
    */
-  public <T>RlWriter write(T o);
+  public synchronized <T>RlWriter write(T rec) {
 
+    Document doc = getLuceneDocument(rec);
+    
+    // プライマリキータームを作成する
+    RlTable table = database.getTableSet().getTable(rec.getClass());
+    Term pkTerm = table.getPkTerm(rec);
+
+    return write(pkTerm, doc);
+  }
+  
   /**
    * 自由形式の値を書き込む。テーブルを指定する必要がある。
    * @param table テーブル
    * @param values 値マップ
    * @return このインデックスライタ
    */
-  public RlWriter write(RlTable table, RlValues values);
+  public synchronized RlWriter write(RlTable table, RlValues values) {
+    return write(table.getPkTerm(values), getLuceneDocument(table, values));
+  }
   
-  public <T>Document getLuceneDocument(T o);
+  
+  public <T>Document getLuceneDocument(T rec) {
+    
+    if (rec instanceof RlValues) {
+      throw new RlException("RlValuesは使用できません");
+    }
+    
+    // オブジェクトのクラスを取得する
+    Class<T>clazz = (Class<T>)rec.getClass();
 
+    // クラスのマッピング情報を取得する
+    RlTable table = database.getTableSet().getTable(clazz);
+    if (table == null) {
+      throw new RlException(clazz.getName() + "は登録されていません");
+    }
+
+    // ドキュメントを作成する
+    return table.getDocument(rec);
+  }
+  
   /**
    * テーブルと値マップを指定してLuceneの{@link Document}を取得する
    * @param table テーブル
    * @param values 値マップ
    * @return Luceneドキュメント
    */
-  public <T>Document getLuceneDocument(RlTable table, RlValues values);
+  public Document getLuceneDocument(RlTable table, RlValues values) {
+    return table.getDocument(values);      
+  }  
+  
   
   /**
    * 指定フィールドが指定値のレコードを削除する
@@ -101,19 +113,35 @@ public interface RlWriter {
    * @param value 値
    * @return　
    */
-  public <T>RlWriter delete(String field, T value);
-
+  public <T>RlWriter delete(String fieldName, T value) {
+    RlField field = database.getFieldFromName(fieldName);
+    if (field == null) throw new RlException("フィールドがありません:" + fieldName);
+    return delete(field, value);
+  }
+  
   /**
    * 指定フィールドのあるすべてのレコードを削除する
    * @param field　フィールド名称
    * @return
    */
-  public <T>RlWriter deleteAll(String field);
-
+  public synchronized <T>RlWriter deleteAll(String fieldName) {
+    RlField field = database.getFieldFromName(fieldName);
+    if (field == null) throw new RlException("フィールドがありません：" + fieldName);
+    return deleteAll(field);
+  }
+  
   /**
    * このインデックスデータベースのすべてのレコードを削除する
    */
-  public <T>RlWriter deleteAll();
+  public synchronized <T>RlWriter deleteAll() {
+    try {
+      indexWriter.deleteAll();
+      writtenCount++;
+    } catch (IOException ex) {
+      throw new RlException.IO(ex);
+    }
+    return this;
+  }
   
   /**
    * 書込みあるいは削除を行った回数を取得する。
@@ -121,23 +149,33 @@ public interface RlWriter {
    * ライタから取得したサーチャを内部的にリオープンするためのもの。
    * </p>
    */
-  public int writtenCount();
-
+  public int writtenCount() {
+    return writtenCount;
+  }
+  
+  
   /**
    * サーチャを取得する。
    * <p>
    * ここで取得されるサーチャはライタの書き込みに即座に追随する。 たとえそれがcommitあるいはcloseされてなくてもよい。
    * </p>
    */
-  public RlSearcher getSearcher(Class<?>recordClass);
-
+  public synchronized RlSearcher getSearcher(Class<?>recordClass) {
+    RlTable table = database.getTableSet().getTable(recordClass);
+    if (table == null) throw new RlException("テーブルがありません：" + recordClass);
+    return getSearcher(table);
+  }
+  
   /**
    * サーチャを取得する。
    * <p>
    * ここで取得されるサーチャはライタの書き込みに即座に追随する。 たとえそれがcommitあるいはcloseされてなくてもよい。
    * </p>
    */
-  public RlSearcher getSearcher(RlTable table);
+  public synchronized RlSearcher getSearcher(RlTable table) {
+    if (table == null) throw new NullPointerException();
+    return new RlSearcherForWriter(table, this);
+  }
   
   /**
    * コミットする。
@@ -146,30 +184,43 @@ public interface RlWriter {
    * リオープンすることで、フラッシュされたデータを検索することができる。
    * </p>
    */
-  public RlWriter commit();
-
+  public synchronized RlWriter commit() {
+    try {
+      indexWriter.commit();
+    } catch (IOException ex) {
+      throw new RlException.IO(ex);
+    }
+    return this;
+  }
+  
   /**
    * クローズする。
    * <p>
    * 書き込みをフラッシュし、ライタを終了する。 通常のデータベースシステムとは異なり、ロールバック操作は無いため、 書き込みをキャンセルする方法はない。
    * </p>
    */
-  public void close();
-
+  public synchronized void close() {
+    try {
+      indexWriter.close();
+      indexWriter = null;
+    } catch (IOException ex) {
+      throw new RlException.IO(ex);
+    }
+  }
+  
   /**
    * 内部的なIndexWriterConfigを取得する
    */
-  public <T> T getIndexWriterConfig();
-
-  /** クローズされたか */
-  public boolean isClosed();
+  public <T> T getIndexWriterConfig() {
+    return (T) config;
+  }
   
-  /**
-   * RlWriter実装
-   * 
-   * @author ysugimura
-   */
-  public class Impl implements RlWriter {
+  
+  /** クローズされたか */
+  public synchronized boolean isClosed() {
+    return indexWriter == null;
+  }
+
 
     /** データベース */
     private RlDatabase database;
@@ -185,7 +236,7 @@ public interface RlWriter {
     private int writtenCount;
 
     /** 初期化 */
-    Impl setup(RlDatabase database) {
+    public RlWriter(RlDatabase database) {
       
       this.database = database;
       try {                
@@ -205,7 +256,7 @@ public interface RlWriter {
       } catch (IOException ex) {
         throw new RlException.IO(ex);
       }
-      return this;
+
 
     }
 
@@ -213,26 +264,11 @@ public interface RlWriter {
      * 内部的なIndexWriterを取得する
      */
     @SuppressWarnings("unchecked")
-    public <T> T getIndexWriterConfig() {
-      return (T) config;
-    }
+
     
-    /**
-     * サーチャを取得する。
-     * <p>
-     * ここで取得されるのはニアリアルタイムサーチャである。
-     * </p>
-     */
-    public synchronized RlSearcher getSearcher(Class<?>recordClass) {
-      RlTable table = database.getTableSet().getTable(recordClass);
-      if (table == null) throw new RlException("テーブルがありません：" + recordClass);
-      return getSearcher(table);
-    }
+
     
-    public synchronized RlSearcher getSearcher(RlTable table) {
-      if (table == null) throw new NullPointerException();
-      return RlSearcherForWriter.Factory.create(table, this);
-    }
+
 
     IndexReader getIndexReader() {
       throw new RuntimeException();
@@ -249,50 +285,15 @@ public interface RlWriter {
       
     }
 
-    @Override
-    public <T>Document getLuceneDocument(T rec) {
-      
-      if (rec instanceof RlValues) {
-        throw new RlException("RlValuesは使用できません");
-      }
-      
-      // オブジェクトのクラスを取得する
-      Class<T>clazz = (Class<T>)rec.getClass();
+  
 
-      // クラスのマッピング情報を取得する
-      RlTable table = database.getTableSet().getTable(clazz);
-      if (table == null) {
-        throw new RlException(clazz.getName() + "は登録されていません");
-      }
-
-      // ドキュメントを作成する
-      return table.getDocument(rec);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public Document getLuceneDocument(RlTable table, RlValues values) {
-      return table.getDocument(values);      
-    }    
+   
     
     /** {@inheritDoc} */
-    @SuppressWarnings("unchecked")
-    public synchronized <T>RlWriter write(T rec) {
-
-      Document doc = getLuceneDocument(rec);
-      
-      // プライマリキータームを作成する
-      RlTable table = database.getTableSet().getTable(rec.getClass());
-      Term pkTerm = table.getPkTerm(rec);
-
-      return write(pkTerm, doc);
-    }
+    
 
     /** {@inheritDoc} */
-    @Override
-    public synchronized RlWriter write(RlTable table, RlValues values) {
-      return write(table.getPkTerm(values), getLuceneDocument(table, values));
-    }
+  
     
     private synchronized RlWriter write(Term pkTerm, Document doc) {      
       // 書込み
@@ -312,43 +313,16 @@ public interface RlWriter {
     }
     
     /** 書込み回数を取得 */
-    public int writtenCount() {
-      return writtenCount;
-    }
+
 
     /** コミットする */
-    public synchronized RlWriter commit() {
-      try {
-        indexWriter.commit();
-      } catch (IOException ex) {
-        throw new RlException.IO(ex);
-      }
-      return this;
-    }
+
 
     /** クローズする */
-    @Override
-    public synchronized void close() {
-      try {
-        indexWriter.close();
-        indexWriter = null;
-      } catch (IOException ex) {
-        throw new RlException.IO(ex);
-      }
-    }
+   
 
-    @Override
-    public synchronized boolean isClosed() {
-      return indexWriter == null;
-    }
     
-    /** {@inheritDoc} */
-    @Override
-    public <T>RlWriter delete(String fieldName, T value) {
-      RlField field = database.getFieldFromName(fieldName);
-      if (field == null) throw new RlException("フィールドがありません:" + fieldName);
-      return delete(field, value);
-    }
+   
     
     /**
      * レコードを削除する。
@@ -372,12 +346,7 @@ public interface RlWriter {
     }
     
     /** {@inheritDoc} */
-    @Override
-    public synchronized <T>RlWriter deleteAll(String fieldName) {
-      RlField field = database.getFieldFromName(fieldName);
-      if (field == null) throw new RlException("フィールドがありません：" + fieldName);
-      return deleteAll(field);
-    }
+    
     
     /** {@inheritDoc} */
     public synchronized<T>RlWriter deleteAll(RlField field) {
@@ -391,18 +360,5 @@ public interface RlWriter {
       }
       return this;
     }
-    
-    /** {@inheritDoc} */
-    @Override
-    public synchronized <T>RlWriter deleteAll() {
-      try {
-        indexWriter.deleteAll();
-        writtenCount++;
-      } catch (IOException ex) {
-        throw new RlException.IO(ex);
-      }
-      return this;
-    }
-  }
 
 }
