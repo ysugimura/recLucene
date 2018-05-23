@@ -1,6 +1,9 @@
 package com.cm55.recLucene;
 
+import java.util.*;
+
 import org.junit.*;
+import static org.junit.Assert.*;
 
 public class RlResetterTest {
 
@@ -12,8 +15,16 @@ public class RlResetterTest {
     writer.commit();
     writer.close();
     RlSearcher searcher = database.createSearcher(Sample.class);
-   
+    List<Sample>list = searcher.search(new RlQuery.Word("test", "abc"));
+    assertEquals(1, list.size());
+    searcher.close();
+    
     database.createResetter().resetAndClose();
+    
+    searcher = database.createSearcher(Sample.class);
+    list = searcher.search(new RlQuery.Word("test", "abc"));
+    assertEquals(0, list.size());
+    searcher.close();
   }
 
   public static class Sample {

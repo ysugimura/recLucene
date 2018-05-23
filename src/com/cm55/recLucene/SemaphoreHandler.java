@@ -5,7 +5,7 @@ import java.util.concurrent.*;
 public class SemaphoreHandler {
 
   /** Javaのセマフォ */
-  private Semaphore semaphore;
+  Semaphore semaphore;
 
   /** 最大許可数 */
   private int permits;

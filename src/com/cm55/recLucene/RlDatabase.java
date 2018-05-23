@@ -30,11 +30,21 @@ public abstract class RlDatabase {
 
   /** ライタ取得セマフォ。ライターはただ一つしか取得することはできない */
   protected SemaphoreHandler writeSemaphore = new SemaphoreHandler(1);
-  
+
   /** リーダ取得セマフォ。最大100個 */
   protected SemaphoreHandler searchSemaphore = new SemaphoreHandler(100);
-  
 
+  /**
+   *  * <h2>バグ</h2> ※lucene3.3.0でのバグに注意：インデックスデータベースの作成時には、一度でも
+ * commit（何も書きこむものがなくてもよい）しておかないと、インデックスファイル 構造が作成されず、リアルタイムサーチャが失敗してしまう。
+ * 
+   */
+  protected void init() {
+    RlWriter writer = this.createWriter();
+    writer.commit();
+    writer.close();
+  }
+  
   /**
    * このデータベースのテーブルセットを取得する
    * 
@@ -68,10 +78,11 @@ public abstract class RlDatabase {
     SemaphoreHandler.Acquisition ac = writeSemaphore.acquire();
     return new RlWriter(this, ac);
   }
-  
+
   public synchronized RlWriter tryCreateWriter() {
     SemaphoreHandler.Acquisition ac = writeSemaphore.tryAcquire();
-    if (ac == null) return null;
+    if (ac == null)
+      return null;
     return new RlWriter(this, ac);
   }
 
@@ -111,11 +122,25 @@ public abstract class RlDatabase {
 
   /** このデータベースに対するリセッタを取得する */
   public synchronized RlResetter createResetter() {
+    //ystem.out.println(" " + writeSemaphore.semaphore.availablePermits() + ","
+    // + searchSemaphore.semaphore.availablePermits());
     SemaphoreHandler.Acquisition write = writeSemaphore.acquireAll();
-    SemaphoreHandler.Acquisition search = searchSemaphore.acquire();
+    SemaphoreHandler.Acquisition search = searchSemaphore.acquireAll();
     return new RlResetter(this, write, search);
   }
-  
+
+  public synchronized RlResetter tryCreateResetter() {
+    SemaphoreHandler.Acquisition write = writeSemaphore.tryAcquireAll();
+    if (write == null)
+      return null;
+    SemaphoreHandler.Acquisition search = searchSemaphore.tryAcquireAll();
+    if (search == null) {
+      write.release();
+      return null;
+    }
+    return new RlResetter(this, write, search);
+  }
+
   /**
    * テーブルのフィールド名からRlFieldを取得する。
    * <p>
@@ -141,30 +166,22 @@ public abstract class RlDatabase {
   }
 
   protected abstract void reset();
-  
-  
+
   /**
    * RAM上に作成されるデータベース
    */
   public static class Ram extends RlDatabase {
 
-    public Ram() {
-      super();
+    public Ram(RlTableSet tableSet) {
+
       this.directory = new RAMDirectory();
+      this.tableSet = tableSet;
+      super.init();
     }
 
-    /**
-     * テーブルセットを指定する
-     * 
-     * @param tableSet
-     *          テーブルセット
-     */
-    private void setup(RlTableSet tableSet) {
-      this.tableSet = tableSet;
-    }
-    
     protected void reset() {
       this.directory = new RAMDirectory();
+      super.init();
     }
   }
 
@@ -172,9 +189,6 @@ public abstract class RlDatabase {
    * 物理ディレクトリ用のデータベース
    */
   public static class Dir extends RlDatabase {
-
-    public Dir() {
-    }
 
     private Path path;
 
@@ -186,9 +200,10 @@ public abstract class RlDatabase {
      * @param dirName
      *          ディレクトリパス
      */
-    private void setup(RlTableSet tableSet, String dirName) {
+    Dir(RlTableSet tableSet, String dirName) {
       this.tableSet = tableSet;
       path = FileSystems.getDefault().getPath(dirName);
+      super.init();
     }
 
     protected void reset() {
@@ -204,6 +219,8 @@ public abstract class RlDatabase {
       } catch (IOException ex) {
         throw new RlException.IO(ex);
       }
+      
+      super.init();
     }
 
     public boolean delete(File file) {
@@ -236,75 +253,69 @@ public abstract class RlDatabase {
     }
   }
 
+  public static RlDatabase createRam(Class<?>... classes) {
+    return createRam(new RlTableSet(classes));
+  }
 
-    public static RlDatabase createRam(Class<?>... classes) {
-      return createRam(new RlTableSet(classes));
-    }
+  /**
+   * RAMデータベースを作成する
+   * 
+   * @param tableSet
+   *          テーブルセット
+   * @return RAMデータベース
+   */
+  public static RlDatabase createRam(RlTableSet tableSet) {
+    Ram ram = new Ram(tableSet);
+    return ram;
+  }
 
-    /**
-     * RAMデータベースを作成する
-     * 
-     * @param tableSet
-     *          テーブルセット
-     * @return RAMデータベース
-     */
-    public static RlDatabase createRam(RlTableSet tableSet) {
-      Ram ram = new Ram();
-      ram.setup(tableSet);
-      return ram;
-    }
+  /**
+   * RAMデータベースを作成する
+   * 
+   * @param tables
+   *          データベースを構成するテーブル
+   * @return RAMデータベース
+   */
+  public static RlDatabase createRam(RlTable... tables) {
+    return createRam(new RlTableSet(tables));
+  }
 
-    /**
-     * RAMデータベースを作成する
-     * 
-     * @param tables
-     *          データベースを構成するテーブル
-     * @return RAMデータベース
-     */
-    public static RlDatabase createRam(RlTable... tables) {
-      return createRam(new RlTableSet(tables));
-    }
+  /**
+   * ディレクトリデータベースを作成する
+   * 
+   * @param dirName
+   *          ディレクトリ名称
+   * @param classes
+   *          対象レコードクラス配列
+   * @return ディレクトリデータベース
+   */
+  public static RlDatabase createDir(String dirName, Class<?>... classes) {
+    return createDir(dirName, new RlTableSet(classes));
+  }
 
-    /**
-     * ディレクトリデータベースを作成する
-     * 
-     * @param dirName
-     *          ディレクトリ名称
-     * @param classes
-     *          対象レコードクラス配列
-     * @return ディレクトリデータベース
-     */
-    public static RlDatabase createDir(String dirName, Class<?>... classes) {
-      return createDir(dirName, new RlTableSet(classes));
-    }
+  /**
+   * ディレクトリデータベースを作成する
+   * 
+   * @param dirName
+   *          ディレクトリ名称
+   * @param tables
+   *          対象テーブル配列
+   * @return ディレクトリデータベース
+   */
+  public static RlDatabase createDir(String dirName, RlTable... tables) {
+    return createDir(dirName, new RlTableSet(tables));
+  }
 
-    /**
-     * ディレクトリデータベースを作成する
-     * 
-     * @param dirName
-     *          ディレクトリ名称
-     * @param tables
-     *          対象テーブル配列
-     * @return ディレクトリデータベース
-     */
-    public static RlDatabase createDir(String dirName, RlTable... tables) {
-      return createDir(dirName, new RlTableSet(tables));
-    }
-
-    /**
-     * ディレクトリデータベースを作成する
-     * 
-     * @param dirName
-     *          ディレクトリ名称
-     * @param tableSet
-     *          テーブルセット
-     * @return ディレクトリデータベース
-     */
-    public static RlDatabase createDir(String dirName, RlTableSet tableSet) {
-      Dir dir = new Dir();
-      dir.setup(tableSet, dirName);
-      return dir;
-    }
-  
-
+  /**
+   * ディレクトリデータベースを作成する
+   * 
+   * @param dirName
+   *          ディレクトリ名称
+   * @param tableSet
+   *          テーブルセット
+   * @return ディレクトリデータベース
+   */
+  public static RlDatabase createDir(String dirName, RlTableSet tableSet) {
+    return new Dir(tableSet, dirName);
+  }
 }
