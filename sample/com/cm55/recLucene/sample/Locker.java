@@ -26,8 +26,8 @@ public class Locker {
   private static MultiSemaphore writerSemaphore;
   
   static {
-    readerSemaphore = MultiSemaphore.Factory.create(30);
-    writerSemaphore = MultiSemaphore.Factory.create(1);
+    readerSemaphore = new MultiSemaphore(30);
+    writerSemaphore = new MultiSemaphore(1);
   }
 
   /**

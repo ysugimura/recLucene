@@ -1,25 +1,70 @@
 package com.cm55.recLucene.sample;
 
-
 import java.util.concurrent.*;
 
+public class MultiSemaphore {
 
+  /** Javaのセマフォ */
+  private Semaphore semaphore;
 
-public interface MultiSemaphore {
+  /** 最大許可数 */
+  private int permits;
 
-  public Acquisition tryAcquire();
-  public Acquisition acquire();
-  
-  public Acquisition tryAcquireAll();
-  public Acquisition acquireAll();
-  
-  public static class Factory {
+  public MultiSemaphore(int permits) {
+    this.permits = permits;
+    semaphore = new Semaphore(permits);
+  }
 
-    public static MultiSemaphore create(int count) {
-      Impl s = new Impl();
-      s.setup(count);
-      return s;
+  /**
+   * セマフォを取得する。取得できた場合は{@link Acquisition}オブジェクトを返す。 できない場合はnullを返す。
+   * 
+   * @return セマフォを取得した場合は{@link Acquisition}、そうでなければnull
+   */
+  public Acquisition tryAcquire() {
+    if (!semaphore.tryAcquire())
+      return null;
+    return new Acquisition(semaphore, 1);
+  }
+
+  /**
+   * セマフォを取得する。取得するまで待つ。
+   * 
+   * @return
+   * @throws InterruptedException
+   */
+  public Acquisition acquire() {
+    try {
+      semaphore.acquire();
+    } catch (InterruptedException ex) {
+      throw new RuntimeException(ex);
     }
+    return new Acquisition(semaphore, 1);
+  }
+
+  /**
+   * 全セマフォを取得してみる。できなければただちにnullを返す。
+   * 
+   * @return
+   */
+  public Acquisition tryAcquireAll() {
+    if (!semaphore.tryAcquire(permits)) {
+      return null;
+    }
+    return new Acquisition(semaphore, permits);
+  }
+
+  /**
+   * 全取得する。取得するまで待つ
+   * 
+   * @return
+   */
+  public Acquisition acquireAll() {
+    try {
+      semaphore.acquire(permits);
+    } catch (InterruptedException ex) {
+      throw new RuntimeException(ex);
+    }
+    return new Acquisition(semaphore, permits);
   }
 
   /**
@@ -34,7 +79,7 @@ public interface MultiSemaphore {
 
     /** 許可数 */
     private final int permits;
-    
+
     /** リリース済フラグ */
     private boolean released;
 
@@ -42,7 +87,7 @@ public interface MultiSemaphore {
       this.semaphore = semaphore;
       this.permits = permits;
     }
-    
+
     /**
      * セマフォをリリースする どのように呼び出されても一度しかリリースしない。
      */
@@ -62,72 +107,4 @@ public interface MultiSemaphore {
       return !released;
     }
   }
-  
-  public static class Impl implements MultiSemaphore {
-
-    /** Javaのセマフォ */
-    private Semaphore semaphore;
-    
-    /** 最大許可数 */
-    private int permits;
-    
-    public  Impl() {    
-    }
-
-    private void setup(int permits) {
-      this.permits = permits;
-      semaphore = new Semaphore(permits);
-    }
-
-    /**
-     * セマフォを取得する。取得できた場合は{@link Acquisition}オブジェクトを返す。 できない場合はnullを返す。
-     * 
-     * @return セマフォを取得した場合は{@link Acquisition}、そうでなければnull
-     */
-    public Acquisition tryAcquire() {
-      if (!semaphore.tryAcquire())
-        return null;
-      return new Acquisition(semaphore, 1);
-    }
-
-    /**
-     * セマフォを取得する。取得するまで待つ。
-     * 
-     * @return
-     * @throws InterruptedException
-     */
-    public Acquisition acquire() {
-      try {
-        semaphore.acquire();
-      } catch (InterruptedException ex) {
-        throw new RuntimeException(ex);
-      }
-      return new Acquisition(semaphore, 1);
-    }
-    
-    /**
-     * 全セマフォを取得してみる。できなければただちにnullを返す。
-     * @return
-     */
-    public Acquisition tryAcquireAll() {
-      if (!semaphore.tryAcquire(permits)) {
-        return null;
-      }
-      return new Acquisition(semaphore, permits);
-    }
-
-    /**
-     * 全取得する。取得するまで待つ
-     * @return
-     */
-    public Acquisition acquireAll() {
-      try {
-        semaphore.acquire(permits);
-      } catch (InterruptedException ex) {
-        throw new RuntimeException(ex);
-      }
-      return new Acquisition(semaphore, permits);
-    }
-  }
-
 }
