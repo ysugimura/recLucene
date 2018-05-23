@@ -42,7 +42,7 @@ public class RlValuesTotalTest {
       fields.add(RlField.Factory.create("token" + i, tokenAttr));
     }
     
-    table = RlTable.Factory.create(fields);
+    table = new RlTable(fields);
     database = RlDatabase.Factory.createRam(table);    
   }
   

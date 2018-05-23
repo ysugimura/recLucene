@@ -46,7 +46,7 @@ public interface RlTableSet {
     public static RlTableSet create(Class<?>...classes) {
       RlTable[]tables = new RlTable[classes.length];
       for (int i = 0; i < tables.length; i++) {
-        tables[i] = RlTable.Factory.create(classes[i]);
+        tables[i] = new RlTable(classes[i]);
       }
       return create(tables);
     }
