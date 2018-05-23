@@ -156,39 +156,6 @@ public class RlTable {
   public RlField getFieldByName(String fieldName) {
     return fieldMap.get(fieldName);
   }
-
-  public RlValues convertToValues(Object o) {
-    if (o instanceof RlValues) return (RlValues)o;
-    RlValues result = new RlValues();
-    fieldMap.values().forEach(f-> {
-      try {
-        result.put(f.getName(), f.getJavaField().get(o));
-      } catch (Exception ex) {
-        throw new RuntimeException(ex);
-      }
-    });
-    return result;
-  }
-  
-  @SuppressWarnings("unchecked")
-  public <T> T convertFromValues(RlValues values) {
-    if (recordClass == null)
-      return (T) values;
-    try {
-      @SuppressWarnings("unchecked")
-      T object = (T) recordClass.newInstance();
-      fieldMap.values().forEach(f -> {
-        try {
-          f.getJavaField().set(object, values.get(f.getName()));
-        } catch (Exception ex) {
-          throw new RuntimeException(ex);
-        }
-      });
-      return object;
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
-    }
-  }
   
   /**
    * 指定されたオブジェクトのプライマリキー{@link Term}を取得する。
@@ -271,5 +238,38 @@ public class RlTable {
     
     if (recordClass == null) return (T)result;
     return this.convertFromValues(result);
+  }
+  
+  public RlValues convertToValues(Object o) {
+    if (o instanceof RlValues) return (RlValues)o;
+    RlValues result = new RlValues();
+    fieldMap.values().forEach(f-> {
+      try {
+        result.put(f.getName(), f.getJavaField().get(o));
+      } catch (Exception ex) {
+        throw new RuntimeException(ex);
+      }
+    });
+    return result;
+  }
+  
+  @SuppressWarnings("unchecked")
+  public <T> T convertFromValues(RlValues values) {
+    if (recordClass == null)
+      return (T) values;
+    try {
+      @SuppressWarnings("unchecked")
+      T object = (T) recordClass.newInstance();
+      fieldMap.values().forEach(f -> {
+        try {
+          f.getJavaField().set(object, values.get(f.getName()));
+        } catch (Exception ex) {
+          throw new RuntimeException(ex);
+        }
+      });
+      return object;
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
   }
 }

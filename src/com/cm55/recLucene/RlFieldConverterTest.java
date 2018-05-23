@@ -13,13 +13,14 @@ public class RlFieldConverterTest {
   public void test() throws Exception {
     Field field = Target.class.getDeclaredField("booleanValue");
     RlField rlField = new RlField(field);
-    Target target = new Target();
+    RlValues target = new RlValues();
+    target.put("booleanValue",  false);
     assertEquals("0", rlField.getStringValue(target));
     rlField.setValue(target,  true);
     assertEquals("1", rlField.getStringValue(target));
     
     rlField.setStringValue(target,  "0");
-    assertFalse(target.booleanValue);
+    assertFalse(target.get("booleanValue"));
   }
   
   public static class Target {
