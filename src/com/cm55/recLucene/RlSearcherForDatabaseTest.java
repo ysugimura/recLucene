@@ -15,7 +15,7 @@ public class RlSearcherForDatabaseTest {
   public void before() {
     RlTableSet tableSet;
     tableSet = new RlTableSet(Foo.class, Bar.class);
-    database = RlDatabase.Factory.createRam(tableSet);
+    database = RlDatabase.createRam(tableSet);
   }
   
   @Test
@@ -25,11 +25,10 @@ public class RlSearcherForDatabaseTest {
     RlWriter writer = database.createWriter();
     
     // ライタが稼働中に、他のライタを作成することはできない。
-    try {
-      database.createWriter();
-      fail();
-    } catch (Exception ex) {      
-    }
+    
+      assertNull(database.tryCreateWriter());
+
+    
     writer.close();
     
     // 前のライタをクローズした後に作成することが可能

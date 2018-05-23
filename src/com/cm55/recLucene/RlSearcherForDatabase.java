@@ -20,13 +20,15 @@ public class RlSearcherForDatabase extends RlSearcher.Impl
   /** Luceneのインデックスリーダ */
   protected IndexReader indexReader;
 
+  protected SemaphoreHandler.Acquisition ac;
 
   public RlSearcherForDatabase() {
   }
   
-  public RlSearcherForDatabase(RlTable table, RlDatabase  database) {
+  public RlSearcherForDatabase(RlTable table, RlDatabase  database, SemaphoreHandler.Acquisition ac) {
     this.database = database;
     this.table = table;
+    this.ac = ac;
   }
   
   /** Luceneのインデックスリーダを取得する */
@@ -46,5 +48,11 @@ public class RlSearcherForDatabase extends RlSearcher.Impl
       }
       indexReader = null;
     }
+  }
+  
+  @Override
+  public void close() {
+    super.close();
+    ac.release();
   }
 }

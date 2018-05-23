@@ -1,6 +1,7 @@
 package com.cm55.recLucene.sample;
 
-import com.cm55.recLucene.sample.MultiSemaphore.*;
+import com.cm55.recLucene.*;
+import com.cm55.recLucene.SemaphoreHandler.*;
 
 /**
  * メールハンドリングのためのロック。以下の種類がある。
@@ -18,16 +19,16 @@ public class Locker {
   /**
    * リーダ用ロック。複数のリーダが同時に取得可能
    */
-  private static MultiSemaphore readerSemaphore;
+  private static SemaphoreHandler readerSemaphore;
 
   /**
    * ライタ用ロック。単一のライタだけが取得可能。
    */
-  private static MultiSemaphore writerSemaphore;
+  private static SemaphoreHandler writerSemaphore;
   
   static {
-    readerSemaphore = new MultiSemaphore(30);
-    writerSemaphore = new MultiSemaphore(1);
+    readerSemaphore = new SemaphoreHandler(30);
+    writerSemaphore = new SemaphoreHandler(1);
   }
 
   /**

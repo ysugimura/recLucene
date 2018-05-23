@@ -6,8 +6,6 @@ import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 
-
-
 /**
  * <h1>インデックスライタ</h1>
  * 
@@ -45,6 +43,109 @@ import org.apache.lucene.search.*;
  */
 public class RlWriter {
 
+  /** データベース */
+  private RlDatabase database;
+
+  /**
+   * LuceneのIndexWriter。初期化時に作成される。クローズ時にnullが代入される。
+   */
+  private IndexWriter indexWriter;
+
+  /** LuceneのIndexWriterConfig */
+  private IndexWriterConfig config;
+
+  /** 書込み回数 */
+  private int writtenCount;
+
+  private SemaphoreHandler.Acquisition acquisition;
+  
+  /** 初期化 */
+  public RlWriter(RlDatabase database, SemaphoreHandler.Acquisition acquisition ) {
+
+    this.database = database;
+    this.acquisition = acquisition;
+    try {
+      config = new IndexWriterConfig(PerFieldAnalyzerCreator.create(database));
+
+      // クローズ時にコミットする
+      assert config.getCommitOnClose();
+
+      indexWriter = new IndexWriter(database.getDirectory(), config);
+
+      // setMaxFieldLengthもdeprecatedとなり、その代わりにLimitTokenCountAnalyzer
+      // を使えとドキュメントにあるが、使い方がわからない。
+      // indexWriter.setMaxFieldLength(MaxFieldLength.UNLIMITED.getLimit());
+
+    } catch (IOException ex) {
+      throw new RlException.IO(ex);
+    }
+  }
+
+  /**
+   * 内部的なIndexWriterを取得する
+   */
+  IndexReader getIndexReader() {
+    throw new RuntimeException();
+    /*
+     * try { // return indexWriter.getReader(); // 上の呼び出しはdeprecatedになった return
+     * IndexReader.open(indexWriter, true);
+     * 
+     * } catch (IOException ex) { throw new RlException.IO(ex); }
+     */
+
+  }
+
+  private synchronized RlWriter write(Term pkTerm, Document doc) {
+    // 書込み
+    try {
+      if (pkTerm == null) {
+        indexWriter.addDocument(doc);
+      } else {
+        indexWriter.updateDocument(pkTerm, doc);
+      }
+
+    } catch (IOException ex) {
+      throw new RlException.IO(ex);
+    }
+
+    writtenCount++;
+    return this;
+  }
+
+  /**
+   * レコードを削除する。
+   * <p>
+   * フィールドとその値を指定する。 フィールドはtokenized=falseでなければいけない。
+   * </p>
+   */
+  public synchronized <T> RlWriter delete(RlField field, T value) {
+    if (field.isTokenized()) {
+      throw new RlException("tokenized=trueのフィールドを指定して削除はできません");
+    }
+    try {
+      String string = field.toString(value);
+      indexWriter.deleteDocuments(new Term(field.getName(), string));
+      writtenCount++;
+      return this;
+    } catch (IOException ex) {
+      throw new RlException.IO(ex);
+    }
+  }
+
+  /** {@inheritDoc} */
+
+  /** {@inheritDoc} */
+  public synchronized <T> RlWriter deleteAll(RlField field) {
+    try {
+      Term term = new Term(field.getName(), "*");
+      Query query = new WildcardQuery(term);
+      indexWriter.deleteDocuments(query);
+      writtenCount++;
+    } catch (IOException ex) {
+      throw new RlException.IO(ex);
+    }
+    return this;
+  }
   
   /**
    * レコードの内容を書き込む
@@ -52,39 +153,43 @@ public class RlWriter {
    * プライマリキーが必ず指定されているはずなので、データベースにキーが なければ挿入し、あれば更新する。
    * </p>
    * 
-   * @param record 書き込みレコード
+   * @param record
+   *          書き込みレコード
    * @return このインデックスライタ
    */
-  public synchronized <T>RlWriter write(T rec) {
+  public synchronized <T> RlWriter write(T rec) {
 
     Document doc = getLuceneDocument(rec);
-    
+
     // プライマリキータームを作成する
     RlTable table = database.getTableSet().getTable(rec.getClass());
     Term pkTerm = table.getPkTerm(rec);
 
     return write(pkTerm, doc);
   }
-  
+
   /**
    * 自由形式の値を書き込む。テーブルを指定する必要がある。
-   * @param table テーブル
-   * @param values 値マップ
+   * 
+   * @param table
+   *          テーブル
+   * @param values
+   *          値マップ
    * @return このインデックスライタ
    */
   public synchronized RlWriter write(RlTable table, RlValues values) {
     return write(table.getPkTerm(values), getLuceneDocument(table, values));
   }
-  
-  
-  public <T>Document getLuceneDocument(T rec) {
-    
+
+  public <T> Document getLuceneDocument(T rec) {
+
     if (rec instanceof RlValues) {
       throw new RlException("RlValuesは使用できません");
     }
-    
+
     // オブジェクトのクラスを取得する
-    Class<T>clazz = (Class<T>)rec.getClass();
+    @SuppressWarnings("unchecked")
+    Class<T> clazz = (Class<T>) rec.getClass();
 
     // クラスのマッピング情報を取得する
     RlTable table = database.getTableSet().getTable(clazz);
@@ -95,45 +200,54 @@ public class RlWriter {
     // ドキュメントを作成する
     return table.getDocumentFromRecord(rec);
   }
-  
+
   /**
    * テーブルと値マップを指定してLuceneの{@link Document}を取得する
-   * @param table テーブル
-   * @param values 値マップ
+   * 
+   * @param table
+   *          テーブル
+   * @param values
+   *          値マップ
    * @return Luceneドキュメント
    */
   public Document getLuceneDocument(RlTable table, RlValues values) {
-    return table.getDocumentFromValues(values);      
-  }  
-  
-  
+    return table.getDocumentFromValues(values);
+  }
+
   /**
    * 指定フィールドが指定値のレコードを削除する
-   * @param field フィールド名称
-   * @param value 値
-   * @return　
-   */
-  public <T>RlWriter delete(String fieldName, T value) {
-    RlField field = database.getFieldFromName(fieldName);
-    if (field == null) throw new RlException("フィールドがありません:" + fieldName);
-    return delete(field, value);
-  }
-  
-  /**
-   * 指定フィールドのあるすべてのレコードを削除する
-   * @param field　フィールド名称
+   * 
+   * @param field
+   *          フィールド名称
+   * @param value
+   *          値
    * @return
    */
-  public synchronized <T>RlWriter deleteAll(String fieldName) {
+  public <T> RlWriter delete(String fieldName, T value) {
     RlField field = database.getFieldFromName(fieldName);
-    if (field == null) throw new RlException("フィールドがありません：" + fieldName);
+    if (field == null)
+      throw new RlException("フィールドがありません:" + fieldName);
+    return delete(field, value);
+  }
+
+  /**
+   * 指定フィールドのあるすべてのレコードを削除する
+   * 
+   * @param field
+   *          フィールド名称
+   * @return
+   */
+  public synchronized <T> RlWriter deleteAll(String fieldName) {
+    RlField field = database.getFieldFromName(fieldName);
+    if (field == null)
+      throw new RlException("フィールドがありません：" + fieldName);
     return deleteAll(field);
   }
-  
+
   /**
    * このインデックスデータベースのすべてのレコードを削除する
    */
-  public synchronized <T>RlWriter deleteAll() {
+  public synchronized <T> RlWriter deleteAll() {
     try {
       indexWriter.deleteAll();
       writtenCount++;
@@ -142,7 +256,7 @@ public class RlWriter {
     }
     return this;
   }
-  
+
   /**
    * 書込みあるいは削除を行った回数を取得する。
    * <p>
@@ -152,20 +266,20 @@ public class RlWriter {
   public int writtenCount() {
     return writtenCount;
   }
-  
-  
+
   /**
    * サーチャを取得する。
    * <p>
    * ここで取得されるサーチャはライタの書き込みに即座に追随する。 たとえそれがcommitあるいはcloseされてなくてもよい。
    * </p>
    */
-  public synchronized RlSearcher getSearcher(Class<?>recordClass) {
+  public synchronized RlSearcher getSearcher(Class<?> recordClass) {
     RlTable table = database.getTableSet().getTable(recordClass);
-    if (table == null) throw new RlException("テーブルがありません：" + recordClass);
+    if (table == null)
+      throw new RlException("テーブルがありません：" + recordClass);
     return getSearcher(table);
   }
-  
+
   /**
    * サーチャを取得する。
    * <p>
@@ -173,10 +287,11 @@ public class RlWriter {
    * </p>
    */
   public synchronized RlSearcher getSearcher(RlTable table) {
-    if (table == null) throw new NullPointerException();
+    if (table == null)
+      throw new NullPointerException();
     return new RlSearcherForWriter(table, this);
   }
-  
+
   /**
    * コミットする。
    * <p>
@@ -192,7 +307,7 @@ public class RlWriter {
     }
     return this;
   }
-  
+
   /**
    * クローズする。
    * <p>
@@ -200,157 +315,28 @@ public class RlWriter {
    * </p>
    */
   public synchronized void close() {
+    if (indexWriter == null) return;
     try {
       indexWriter.close();
       indexWriter = null;
+      acquisition.release();
     } catch (IOException ex) {
       throw new RlException.IO(ex);
     }
   }
-  
+
   /**
    * 内部的なIndexWriterConfigを取得する
    */
+  @SuppressWarnings("unchecked")
   public <T> T getIndexWriterConfig() {
     return (T) config;
   }
-  
-  
+
   /** クローズされたか */
   public synchronized boolean isClosed() {
     return indexWriter == null;
   }
 
-
-    /** データベース */
-    private RlDatabase database;
-
-    /** LuceneのIndexWriter。初期化時に作成される。クローズ時にnullが代入される。
-     *  */
-    private IndexWriter indexWriter;
-
-    /** LuceneのIndexWriterConfig */
-    private IndexWriterConfig config;
-
-    /** 書込み回数 */
-    private int writtenCount;
-
-    /** 初期化 */
-    public RlWriter(RlDatabase database) {
-      
-      this.database = database;
-      try {                
-        config = new IndexWriterConfig(PerFieldAnalyzerCreator.create(database));
-        
-        // クローズ時にコミットする
-        assert config.getCommitOnClose();
-        
-        indexWriter = new IndexWriter(database.getDirectory(), config);
-
-        // setMaxFieldLengthもdeprecatedとなり、その代わりにLimitTokenCountAnalyzer
-        // を使えとドキュメントにあるが、使い方がわからない。
-//        indexWriter.setMaxFieldLength(MaxFieldLength.UNLIMITED.getLimit());
-        
-        
-      } catch (IOException ex) {
-        throw new RlException.IO(ex);
-      }
-
-
-    }
-
-    /**
-     * 内部的なIndexWriterを取得する
-     */
-    IndexReader getIndexReader() {
-      throw new RuntimeException();
-      /*
-      try {
-        // return indexWriter.getReader();
-        // 上の呼び出しはdeprecatedになった
-        return IndexReader.open(indexWriter, true);
-
-      } catch (IOException ex) {
-        throw new RlException.IO(ex);
-      }
-      */
-      
-    }
-
-  
-
-   
-    
-    /** {@inheritDoc} */
-    
-
-    /** {@inheritDoc} */
-  
-    
-    private synchronized RlWriter write(Term pkTerm, Document doc) {      
-      // 書込み
-      try {
-        if (pkTerm == null) {
-          indexWriter.addDocument(doc);
-        } else {
-          indexWriter.updateDocument(pkTerm, doc);
-        }
-        
-      } catch (IOException ex) {
-        throw new RlException.IO(ex);
-      }
-
-      writtenCount++;
-      return this;
-    }
-    
-    /** 書込み回数を取得 */
-
-
-    /** コミットする */
-
-
-    /** クローズする */
-   
-
-    
-   
-    
-    /**
-     * レコードを削除する。
-     * <p>
-     * フィールドとその値を指定する。
-     * フィールドはtokenized=falseでなければいけない。
-     * </p>
-     */
-    public synchronized <T>RlWriter delete(RlField field, T value) {
-      if (field.isTokenized()) {
-        throw new RlException("tokenized=trueのフィールドを指定して削除はできません");
-      }
-      try {
-        String string = field.toString(value);
-        indexWriter.deleteDocuments(new Term(field.getName(), string));
-        writtenCount++;
-        return this;
-      } catch (IOException ex) {
-        throw new RlException.IO(ex);
-      }
-    }
-    
-    /** {@inheritDoc} */
-    
-    
-    /** {@inheritDoc} */
-    public synchronized<T>RlWriter deleteAll(RlField field) {
-      try {
-        Term term = new Term(field.getName(), "*");
-        Query query = new WildcardQuery(term);
-        indexWriter.deleteDocuments(query);
-        writtenCount++;
-      } catch (IOException ex) {
-        throw new RlException.IO(ex);
-      }
-      return this;
-    }
 
 }

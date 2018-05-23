@@ -1,6 +1,6 @@
 package com.cm55.recLucene.sample;
 
-import com.cm55.recLucene.sample.MultiSemaphore.*;
+import com.cm55.recLucene.SemaphoreHandler.*;
 
 /**
  * {@link Locker｝によって取得されたロックのホルダ

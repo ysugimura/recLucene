@@ -14,7 +14,7 @@ public class RlWriterTest {
   public void before() {
 
 
-    database = RlDatabase.Factory.createRam(Foo.class, Bar.class, FooBar.class);
+    database = RlDatabase.createRam(Foo.class, Bar.class, FooBar.class);
   }
   
   @Test
@@ -24,15 +24,13 @@ public class RlWriterTest {
     RlWriter writer = database.createWriter();
     
     // ライタが稼働中に、他のライタを作成することはできない。
-    try {
-      database.createWriter();
-      fail();
-    } catch (Exception ex) {      
-    }
+
+      assertNull(database.tryCreateWriter());
+
     writer.close();
     
     // 前のライタをクローズした後に作成することが可能
-    database.createWriter();
+    assertNotNull(database.tryCreateWriter());
   }
 
   //@Test

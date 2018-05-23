@@ -1,8 +1,8 @@
-package com.cm55.recLucene.sample;
+package com.cm55.recLucene;
 
 import java.util.concurrent.*;
 
-public class MultiSemaphore {
+public class SemaphoreHandler {
 
   /** Javaのセマフォ */
   private Semaphore semaphore;
@@ -10,7 +10,11 @@ public class MultiSemaphore {
   /** 最大許可数 */
   private int permits;
 
-  public MultiSemaphore(int permits) {
+  public SemaphoreHandler() {
+    this(1);
+  }
+  
+  public SemaphoreHandler(int permits) {
     this.permits = permits;
     semaphore = new Semaphore(permits);
   }

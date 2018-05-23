@@ -14,7 +14,7 @@ public class RlSearcherTest {
   @Test
   public void test() {
     RlTableSet tableSet = new RlTableSet(BookData.class);
-    RlDatabase database = RlDatabase.Factory.createRam(tableSet);
+    RlDatabase database = RlDatabase.createRam(tableSet);
     
     RlWriter writer = database.createWriter();
     for (BookData bookData: BOOK_DATA) {

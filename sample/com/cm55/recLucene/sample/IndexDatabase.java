@@ -18,7 +18,7 @@ public class IndexDatabase {
   
   public IndexDatabase(String path) {
     this.path = path;
-    cachedDatabase = RlDatabase.Factory.createDir(path, IndexRecord.class);
+    cachedDatabase = RlDatabase.createDir(path, IndexRecord.class);
   }
 
   /** {@inheritDoc} */

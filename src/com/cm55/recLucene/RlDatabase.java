@@ -28,6 +28,13 @@ public abstract class RlDatabase {
   /** テーブルセット */
   protected RlTableSet tableSet;
 
+  /** ライタ取得セマフォ。ライターはただ一つしか取得することはできない */
+  protected SemaphoreHandler writeSemaphore = new SemaphoreHandler(1);
+  
+  /** リーダ取得セマフォ。最大100個 */
+  protected SemaphoreHandler searchSemaphore = new SemaphoreHandler(100);
+  
+
   /**
    * このデータベースのテーブルセットを取得する
    * 
@@ -58,7 +65,14 @@ public abstract class RlDatabase {
    * @return 新たなライタ
    */
   public synchronized RlWriter createWriter() {
-    return new RlWriter(this);
+    SemaphoreHandler.Acquisition ac = writeSemaphore.acquire();
+    return new RlWriter(this, ac);
+  }
+  
+  public synchronized RlWriter tryCreateWriter() {
+    SemaphoreHandler.Acquisition ac = writeSemaphore.tryAcquire();
+    if (ac == null) return null;
+    return new RlWriter(this, ac);
   }
 
   /**
@@ -91,9 +105,17 @@ public abstract class RlDatabase {
    * @return サーチャ
    */
   public synchronized RlSearcher createSearcher(RlTable table) {
-    return new RlSearcherForDatabase(table, this);
+    SemaphoreHandler.Acquisition ac = searchSemaphore.acquire();
+    return new RlSearcherForDatabase(table, this, ac);
   }
 
+  /** このデータベースに対するリセッタを取得する */
+  public synchronized RlResetter createResetter() {
+    SemaphoreHandler.Acquisition write = writeSemaphore.acquireAll();
+    SemaphoreHandler.Acquisition search = searchSemaphore.acquire();
+    return new RlResetter(this, write, search);
+  }
+  
   /**
    * テーブルのフィールド名からRlFieldを取得する。
    * <p>
@@ -118,6 +140,9 @@ public abstract class RlDatabase {
     return directory;
   }
 
+  protected abstract void reset();
+  
+  
   /**
    * RAM上に作成されるデータベース
    */
@@ -137,6 +162,10 @@ public abstract class RlDatabase {
     private void setup(RlTableSet tableSet) {
       this.tableSet = tableSet;
     }
+    
+    protected void reset() {
+      this.directory = new RAMDirectory();
+    }
   }
 
   /**
@@ -146,6 +175,8 @@ public abstract class RlDatabase {
 
     public Dir() {
     }
+
+    private Path path;
 
     /**
      * テーブルセット、ディレクトリパスを指定する
@@ -157,21 +188,54 @@ public abstract class RlDatabase {
      */
     private void setup(RlTableSet tableSet, String dirName) {
       this.tableSet = tableSet;
-      Path path = FileSystems.getDefault().getPath(dirName);
+      path = FileSystems.getDefault().getPath(dirName);
+    }
+
+    protected void reset() {
+
+      // luceneデータベースフォルダを削除する
+      File dir = path.toFile();
+      delete(dir);
+      if (dir.exists()) {
+        System.err.println("!!! DIRECTORY LEFT !!!!");
+      }
       try {
         this.directory = FSDirectory.open(path);
       } catch (IOException ex) {
         throw new RlException.IO(ex);
       }
     }
+
+    public boolean delete(File file) {
+      return new Object() {
+        boolean delete(File file) {
+
+          // ファイルがもともと存在しなかければtrueを返す
+          if (!file.exists())
+            return true;
+
+          // 通常ファイルのとき
+          if (!file.isDirectory()) {
+            return file.delete();
+          }
+
+          // ディレクトリのとき、その中のファイルを削除する
+          // 一つでも削除できないものがあったらfalseを返す
+          for (File child : file.listFiles()) {
+            if (!delete(child))
+              return false;
+          }
+
+          // ディレクトリ自体を削除する。削除できなければfalseを返す
+          if (!file.delete())
+            return false;
+
+          return true;
+        }
+      }.delete(file);
+    }
   }
 
-  /**
-   * {@link RlDatabase}のファクトリ
-   * 
-   * @author ysugimura
-   */
-  public static class Factory {
 
     public static RlDatabase createRam(Class<?>... classes) {
       return createRam(new RlTableSet(classes));
@@ -241,6 +305,6 @@ public abstract class RlDatabase {
       dir.setup(tableSet, dirName);
       return dir;
     }
-  }
+  
 
 }
