@@ -14,7 +14,7 @@ public class RlFieldTest {
     Class<?>clazz = Test0.class;
     Field field1 = clazz.getDeclaredField("value");
     try {
-      RlField.Factory.create(field1);
+      new RlField(field1);
       fail();
     } catch (Exception ex) {
       assertTrue(ex.getMessage().startsWith("フィールドがString以外の場合には"));
@@ -33,15 +33,15 @@ public class RlFieldTest {
     Field field2 = clazz.getDeclaredField("field2");
     Field field3 = clazz.getDeclaredField("field3");
     
-    RlField lxField1 = RlField.Factory.create(field1);
+    RlField lxField1 = new RlField(field1);
     assertTrue(lxField1.isPk());
     assertTrue(lxField1.isStore());
     
-    RlField lxField2 = RlField.Factory.create(field2);
+    RlField lxField2 = new RlField(field2);
     assertFalse(lxField2.isPk()); 
     assertFalse(lxField2.isStore());
 
-    RlField lxField3 = RlField.Factory.create(field3);
+    RlField lxField3 = new RlField(field3);
     assertFalse(lxField3.isPk());
     assertTrue(lxField3.isStore());
     
@@ -102,7 +102,7 @@ public class RlFieldTest {
   
   @Test
   public void testValues0() {
-    RlField field1 = RlField.Factory.create("testField",  null);
+    RlField field1 = new RlField("testField",  null);
     assertEquals(
       "java:none,type:java.lang.String,name:testField,pk:false,sto:false,tok:true,conv:none,analy:none", 
       field1.toString()

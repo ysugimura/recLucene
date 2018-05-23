@@ -34,12 +34,12 @@ public class RlValuesTotalTest {
     
     List<RlField>fields = new ArrayList<RlField>();
 
-    fields.add(RlField.Factory.create("id", idAttr));
+    fields.add(new RlField("id", idAttr));
     for (int i = 0; i < 2; i++) {
-      fields.add(RlField.Factory.create("match" + i, matchAttr));
+      fields.add(new RlField("match" + i, matchAttr));
     }
     for (int i = 0; i < 2; i++) {
-      fields.add(RlField.Factory.create("token" + i, tokenAttr));
+      fields.add(new RlField("token" + i, tokenAttr));
     }
     
     table = new RlTable(fields);

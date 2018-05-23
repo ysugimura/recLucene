@@ -10,7 +10,7 @@ public class RlValuesTest {
   
   @Test
   public void test1() {
-    RlField field = RlField.Factory.create("test",  null);
+    RlField field = new RlField("test",  null);
     RlValues values = new RlValues();
     values.put("test",  "abc123");
     assertEquals("abc123", field.getValue(values));    
@@ -20,7 +20,7 @@ public class RlValuesTest {
   
   @Test
   public void test2() {
-    RlField field = RlField.Factory.create("test",  new RlFieldAttr.Default() {
+    RlField field = new RlField("test",  new RlFieldAttr.Default() {
       public Class<? extends RlFieldConverter<?>> converter() {
         return RlFieldConverter.LongConv.class;
       }

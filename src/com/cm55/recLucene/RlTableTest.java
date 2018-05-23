@@ -118,7 +118,7 @@ public class RlTableTest {
   public void test6() {
     RlField aField, bField;
     RlTable table = new RlTable(
-      aField = RlField.Factory.create("a", new RlFieldAttr.Default() {
+      aField = new RlField("a", new RlFieldAttr.Default() {
         @Override
         public boolean pk() {
           return true;
@@ -128,7 +128,7 @@ public class RlTableTest {
           return RlFieldConverter.IntConv.class;
         }
       }),
-      bField = RlField.Factory.create("b", null)
+      bField = new RlField("b", null)
     );
     
     RlValues values = new RlValues();

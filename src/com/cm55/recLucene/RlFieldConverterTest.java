@@ -12,7 +12,7 @@ public class RlFieldConverterTest {
   @Test
   public void test() throws Exception {
     Field field = Target.class.getDeclaredField("booleanValue");
-    RlField rlField = RlField.Factory.create(field);
+    RlField rlField = new RlField(field);
     Target target = new Target();
     assertEquals("0", rlField.getStringValue(target));
     rlField.setValue(target,  true);

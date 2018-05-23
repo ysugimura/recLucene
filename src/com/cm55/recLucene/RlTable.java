@@ -53,7 +53,7 @@ public class RlTable {
       }
 
       // このフィールドについてのRlFieldを作成して追加
-      fieldsFromClass.add(RlField.Factory.create(javaField));
+      fieldsFromClass.add(new RlField(javaField));
     });
 
     init(fieldsFromClass.toArray(new RlField[0]));
