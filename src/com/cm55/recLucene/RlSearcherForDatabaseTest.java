@@ -89,8 +89,8 @@ public class RlSearcherForDatabaseTest {
     public boolean equals(Object o) {
       if (!(o instanceof Foo)) return false;
       Foo that = (Foo)o;
-      return Misc.equals(this.id1, that.id1)&&
-          Misc.equals(this.testField, that.testField);
+      return Objects.equals(this.id1, that.id1)&&
+          Objects.equals(this.testField, that.testField);
     }
   }
   

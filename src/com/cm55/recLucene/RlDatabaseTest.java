@@ -69,8 +69,8 @@ public class RlDatabaseTest {
     public boolean equals(Object o) {
       if (!(o instanceof Table3)) return false;
       Table3 that = (Table3)o;
-      return Misc.equals(this.id3, that.id3)&&
-          Misc.equals(this.testField, that.testField);
+      return Objects.equals(this.id3, that.id3)&&
+          Objects.equals(this.testField, that.testField);
     }
   }
   

@@ -89,8 +89,8 @@ public class RlWriterTest {
     public boolean equals(Object o) {
       if (!(o instanceof Foo)) return false;
       Foo that = (Foo)o;
-      return Misc.equals(this.id1, that.id1)&&
-          Misc.equals(this.testField, that.testField);
+      return Objects.equals(this.id1, that.id1)&&
+          Objects.equals(this.testField, that.testField);
     }
   }
   
@@ -168,7 +168,7 @@ public class RlWriterTest {
       FooBar that = (FooBar)o;
       return 
         this.id3 == that.id3 &&
-        Misc.equals(this.value, that.value);
+        Objects.equals(this.value, that.value);
     }
     
     @Override
