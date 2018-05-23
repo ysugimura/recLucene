@@ -18,6 +18,8 @@ public class SampleMain {
   public static void main(String[]args) {
     RlDatabase db = RlDatabase.createDir("sampleDb").add(FooRecord.class);
     
+    db.createResetter().resetAndClose();
+    
     {
       RlWriter writer = db.createWriter();
       Arrays.stream(recs).forEach(r->writer.write(r));
