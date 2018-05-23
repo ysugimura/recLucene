@@ -57,8 +57,8 @@ public abstract class RlAnalyzer {
       protected TokenStreamComponents createComponents(String fieldName) {
         
         // ここではフィールド名は指定されない
-        if (fieldName != null) throw new LxException("program error");
-        return LxAnalyzer.this.createComponents();
+        if (fieldName != null) throw new RlException("program error");
+        return RlAnalyzer.this.createComponents();
       }
     };
     */

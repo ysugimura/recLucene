@@ -13,21 +13,21 @@ import org.apache.lucene.search.*;
 public class RlSortFields {
 
   public final RlTable tableDef;
-  public final RlSortField[]lxSortFields;
+  public final RlSortField[]rlSortFields;
 
   /** 
    * 任意の数のソートフィールドを指定する。
    * テーブル定義は一致していなければならない。
-   * @param lxSortFields
+   * @param rlSortFields
    */
-  public RlSortFields(RlSortField...lxSortFields) {
-    this.lxSortFields = lxSortFields;
-    if (lxSortFields.length == 0) {
+  public RlSortFields(RlSortField...rlSortFields) {
+    this.rlSortFields = rlSortFields;
+    if (rlSortFields.length == 0) {
       tableDef = null;
       return;
     }
-    tableDef = lxSortFields[0].getTableDef();
-    for (RlSortField field: lxSortFields) {
+    tableDef = rlSortFields[0].getTableDef();
+    for (RlSortField field: rlSortFields) {
       if (tableDef != field.getTableDef()) {
         throw new RlException.Usage("テーブル定義不一致");
       }
@@ -42,11 +42,11 @@ public class RlSortFields {
   /** LuceneのSortオブジェクトを取得する */
   public Sort getSort() {
     /*
-    SortField[]sortFields = new SortField[lxSortFields.length];
+    SortField[]sortFields = new SortField[rlSortFields.length];
     for (int i = 0; i < sortFields.length; i++) {
-      LxSortField lxSortField = lxSortFields[i];
-      LxField field = lxSortField.getField();
-      sortFields[i] = new SortField(field.getName(), SortField.STRING, lxSortField.getDesc());
+      LxSortField rlSortField = rlSortFields[i];
+      LxField field = rlSortField.getField();
+      sortFields[i] = new SortField(field.getName(), SortField.STRING, rlSortField.getDesc());
     }
     return new Sort(sortFields);
     */

@@ -282,7 +282,7 @@ public interface RlSearcher {
       try {
         TopDocs hits;
         Query luceneQuery = query.getLuceneQuery(table);
-        if (sorts == null || sorts.lxSortFields.length == 0) {
+        if (sorts == null || sorts.rlSortFields.length == 0) {
           hits = getIndexSearcher().search(luceneQuery, maxCount);
         } else {
           hits = getIndexSearcher().search(luceneQuery, null, maxCount,

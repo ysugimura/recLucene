@@ -13,12 +13,12 @@ import org.apache.lucene.search.*;
  * 
  * <h2>インデックスライタのロック</h2>
  * <p>
- * 一つLuceneインデックス（このパッケージではLxDatabase）については、
+ * 一つLuceneインデックス（このパッケージではRlDatabase）については、
  * ただ一つのライタがオープンしうる。luceneはこれを保証するため、ロック
- * ファイルを用いている。LxWriter内でIndexWriterが生成されるとすぐに書き込み ロックが取得される。
+ * ファイルを用いている。RlWriter内でIndexWriterが生成されるとすぐに書き込み ロックが取得される。
  * </p>
  * <p>
- * つまり、他のLxWriterを作成しても前のLxWriterがクローズされるまでは使用 することはできない。
+ * つまり、他のRlWriterを作成しても前のRlWriterがクローズされるまでは使用 することはできない。
  * </p>
  * <h2>セグメント数とマージ</h2>
  * <p>
@@ -165,7 +165,7 @@ public interface RlWriter {
   public boolean isClosed();
   
   /**
-   * LxWriter実装
+   * RlWriter実装
    * 
    * @author ysugimura
    */
@@ -243,7 +243,7 @@ public interface RlWriter {
         return IndexReader.open(indexWriter, true);
 
       } catch (IOException ex) {
-        throw new LxException.IO(ex);
+        throw new RlException.IO(ex);
       }
       */
       
@@ -253,7 +253,7 @@ public interface RlWriter {
     public <T>Document getLuceneDocument(T rec) {
       
       if (rec instanceof RlValues) {
-        throw new RlException("LxValuesは使用できません");
+        throw new RlException("RlValuesは使用できません");
       }
       
       // オブジェクトのクラスを取得する

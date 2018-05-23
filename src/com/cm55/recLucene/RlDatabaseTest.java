@@ -16,8 +16,8 @@ public class RlDatabaseTest {
     // 
     Util.deleteAll(new File("testOut"));
     
-    LxDatabase database1 = databaseFactory.createDir("testOut", Table3.class, Table4.class);
-    LxWriter writer1 = database1.createWriter();
+    RlDatabase database1 = databaseFactory.createDir("testOut", Table3.class, Table4.class);
+    RlWriter writer1 = database1.createWriter();
 
     writer1.write(new Table3("1", "this is test"));
     writer1.write(new Table3("2", "that is sample"));
@@ -26,10 +26,10 @@ public class RlDatabaseTest {
     writer1.write(new Table4("1", "asdf"));
     writer1.commit();
     
-    //LxDatabase database2 = databaseFactory.createDir(tableSet, "testOut");
-    //LxWriter writer2 = database2.createWriter();
+    //RlDatabase database2 = databaseFactory.createDir(tableSet, "testOut");
+    //RlWriter writer2 = database2.createWriter();
     
-    LxSearcher searcher = database1.createSearcher(Table3.class);
+    RlSearcher searcher = database1.createSearcher(Table3.class);
     List<Object>list = searcher.getAllByPk(); //
     //List<Object>list = searcher.search(searcher.matchQuery("id3", "1"));
     for (Object o: list) {

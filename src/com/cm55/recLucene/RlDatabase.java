@@ -61,7 +61,7 @@ public interface RlDatabase {
      * @param classes 対象レコードクラス配列
      * @return ディレクトリデータベース
      */
-    public RlDatabase createDir(String dirName, Class<?>...classes) {
+    public static RlDatabase createDir(String dirName, Class<?>...classes) {
       return createDir(dirName, RlTableSet.Factory.create(classes));
     }
 
@@ -71,7 +71,7 @@ public interface RlDatabase {
      * @param tables 対象テーブル配列
      * @return ディレクトリデータベース
      */
-    public RlDatabase createDir(String dirName, RlTable...tables) {
+    public static RlDatabase createDir(String dirName, RlTable...tables) {
       return createDir(dirName, RlTableSet.Factory.create(tables));
     }
     
@@ -81,7 +81,7 @@ public interface RlDatabase {
      * @param tableSet テーブルセット
      * @return ディレクトリデータベース
      */
-    public RlDatabase createDir(String dirName, RlTableSet tableSet) {
+    public static RlDatabase createDir(String dirName, RlTableSet tableSet) {
       Dir dir = new Dir();
       dir.setup(tableSet, dirName);
       return dir;
@@ -132,7 +132,7 @@ public interface RlDatabase {
   public RlSearcher createSearcher(RlTable table);
   
   /**
-   * テーブルのフィールド名からLxFieldを取得する。
+   * テーブルのフィールド名からRlFieldを取得する。
    * <p>
    * フィールド名はデータベース中で一意であるので、フィールドも一意に決定する。
    * </p>
@@ -140,7 +140,7 @@ public interface RlDatabase {
   public RlField getFieldFromName(String fieldName);
   
   /**
-   * LxDatabase実装
+   * RlDatabase実装
    * 
    * @author ysugimura
    *
@@ -206,7 +206,7 @@ public interface RlDatabase {
       return RlWriter.Factory.create(this);
     }
 
-    /** フィールド名からLxFieldを取得する */
+    /** フィールド名からRlFieldを取得する */
     @Override
     public RlField getFieldFromName(String fieldName) {
       return tableSet.getFieldByName(fieldName);

@@ -108,7 +108,7 @@ public class RlFieldTest {
       field1.toString()
     );  
     /*
-    LxField field2 = factory.create("testField", String.class, null);
+    RlField field2 = factory.create("testField", String.class, null);
     assertEquals(
       "java:none,type:java.lang.String,name:testField,pk:false,sto:false,tok:true,conv:none,analy:none", 
       field1.toString()

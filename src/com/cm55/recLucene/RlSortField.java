@@ -5,7 +5,7 @@ package com.cm55.recLucene;
  * ソートフィールド指定
  * <p>
  * ここでは、フィールドとその昇順・降順のみを指定する。
- * 複数のLxSortFieldがまとめられてLxSortFieldsになり、それが実際に検索の際
+ * 複数のRlSortFieldがまとめられてRlSortFieldsになり、それが実際に検索の際
  * のソート指定となる。
  * </p>
  * <p>

@@ -84,7 +84,7 @@ public @interface RlFieldAttr {
   /**
    * アナライザの指定
    * <p>
-   * デフォルトのLxAnalyzer.Default.classの場合、{@link Defaults}にて指定されたアナライザが使用される。
+   * デフォルトのRlAnalyzer.Default.classの場合、{@link Defaults}にて指定されたアナライザが使用される。
    * それ以外のアナライザを使用したいときは、そのアナライザクラスを指定する。
    * ただし、tokenized=falseの場合はここに何を指定しても無視される。
    * </p>

@@ -21,7 +21,7 @@ public interface RlTableSet {
   public <T> RlTable getTable(Class<T>clazz);
 
   /** 
-   * フィールド名からLxFieldを取得する。存在しなければnullを返す。
+   * フィールド名からRlFieldを取得する。存在しなければnullを返す。
    * {@link RlTableSet}中のすべてのテーブルのフィールドは一意名称であるため、フィールド名を
    * 指定すれば、テーブルが決まり、フィールドも決まる。\
    * @param fieldName

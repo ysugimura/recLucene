@@ -13,7 +13,7 @@ public class RlTableSetTest {
   public void プライマリキー指定あり() {
     RlTableSet tableSet = RlTableSet.Factory.create(Table2.class);
     /*
-    LxField idField = tableSet.getFieldFromName("id");
+    RlField idField = tableSet.getFieldFromName("id");
     //ystem.out.println("" + idField);
   */
   }

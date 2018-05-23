@@ -139,7 +139,7 @@ public interface RlTable {
             return;
         }
 
-        // このフィールドについてのLxFieldを作成して追加
+        // このフィールドについてのRlFieldを作成して追加
         fieldsFromClass.add(RlField.Factory.create(javaField));
       });
       
@@ -178,7 +178,7 @@ public interface RlTable {
       // ※指定がなくてもいいことにした
       /*
       if (pkField == null) {
-        throw new LxException("プライマリキー指定がありません");
+        throw new RlException("プライマリキー指定がありません");
       }
       */
       

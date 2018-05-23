@@ -325,7 +325,7 @@ public abstract class RlQuery {
      * <p>
      * 内部リストに0または1しか格納されていない場合には、リストである必要性がないのでコンパクト化する。
      * </p>
-     * @return null:何も格納されていないとき、LxQuery:一つのみの場合、
+     * @return null:何も格納されていないとき、RlQuery:一つのみの場合、
      * このCompound:複数格納されているとき。
      */
     public RlQuery compact() {

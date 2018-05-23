@@ -52,6 +52,14 @@ sourceSets {
       srcDir 'src'; exclude '**/*Test.java'
     }
   }
+  sample {
+    java {
+      srcDir 'sample'; exclude '**/*Test.java'
+    }
+    resources {
+      srcDir 'sample'; exclude '**/*Test.java'
+    }
+  }
 }
 
 // このプロジェクトの依存ライブラリの指定
