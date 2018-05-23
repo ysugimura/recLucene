@@ -26,6 +26,19 @@ public class SampleMain {
       writer.close();
     }
     
+    show(db);
+    
+    {
+      RlWriter writer = db.createWriter();
+      writer.write(new FooRecord(5L, "この書生というのは時々我々を捕えて煮て食うという話である。"));      
+      writer.close();
+    }
+
+    show(db);
+ 
+  }
+  
+  static void show(RlDatabase db) {
     RlSearcher searcher = db.createSearcher(FooRecord.class);
     {
       List<FooRecord>list = searcher.search(new RlQuery.Word("content", "人間"));
@@ -37,20 +50,6 @@ public class SampleMain {
           new RlQuery.And(new RlQuery.Word("content", "人間"), new RlQuery.Word("content",  "種族")));
       System.out.println("second");
       list.stream().forEach(System.out::println); 
-    }
-    searcher.close();
-    
-    {
-      RlWriter writer = db.createWriter();
-      writer.write(new FooRecord(5L, "この書生というのは時々我々を捕えて煮て食うという話である。"));      
-      writer.close();
-    }
-    
-    searcher = db.createSearcher(FooRecord.class);    
-    {
-      List<FooRecord>list = searcher.search(new RlQuery.Word("content", "人間"));
-      System.out.println("first");
-      list.stream().forEach(System.out::println);
     }
     searcher.close();
   }
