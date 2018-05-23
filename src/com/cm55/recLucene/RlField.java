@@ -177,7 +177,7 @@ public class RlField {
     try {
       if (analyzerClass != null)
         return cachedAnalyzer = analyzerClass.newInstance();
-      return cachedAnalyzer = Defaults.analyzerClass.newInstance();
+      return cachedAnalyzer = RlDefaults.analyzerClass.newInstance();
     } catch (Exception ex) {
       throw new RuntimeException();
     }

@@ -80,7 +80,7 @@ public abstract class RlAnalyzer {
   }
   
   /**
-   * {@link Defaults}にあるアナライザを使用するためのマーカ
+   * {@link RlDefaults}にあるアナライザを使用するためのマーカ
    * @author ysugimura
    */
   public static class Default extends RlAnalyzer {
