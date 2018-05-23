@@ -55,13 +55,13 @@ public class DuplicatedIdTest {
   
   @Test
   public void test() throws IOException {
-    BooleanQuery booleanQuery = new BooleanQuery();
+    BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder();
     Query query1 = new TermQuery(new Term("field1", "field1"));
     Query query2 = new TermQuery(new Term("field2", "field2"));
     booleanQuery.add(query1, BooleanClause.Occur.SHOULD);
     booleanQuery.add(query2, BooleanClause.Occur.SHOULD);
     
-    TopDocs docs = indexSearcher.search(booleanQuery, 10);
+    TopDocs docs = indexSearcher.search(booleanQuery.build(), 10);
     assertEquals(2, docs.totalHits);
     
     Set<String>set = new HashSet<String>();

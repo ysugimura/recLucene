@@ -187,7 +187,7 @@ public abstract class RlSearcher implements Closeable {
       if (sorts == null || sorts.rlSortFields.length == 0) {
         hits = getIndexSearcher().search(luceneQuery, maxCount);
       } else {
-        hits = getIndexSearcher().search(luceneQuery, null, maxCount, sorts.getSort());
+        hits = getIndexSearcher().search(luceneQuery, maxCount, sorts.getSort());
       }
       return hits;
 

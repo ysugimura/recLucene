@@ -227,12 +227,12 @@ public abstract class RlQuery {
     public Query getLuceneQuery(RlTable table) {              
       RlField field = table.getFieldByName(fieldName);
       if (field == null) throw new RuntimeException();
-      BooleanQuery bQuery = new BooleanQuery();
+      BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (String s: field.getAnalyzer().expandString(new StringReader("" + value))) {
-        bQuery.add(
+        builder.add(
           new TermQuery(new Term(field.getName(), s)), BooleanClause.Occur.MUST);
       }
-      return bQuery;
+      return builder.build();
     }
     
     /** 文字列化。デバッグ用 */
@@ -300,11 +300,11 @@ public abstract class RlQuery {
     /** Lucene用のQueryを取得する */
     @Override
     public Query getLuceneQuery(RlTable table) {
-      BooleanQuery booleanQuery = new BooleanQuery();
+      BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (RlQuery query : queryList) {
-        booleanQuery.add(query.getLuceneQuery(table), getOccur());
+        builder.add(query.getLuceneQuery(table), getOccur());
       }
-      return booleanQuery;
+      return builder.build();
     }
 
     protected abstract BooleanClause.Occur getOccur();
@@ -407,12 +407,12 @@ public abstract class RlQuery {
     /** クエリを取得する */
     @Override
     public Query getLuceneQuery(RlTable table) {
-      BooleanQuery booleanQuery = new BooleanQuery();
-      booleanQuery.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
+      BooleanQuery.Builder builder = new BooleanQuery.Builder();
+      builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
       for (RlQuery query : queryList) {
-        booleanQuery.add(query.getLuceneQuery(table), BooleanClause.Occur.MUST_NOT);
+        builder.add(query.getLuceneQuery(table), BooleanClause.Occur.MUST_NOT);
       }
-      return booleanQuery;
+      return builder.build();
     }
     
     /** 文字列化。デバッグ用 */
