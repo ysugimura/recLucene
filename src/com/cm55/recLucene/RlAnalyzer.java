@@ -52,17 +52,8 @@ public abstract class RlAnalyzer {
   public String[]expandString(Reader reader) {
     
     // luceneのアナライザを作成する
-    /*
-    Analyzer analyzer = new Analyzer() {
-      protected TokenStreamComponents createComponents(String fieldName) {
-        
-        // ここではフィールド名は指定されない
-        if (fieldName != null) throw new RlException("program error");
-        return RlAnalyzer.this.createComponents();
-      }
-    };
-    */
-    Analyzer analyzer = new LuceneAnalyzerWrapper(this);
+
+    try (Analyzer analyzer = new LuceneAnalyzerWrapper(this)) {
 
     TokenStream stream = null;
     try {
@@ -84,6 +75,7 @@ public abstract class RlAnalyzer {
       throw new RlException(ex);
     } finally {
       try { stream.close(); } catch (IOException ex) {}
+    }
     }
   }
   

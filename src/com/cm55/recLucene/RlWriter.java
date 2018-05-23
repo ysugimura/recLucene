@@ -263,13 +263,6 @@ public class RlWriter {
     /**
      * 内部的なIndexWriterを取得する
      */
-    @SuppressWarnings("unchecked")
-
-    
-
-    
-
-
     IndexReader getIndexReader() {
       throw new RuntimeException();
       /*

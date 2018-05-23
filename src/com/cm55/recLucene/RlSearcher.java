@@ -278,6 +278,7 @@ public interface RlSearcher {
       }      
     }
     
+    @SuppressWarnings("deprecation")
     private synchronized TopDocs searchHits(RlQuery query, RlSortFields sorts) {
       try {
         TopDocs hits;

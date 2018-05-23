@@ -157,6 +157,39 @@ public class RlTable {
     return fieldMap.get(fieldName);
   }
 
+  public RlValues convertToValues(Object o) {
+    if (o instanceof RlValues) return (RlValues)o;
+    RlValues result = new RlValues();
+    fieldMap.values().forEach(f-> {
+      try {
+        result.put(f.getName(), f.getJavaField().get(o));
+      } catch (Exception ex) {
+        throw new RuntimeException(ex);
+      }
+    });
+    return result;
+  }
+  
+  @SuppressWarnings("unchecked")
+  public <T> T convertFromValues(RlValues values) {
+    if (recordClass == null)
+      return (T) values;
+    try {
+      @SuppressWarnings("unchecked")
+      T object = (T) recordClass.newInstance();
+      fieldMap.values().forEach(f -> {
+        try {
+          f.getJavaField().set(object, values.get(f.getName()));
+        } catch (Exception ex) {
+          throw new RuntimeException(ex);
+        }
+      });
+      return object;
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+  
   /**
    * 指定されたオブジェクトのプライマリキー{@link Term}を取得する。
    * @param rec
@@ -165,18 +198,22 @@ public class RlTable {
   public Term getPkTerm(Object object) {
     if (pkField == null)
       return null;
+    
+    RlValues values;
     if (recordClass == null) {
       // 自由形式
       if (object == null || !(object instanceof RlValues)) {
         throw new RlException("getPkTermの引数オブジェクトのクラスが違います");
       }
+      values = (RlValues)object;
     } else {
       // レコード形式
       if (object == null || object.getClass() != recordClass) {
         throw new RlException("getPkTermの引数オブジェクトのクラスが違います");
       }
+      values = this.convertToValues(object);
     }
-    String value = pkField.getStringValue(object);
+    String value = pkField.getStringValue(values);
     if (value == null) {
       throw new RlException("プライマリキーがnullです");
     }
@@ -191,21 +228,24 @@ public class RlTable {
    * @return luceneの{@link Document}
    */
   public <T> Document getDocument(T object) {
+    RlValues values;
     if (recordClass == null) {
       // レコードクラスが無い場合。自由形式
       if (object == null || !(object instanceof RlValues)) {
         throw new RlException("getDocumentの引数オブジェクトのクラスが違います");
       }
+      values = (RlValues)object;
     } else {
       // レコードクラスがある場合
       if (object == null || object.getClass() != recordClass) {
         throw new RlException("getDocumentの引数オブジェクトのクラスが違います");
       }
+      values = this.convertToValues(object);
     }
 
     Document doc = new Document();
     for (RlField field : fieldMap.values()) {
-      Field lField = field.getLuceneField(object);
+      Field lField = field.getLuceneField(values);
       if (lField == null)
         continue; // 値がnullの場合はnullのフィールドが返る。登録しない。
       doc.add(lField);
@@ -221,23 +261,15 @@ public class RlTable {
    */
   @SuppressWarnings("unchecked")
   public <T> T fromDocument(Document doc) {
-    Object result;
-    if (recordClass == null) {
-      // レコードクラスが無い場合、自由形式
-      result = new RlValues();
-    } else {
-      // レコードクラスがある場合
-      try {
-        result = recordClass.newInstance();
-      } catch (Exception ex) {
-        throw new RlException(recordClass + "のインスタンスを作成できません:" + ex.getMessage());
-      }
-    }
+    RlValues result = new RlValues();
+
     for (Map.Entry<String, RlField> e : fieldMap.entrySet()) {
       String fieldName = e.getKey();
       RlField field = e.getValue();
       field.setStringValue(result, doc.get(fieldName));
     }
-    return (T) result;
+    
+    if (recordClass == null) return (T)result;
+    return this.convertFromValues(result);
   }
 }

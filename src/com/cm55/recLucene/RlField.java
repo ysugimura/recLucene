@@ -40,6 +40,10 @@ public class RlField {
   /** analyzerクラス */
   private Class<? extends RlAnalyzer> analyzerClass;
 
+  public java.lang.reflect.Field getJavaField() {
+    return javaField;
+  }
+  
   /**
    * フィールドのJavaタイプを取得する
    * 
@@ -102,7 +106,21 @@ public class RlField {
    *          オブジェクト
    * @return Luecene用フィールド
    */
+  @Deprecated
   public <T> Field getLuceneField(T object) {
+    String value = getStringValue(object);
+    if (value == null)
+      return null;
+    if (!tokenized) {
+      // トークン化されない場合、StringFieldを使用する
+      return new StringField(name, value, store ? Field.Store.YES : Field.Store.NO);
+    } else {
+      // トークン化される場合、TextFieldを使用する
+      return new TextField(name, value, store ? Field.Store.YES : Field.Store.NO);
+    }
+  }
+  
+  public <T> Field getLuceneField(RlValues object) {
     String value = getStringValue(object);
     if (value == null)
       return null;
@@ -122,6 +140,8 @@ public class RlField {
    *          オブジェクト
    * @return フィールド値
    */
+  @SuppressWarnings("unchecked")
+  @Deprecated
   public <T, V> V getValue(T object) {
     // 通常のオブジェクトの場合
     if (javaField != null) {
@@ -139,6 +159,10 @@ public class RlField {
       throw new RlException("不適当なオブジェクトです");
     return (V) ((RlValues) object).get(name);
   }
+  
+  public <V>V getValue(RlValues values) {
+    return values.get(name);
+  }
 
   /**
    * 指定オブジェクトにある「このフィールド」の値を設定する
@@ -148,6 +172,7 @@ public class RlField {
    * @param value
    *          設定する値
    */
+  @Deprecated
   public <T, V> void setValue(T object, V value) {
     // 通常のオブジェクトの場合
     if (javaField != null) {
@@ -167,6 +192,10 @@ public class RlField {
     }
     ((RlValues) object).put(name, value);
   }
+  
+  public <T, V> void setValue(RlValues values, V value) {
+    values.put(name, value);
+  }
 
   /**
    * フィールド値をLucene格納用のStringに変換する
@@ -174,6 +203,7 @@ public class RlField {
    * @param value
    * @return
    */
+  @SuppressWarnings("unchecked")
   public <V> String toString(V value) {
     if (value == null)
       return null;
@@ -183,6 +213,7 @@ public class RlField {
   }
 
   /** Lucene格納用のStringからフィールド値を取得する */
+  @SuppressWarnings("unchecked")
   public <V> V fromString(String string) {
     if (string == null)
       return null;
@@ -197,10 +228,15 @@ public class RlField {
    * @param object
    * @return
    */
+  @Deprecated
   public <T> String getStringValue(T object) {
     return toString(getValue(object));
   }
 
+  public <T>String getStringValue(RlValues values) {
+    return toString(getValue(values));
+  }
+  
   /**
    * 指定されたオブジェクトの、このフィールドの値を設定する。 現在のところ値はString型のみをサポートしている。
    * 
@@ -209,7 +245,12 @@ public class RlField {
    * @param value
    *          値
    */
+  @Deprecated
   public <T> void setStringValue(T object, String value) {
+    setValue(object, fromString(value));
+  }
+  
+  public <T> void setStringValue(RlValues object, String value) {
     setValue(object, fromString(value));
   }
 

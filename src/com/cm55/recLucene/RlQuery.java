@@ -312,7 +312,7 @@ public abstract class RlQuery {
     @Override
     protected boolean checkEquals(RlQuery o) {
       if (!super.checkEquals(o)) return false;
-      Compound that = (Compound)o;
+      Compound<?> that = (Compound<?>)o;
       if (this.queryList.size() != that.queryList.size()) return false;
       for (int i = 0; i < this.queryList.size(); i++) {
         if (!this.queryList.get(i).equals(that.queryList.get(i))) return false;
