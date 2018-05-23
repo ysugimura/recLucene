@@ -7,7 +7,7 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 
 /**
- * クエリを構築するインターフェース
+ * クエリを構築するオブジェクト
  * <p>
  * LuceneのQueryとはまったく別の方法でクエリを構築し、最後にgetQuery() でLuceneのQueryを取り出す。
  * </p>

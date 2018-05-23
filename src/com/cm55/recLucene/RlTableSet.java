@@ -11,24 +11,24 @@ import java.util.stream.*;
  * 
  * @author ysugimura
  */
-public class RlTableSet {
+class RlTableSet {
 
   /** 全テーブル */
-  private List<RlTable>tables = new ArrayList<>();
+  List<RlTable>tables = new ArrayList<>();
 
   /** フィールド名/テーブルマップ */
-  private Map<String, RlTable> fieldToTable = new HashMap<String, RlTable>();
+  Map<String, RlTable> fieldToTable = new HashMap<String, RlTable>();
 
   /** レコードクラス/テーブルマップ */
-  private Map<Class<?>, RlTable> recordToTable = new HashMap<Class<?>, RlTable>();
+  Map<Class<?>, RlTable> recordToTable = new HashMap<Class<?>, RlTable>();
 
   
-  public RlTableSet add(Class<?>...classes) {
+  RlTableSet add(Class<?>...classes) {
     Arrays.stream(classes).map(c->new RlTable(c)).forEach(this::add);
     return this;
   }
   
-  public RlTableSet add(RlTable... _tables) {
+  RlTableSet add(RlTable... _tables) {
     Arrays.stream(_tables).forEach(table -> {
       tables.add(table);
 
@@ -59,7 +59,7 @@ public class RlTableSet {
    *          レコードクラス
    * @return {@link RlTable}
    */
-  public <T> RlTable getTable(Class<T> clazz) {
+   <T> RlTable getTable(Class<T> clazz) {
     return recordToTable.get(clazz);
   }
 
@@ -71,7 +71,7 @@ public class RlTableSet {
    * @param fieldName
    * @return
    */
-  public RlField getFieldByName(String fieldName) {
+  RlField getFieldByName(String fieldName) {
     RlTable table = fieldToTable.get(fieldName);
     if (table == null)
       return null;
@@ -83,7 +83,7 @@ public class RlTableSet {
    * 
    * @return
    */
-  public Stream<RlTable> getTables() {
+  Stream<RlTable> getTables() {
     return tables.stream();
   }
 }

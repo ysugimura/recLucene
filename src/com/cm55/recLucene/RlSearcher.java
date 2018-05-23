@@ -109,12 +109,7 @@ public abstract class RlSearcher implements Closeable {
   }
 
   /**
-   * 指定条件で検索を行い、結果をLxRecordのリストとして返す。
-   * <p>
-   * LxRecordにはすべてのフィールド値が含まれているわけではない、 store指定のないフィールドの値はふくまれない。
-   * {@link LxRecord}を参照のこと。
-   * </p>
-   * 
+   * 指定条件で検索を行い、結果をオブジェクトリストとして返す。
    * @param query
    *          クエリ
    * @return 検索結果レコードリスト

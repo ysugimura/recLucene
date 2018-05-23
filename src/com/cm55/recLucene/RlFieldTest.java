@@ -33,22 +33,22 @@ public class RlFieldTest {
     Field field2 = clazz.getDeclaredField("field2");
     Field field3 = clazz.getDeclaredField("field3");
     
-    RlField lxField1 = new RlField(field1);
-    assertTrue(lxField1.isPk());
-    assertTrue(lxField1.isStore());
+    RlField rlField1 = new RlField(field1);
+    assertTrue(rlField1.isPk());
+    assertTrue(rlField1.isStore());
     
-    RlField lxField2 = new RlField(field2);
-    assertFalse(lxField2.isPk()); 
-    assertFalse(lxField2.isStore());
+    RlField rlField2 = new RlField(field2);
+    assertFalse(rlField2.isPk()); 
+    assertFalse(rlField2.isStore());
 
-    RlField lxField3 = new RlField(field3);
-    assertFalse(lxField3.isPk());
-    assertTrue(lxField3.isStore());
+    RlField rlField3 = new RlField(field3);
+    assertFalse(rlField3.isPk());
+    assertTrue(rlField3.isStore());
     
     Sample sample = new Sample(new Id(123L), "456", "789");
-    //assertEquals("123", lxField1.getStringValue(sample));
+    //assertEquals("123", rlField1.getStringValue(sample));
     
-    //lxField1.setStringValue(sample,  "333");
+    //rlField1.setStringValue(sample,  "333");
     //assertEquals(new Id(333), sample.field1);
   }
 

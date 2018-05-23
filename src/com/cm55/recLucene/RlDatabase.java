@@ -59,7 +59,7 @@ public abstract class RlDatabase {
    * 
    * @return テーブルセット
    */
-  public RlTableSet getTableSet() {
+  RlTableSet getTableSet() {
     return tableSet;
   }
 
@@ -73,11 +73,21 @@ public abstract class RlDatabase {
     directory = null;
   }
 
+  /**
+   * テーブルとしてクラスを追加する
+   * @param classes
+   * @return
+   */
   public RlDatabase add(Class<?>...classes) {
     Arrays.stream(classes).map(c->new RlTable(c)).forEach(this::add);
     return this;
   }
-  
+
+  /**
+   * テーブルを追加する
+   * @param tables
+   * @return
+   */
   public RlDatabase add(RlTable...tables) {
     SemaphoreHandler.Acquisition ac = this.writeSemaphore.acquire();    
     try {

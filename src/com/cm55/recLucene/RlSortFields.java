@@ -41,15 +41,6 @@ public class RlSortFields {
   
   /** LuceneのSortオブジェクトを取得する */
   public Sort getSort() {
-    /*
-    SortField[]sortFields = new SortField[rlSortFields.length];
-    for (int i = 0; i < sortFields.length; i++) {
-      LxSortField rlSortField = rlSortFields[i];
-      LxField field = rlSortField.getField();
-      sortFields[i] = new SortField(field.getName(), SortField.STRING, rlSortField.getDesc());
-    }
-    return new Sort(sortFields);
-    */
     throw new RuntimeException();
   }
 }
