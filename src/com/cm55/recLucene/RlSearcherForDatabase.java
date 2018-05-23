@@ -4,16 +4,13 @@ import java.io.*;
 
 import org.apache.lucene.index.*;
 
-import com.cm55.recLucene.RlDatabase.*;
-
 /**
  * データベース用のサーチャ
  * <p>
  * 
  * </p>
  */
-public class RlSearcherForDatabase extends RlSearcher.Impl
-    implements RlSearcher {
+public class RlSearcherForDatabase extends RlSearcher {
   
   private RlDatabase database;
   

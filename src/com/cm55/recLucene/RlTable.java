@@ -228,6 +228,7 @@ public class RlTable {
     return doc;
   }
 
+  @SuppressWarnings("unchecked")
   public <T>T recordFromDocument(Document doc) {
     return (T)fromDocument(doc);    
   }

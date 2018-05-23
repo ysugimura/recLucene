@@ -9,7 +9,7 @@ import org.apache.lucene.index.*;
 /**
  * ライタ用のニアリアルタイムサーチャ
  */
-public class RlSearcherForWriter extends RlSearcher.Impl {
+public class RlSearcherForWriter extends RlSearcher {
 
   
   private RlWriter writer;
