@@ -12,30 +12,7 @@ public class RlDatabaseTest {
   
   //@Test
   public void オープンテスト() {
-    /*
-    // 
-    Util.deleteAll(new File("testOut"));
-    
-    RlDatabase database1 = databaseFactory.createDir("testOut", Table3.class, Table4.class);
-    RlWriter writer1 = database1.createWriter();
 
-    writer1.write(new Table3("1", "this is test"));
-    writer1.write(new Table3("2", "that is sample"));
-    writer1.write(new Table3("1", "this is test"));
-    writer1.write(new Table3("2", "that is sample"));
-    writer1.write(new Table4("1", "asdf"));
-    writer1.commit();
-    
-    //RlDatabase database2 = databaseFactory.createDir(tableSet, "testOut");
-    //RlWriter writer2 = database2.createWriter();
-    
-    RlSearcher searcher = database1.createSearcher(Table3.class);
-    List<Object>list = searcher.getAllByPk(); //
-    //List<Object>list = searcher.search(searcher.matchQuery("id3", "1"));
-    for (Object o: list) {
-      System.out.println("" + o);
-    }
-    */
   }
   
   //@Test

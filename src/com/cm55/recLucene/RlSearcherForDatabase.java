@@ -14,13 +14,6 @@ import com.cm55.recLucene.RlDatabase.*;
  */
 public class RlSearcherForDatabase extends RlSearcher.Impl
     implements RlSearcher {
-
-  public static class Factory {
-    public static RlSearcher create(RlTable table, AbstractImpl database) {
-      RlSearcherForDatabase searcher = new RlSearcherForDatabase();
-      return searcher.setup(table,  database);
-    }
-  }
   
   private AbstractImpl database;
   
@@ -31,10 +24,9 @@ public class RlSearcherForDatabase extends RlSearcher.Impl
   public RlSearcherForDatabase() {
   }
   
-  private RlSearcherForDatabase setup(RlTable table, AbstractImpl  database) {
+  public RlSearcherForDatabase(RlTable table, AbstractImpl  database) {
     this.database = database;
     this.table = table;
-    return this;
   }
   
   /** Luceneのインデックスリーダを取得する */

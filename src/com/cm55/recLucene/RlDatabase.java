@@ -197,7 +197,7 @@ public interface RlDatabase {
     /** {@inheritDoc} */
     @Override
     public synchronized RlSearcher createSearcher(RlTable table) {
-      return RlSearcherForDatabase.Factory.create(table,  this);
+      return new RlSearcherForDatabase(table,  this);
     }
     
     /** {@inheritDoc} */
