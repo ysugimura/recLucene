@@ -1,6 +1,7 @@
 package com.cm55.recLucene;
 
 import java.util.*;
+import java.util.stream.*;
 
 /**
  * テーブルの集合を扱う。
@@ -13,39 +14,23 @@ import java.util.*;
 public class RlTableSet {
 
   /** 全テーブル */
-  private RlTable[] tables;
+  private List<RlTable>tables = new ArrayList<>();
 
   /** フィールド名/テーブルマップ */
-  private Map<String, RlTable> fieldToTable;
+  private Map<String, RlTable> fieldToTable = new HashMap<String, RlTable>();
 
   /** レコードクラス/テーブルマップ */
-  private Map<Class<?>, RlTable> recordToTable;
+  private Map<Class<?>, RlTable> recordToTable = new HashMap<Class<?>, RlTable>();
 
-  public RlTableSet(Class<?>... classes) {
-    RlTable[] tables = new RlTable[classes.length];
-    for (int i = 0; i < tables.length; i++) {
-      tables[i] = new RlTable(classes[i]);
-    }
-    setup(tables);
+  
+  public RlTableSet add(Class<?>...classes) {
+    Arrays.stream(classes).map(c->new RlTable(c)).forEach(this::add);
+    return this;
   }
   
-  public RlTableSet(RlTable... tables) {
-    setup(tables);
-  }
-  
-  /**
-   * クラス/{@link RlTable}マップを指定する
-   * 
-   * @param map
-   */
-  private void setup(RlTable... tables) {
-
-    this.tables = tables;
-
-    fieldToTable = new HashMap<String, RlTable>();
-    recordToTable = new HashMap<Class<?>, RlTable>();
-
-    for (RlTable table : tables) {
+  public RlTableSet add(RlTable... _tables) {
+    Arrays.stream(_tables).forEach(table -> {
+      tables.add(table);
 
       // フィールド名/テーブル名マップを作成
       for (String fieldName : table.getFieldNames()) {
@@ -63,7 +48,8 @@ public class RlTableSet {
         }
         recordToTable.put(recordClass, table);
       }
-    }
+    });
+    return this;
   }
   
   /**
@@ -97,7 +83,7 @@ public class RlTableSet {
    * 
    * @return
    */
-  public Collection<RlTable> getTables() {
-    return Arrays.asList(tables);
+  public Stream<RlTable> getTables() {
+    return tables.stream();
   }
 }

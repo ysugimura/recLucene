@@ -60,15 +60,13 @@ public class RlWriter implements Closeable {
   private SemaphoreHandler.Acquisition acquisition;
   
   /** 初期化 */
-  public RlWriter(RlDatabase database, SemaphoreHandler.Acquisition acquisition ) {
+  public RlWriter(RlDatabase database, SemaphoreHandler.Acquisition acquisition
+      , IndexWriterConfig config) {
 
     this.database = database;
     this.acquisition = acquisition;
     try {
-      config = new IndexWriterConfig(PerFieldAnalyzerCreator.create(database));
 
-      // クローズ時にコミットする
-      assert config.getCommitOnClose();
 
       indexWriter = new IndexWriter(database.getDirectory(), config);
 

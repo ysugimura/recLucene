@@ -14,7 +14,7 @@ public class RlWriterTest {
   public void before() {
 
 
-    database = RlDatabase.createRam(Foo.class, Bar.class, FooBar.class);
+    database = RlDatabase.createRam().add(Foo.class, Bar.class, FooBar.class);
   }
   
   @Test

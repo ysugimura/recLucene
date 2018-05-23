@@ -11,9 +11,9 @@ import org.apache.lucene.analysis.miscellaneous.*;
  */
 public class PerFieldAnalyzerCreator {
   
-  public static Analyzer create(RlDatabase database) {
+  public static Analyzer create(RlTableSet tableSet) {
     Map<String, Analyzer> analyzerMap = new HashMap<String, Analyzer>();
-    for (RlTable table: database.getTableSet().getTables()) {
+    tableSet.getTables().forEach(table-> {
       for (RlField f: table.getFields()) {
         final RlField field = f;
         if (!field.isTokenized()) continue;
@@ -24,7 +24,7 @@ public class PerFieldAnalyzerCreator {
         };
         analyzerMap.put(field.getName(), analyzer);        
       }     
-    }    
+    });    
     return new PerFieldAnalyzerWrapper(null, analyzerMap);
   }
 }

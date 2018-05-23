@@ -17,7 +17,7 @@ public class RlDatabaseTest {
   
   //@Test
   public void アクセステスト() {
-    RlDatabase database = RlDatabase.createRam(Table3.class, Table4.class);
+    RlDatabase database = RlDatabase.createRam().add(Table3.class, Table4.class);
     
     RlWriter writer = database.createWriter();
     try {
@@ -89,7 +89,7 @@ public class RlDatabaseTest {
 
   @Test
   public void longTest() {
-    RlDatabase database = RlDatabase.createRam(LongTest.class);
+    RlDatabase database = RlDatabase.createRam().add(LongTest.class);
     RlWriter writer = database.createWriter();
     
     writer.write(new LongTest(10001, "test1"));

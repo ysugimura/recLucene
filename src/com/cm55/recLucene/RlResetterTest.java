@@ -9,7 +9,7 @@ public class RlResetterTest {
 
   @Test
   public void testRam() {
-    RlDatabase database = RlDatabase.createRam(Sample.class);
+    RlDatabase database = RlDatabase.createRam().add(Sample.class);
     RlWriter writer = database.createWriter();
     writer.write(new Sample());
     writer.commit();
@@ -29,7 +29,7 @@ public class RlResetterTest {
   
   @Test
   public void test() {
-    RlDatabase database = RlDatabase.createDir("sampleDb", Sample.class);
+    RlDatabase database = RlDatabase.createDir("sampleDb").add(Sample.class);
     RlWriter writer = database.createWriter();
     writer.write(new Sample());
     writer.commit();

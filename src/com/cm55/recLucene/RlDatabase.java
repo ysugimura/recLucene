@@ -2,6 +2,7 @@ package com.cm55.recLucene;
 
 import java.io.*;
 import java.nio.file.*;
+import java.util.*;
 
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.*;
@@ -26,7 +27,7 @@ public abstract class RlDatabase {
   protected Directory directory;
 
   /** テーブルセット */
-  protected RlTableSet tableSet;
+  protected RlTableSet tableSet = new RlTableSet();
 
   /** ライタ取得セマフォ。ライターはただ一つしか取得することはできない */
   protected SemaphoreHandler writeSemaphore = new SemaphoreHandler(1);
@@ -34,17 +35,20 @@ public abstract class RlDatabase {
   /** リーダ取得セマフォ。最大100個 */
   protected SemaphoreHandler searchSemaphore = new SemaphoreHandler(100);
 
+  protected RlDatabase() {
+    
+  }
   /**
-   *  * <h2>バグ</h2> ※lucene3.3.0でのバグに注意：インデックスデータベースの作成時には、一度でも
- * commit（何も書きこむものがなくてもよい）しておかないと、インデックスファイル 構造が作成されず、リアルタイムサーチャが失敗してしまう。
- * 
+   *  ※lucene3.3.0でのバグに注意：インデックスデータベースの作成時には、一度でも
+   * commit（何も書きこむものがなくてもよい）しておかないと、インデックスファイル 構造が作成されず、リアルタイムサーチャが失敗してしまう。
+   * 
    */
   protected void init(SemaphoreHandler.Acquisition ac) {
     RlWriter writer;
     if (ac == null) {
       writer = this.createWriter();
     } else {
-      writer = new RlWriter(this, ac);
+      writer = newWriter(ac);
     }
     writer.commit();
     writer.close();
@@ -69,6 +73,21 @@ public abstract class RlDatabase {
     directory = null;
   }
 
+  public RlDatabase add(Class<?>...classes) {
+    Arrays.stream(classes).map(c->new RlTable(c)).forEach(this::add);
+    return this;
+  }
+  
+  public RlDatabase add(RlTable...tables) {
+    SemaphoreHandler.Acquisition ac = this.writeSemaphore.acquire();    
+    try {
+      Arrays.stream(tables).forEach(tableSet::add);
+    } finally {
+      ac.release();
+    }
+    return this;
+  }
+  
   /**
    * このデータベースに対するライタを作成して返す。
    * <p>
@@ -81,16 +100,24 @@ public abstract class RlDatabase {
    */
   public synchronized RlWriter createWriter() {
     SemaphoreHandler.Acquisition ac = writeSemaphore.acquire();
-    return new RlWriter(this, ac);
+    return newWriter(ac);
   }
 
   public synchronized RlWriter tryCreateWriter() {
     SemaphoreHandler.Acquisition ac = writeSemaphore.tryAcquire();
     if (ac == null)
       return null;
-    return new RlWriter(this, ac);
+    return newWriter(ac);
   }
 
+  private RlWriter newWriter(SemaphoreHandler.Acquisition ac) {
+    IndexWriterConfig config = new IndexWriterConfig(PerFieldAnalyzerCreator.create(tableSet));
+
+    // クローズ時にコミットする
+    assert config.getCommitOnClose();
+    return new RlWriter(this, ac, config);    
+  }
+  
   /**
    * 指定したクラスオブジェクトのテーブルに対するサーチャを取得する。
    * <p>
@@ -177,10 +204,8 @@ public abstract class RlDatabase {
    */
   public static class Ram extends RlDatabase {
 
-    public Ram(RlTableSet tableSet) {
-
+    public Ram() {
       this.directory = new RAMDirectory();
-      this.tableSet = tableSet;
       super.init(null);
     }
 
@@ -205,8 +230,7 @@ public abstract class RlDatabase {
      * @param dirName
      *          ディレクトリパス
      */
-    Dir(RlTableSet tableSet, String dirName) {
-      this.tableSet = tableSet;
+    Dir(String dirName) {
       path = FileSystems.getDefault().getPath(dirName);
       try {
         this.directory = FSDirectory.open(path);
@@ -263,10 +287,6 @@ public abstract class RlDatabase {
     }
   }
 
-  public static RlDatabase createRam(Class<?>... classes) {
-    return createRam(new RlTableSet(classes));
-  }
-
   /**
    * RAMデータベースを作成する
    * 
@@ -274,47 +294,11 @@ public abstract class RlDatabase {
    *          テーブルセット
    * @return RAMデータベース
    */
-  public static RlDatabase createRam(RlTableSet tableSet) {
-    Ram ram = new Ram(tableSet);
+  public static RlDatabase createRam() {
+    Ram ram = new Ram();
     return ram;
   }
 
-  /**
-   * RAMデータベースを作成する
-   * 
-   * @param tables
-   *          データベースを構成するテーブル
-   * @return RAMデータベース
-   */
-  public static RlDatabase createRam(RlTable... tables) {
-    return createRam(new RlTableSet(tables));
-  }
-
-  /**
-   * ディレクトリデータベースを作成する
-   * 
-   * @param dirName
-   *          ディレクトリ名称
-   * @param classes
-   *          対象レコードクラス配列
-   * @return ディレクトリデータベース
-   */
-  public static RlDatabase createDir(String dirName, Class<?>... classes) {
-    return createDir(dirName, new RlTableSet(classes));
-  }
-
-  /**
-   * ディレクトリデータベースを作成する
-   * 
-   * @param dirName
-   *          ディレクトリ名称
-   * @param tables
-   *          対象テーブル配列
-   * @return ディレクトリデータベース
-   */
-  public static RlDatabase createDir(String dirName, RlTable... tables) {
-    return createDir(dirName, new RlTableSet(tables));
-  }
 
   /**
    * ディレクトリデータベースを作成する
@@ -325,7 +309,7 @@ public abstract class RlDatabase {
    *          テーブルセット
    * @return ディレクトリデータベース
    */
-  public static RlDatabase createDir(String dirName, RlTableSet tableSet) {
-    return new Dir(tableSet, dirName);
+  public static RlDatabase createDir(String dirName) {
+    return new Dir(dirName);
   }
 }
