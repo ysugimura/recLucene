@@ -16,7 +16,8 @@ targetCompatibility = 1.8
 
 // 依存を取得する場合のリポジトリ
 repositories {
-  maven { url CENTRAL_REPOSITORY }
+    jcenter();
+    maven { url 'https://ysugimura.github.io/maven' }
 }
 
 // 公開設定
@@ -36,8 +37,9 @@ publishing {
     }
   }  
   repositories {
-    jcenter();
-    maven { url 'https://ysugimura.github.io/maven' }
+    maven {
+      url GITHUB_MAVEN            
+    }
   }
 }
 
