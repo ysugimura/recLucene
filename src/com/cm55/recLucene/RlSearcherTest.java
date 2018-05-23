@@ -13,7 +13,7 @@ public class RlSearcherTest {
   
   @Test
   public void test() {
-    RlTableSet tableSet = RlTableSet.Factory.create(BookData.class);
+    RlTableSet tableSet = new RlTableSet(BookData.class);
     RlDatabase database = RlDatabase.Factory.createRam(tableSet);
     
     RlWriter writer = database.createWriter();

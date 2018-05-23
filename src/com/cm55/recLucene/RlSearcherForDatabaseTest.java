@@ -14,7 +14,7 @@ public class RlSearcherForDatabaseTest {
   @Before
   public void before() {
     RlTableSet tableSet;
-    tableSet = RlTableSet.Factory.create(Foo.class, Bar.class);
+    tableSet = new RlTableSet(Foo.class, Bar.class);
     database = RlDatabase.Factory.createRam(tableSet);
   }
   

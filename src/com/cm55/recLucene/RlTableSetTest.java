@@ -11,7 +11,7 @@ public class RlTableSetTest {
 
   @Test
   public void プライマリキー指定あり() {
-    RlTableSet tableSet = RlTableSet.Factory.create(Table2.class);
+    RlTableSet tableSet = new RlTableSet(Table2.class);
     /*
     RlField idField = tableSet.getFieldFromName("id");
     //ystem.out.println("" + idField);
@@ -21,7 +21,7 @@ public class RlTableSetTest {
   @Test
   public void フィールド名重複() {
     try {
-      RlTableSet.Factory.create(Table2.class, Table3.class);
+      new RlTableSet(Table2.class, Table3.class);
       fail();
     } catch (Exception ex) {
       assertTrue(ex.getMessage().startsWith("フィールド名が重複しています：testField"));

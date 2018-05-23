@@ -32,7 +32,7 @@ public interface RlDatabase {
   public static class Factory {
         
     public static RlDatabase createRam(Class<?>...classes) {
-      return createRam(RlTableSet.Factory.create(classes));
+      return createRam(new RlTableSet(classes));
     }
     
     /**
@@ -52,7 +52,7 @@ public interface RlDatabase {
      * @return RAMデータベース
      */
     public static RlDatabase createRam(RlTable...tables) {
-      return createRam(RlTableSet.Factory.create(tables));
+      return createRam(new RlTableSet(tables));
     }
 
     /**
@@ -62,7 +62,7 @@ public interface RlDatabase {
      * @return ディレクトリデータベース
      */
     public static RlDatabase createDir(String dirName, Class<?>...classes) {
-      return createDir(dirName, RlTableSet.Factory.create(classes));
+      return createDir(dirName, new RlTableSet(classes));
     }
 
     /**
@@ -72,7 +72,7 @@ public interface RlDatabase {
      * @return ディレクトリデータベース
      */
     public static RlDatabase createDir(String dirName, RlTable...tables) {
-      return createDir(dirName, RlTableSet.Factory.create(tables));
+      return createDir(dirName, new RlTableSet(tables));
     }
     
     /**
