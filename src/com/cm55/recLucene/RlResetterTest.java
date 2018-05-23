@@ -19,7 +19,7 @@ public class RlResetterTest {
     assertEquals(1, list.size());
     searcher.close();
     
-    database.createResetter().resetAndClose();
+    database.reset();
     
     searcher = database.createSearcher(Sample.class);
     list = searcher.search(new RlQuery.Word("test", "abc"));
@@ -39,7 +39,7 @@ public class RlResetterTest {
     assertEquals(1, list.size());
     searcher.close();
     
-    database.createResetter().resetAndClose();
+    database.reset();
     
     searcher = database.createSearcher(Sample.class);
     list = searcher.search(new RlQuery.Word("test", "abc"));

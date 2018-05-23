@@ -163,26 +163,31 @@ public abstract class RlDatabase {
   }
 
   /** このデータベースに対するリセッタを取得する */
-  public synchronized RlResetter createResetter() {
-    //ystem.out.println(" " + writeSemaphore.semaphore.availablePermits() + ","
-    // + searchSemaphore.semaphore.availablePermits());
-    SemaphoreHandler.Acquisition write = writeSemaphore.acquireAll();
-    SemaphoreHandler.Acquisition search = searchSemaphore.acquireAll();
-    return new RlResetter(this, write, search);
+  public synchronized void reset() {
+    reset( writeSemaphore.acquireAll(), searchSemaphore.acquireAll());
   }
 
-  public synchronized RlResetter tryCreateResetter() {
+  public synchronized boolean tryReset() {
     SemaphoreHandler.Acquisition write = writeSemaphore.tryAcquireAll();
     if (write == null)
-      return null;
+      return false;
     SemaphoreHandler.Acquisition search = searchSemaphore.tryAcquireAll();
     if (search == null) {
       write.release();
-      return null;
+      return false;
     }
-    return new RlResetter(this, write, search);
+    reset(write, search);
+    return true;
   }
 
+  private void reset(SemaphoreHandler.Acquisition write, SemaphoreHandler.Acquisition search) {
+    try {
+      reset(write);
+    } finally {
+      search.release();
+    }
+  }
+  
   /**
    * テーブルのフィールド名からRlFieldを取得する。
    * <p>

@@ -2,7 +2,7 @@ package com.cm55.recLucene;
 
 import java.util.concurrent.*;
 
-public class SemaphoreHandler {
+class SemaphoreHandler {
 
   /** Javaのセマフォ */
   Semaphore semaphore;
@@ -10,11 +10,7 @@ public class SemaphoreHandler {
   /** 最大許可数 */
   private int permits;
 
-  public SemaphoreHandler() {
-    this(1);
-  }
-  
-  public SemaphoreHandler(int permits) {
+  SemaphoreHandler(int permits) {
     this.permits = permits;
     semaphore = new Semaphore(permits);
   }
@@ -24,7 +20,7 @@ public class SemaphoreHandler {
    * 
    * @return セマフォを取得した場合は{@link Acquisition}、そうでなければnull
    */
-  public Acquisition tryAcquire() {
+  Acquisition tryAcquire() {
     if (!semaphore.tryAcquire())
       return null;
     return new Acquisition(semaphore, 1);
@@ -36,7 +32,7 @@ public class SemaphoreHandler {
    * @return
    * @throws InterruptedException
    */
-  public Acquisition acquire() {
+  Acquisition acquire() {
     try {
       semaphore.acquire();
     } catch (InterruptedException ex) {
@@ -50,7 +46,7 @@ public class SemaphoreHandler {
    * 
    * @return
    */
-  public Acquisition tryAcquireAll() {
+  Acquisition tryAcquireAll() {
     if (!semaphore.tryAcquire(permits)) {
       return null;
     }
@@ -62,7 +58,7 @@ public class SemaphoreHandler {
    * 
    * @return
    */
-  public Acquisition acquireAll() {
+  Acquisition acquireAll() {
     try {
       semaphore.acquire(permits);
     } catch (InterruptedException ex) {
@@ -76,7 +72,7 @@ public class SemaphoreHandler {
    * 
    * @author ysugimura
    */
-  public class Acquisition {
+  class Acquisition {
 
     /** セマフォ */
     private final Semaphore semaphore;
@@ -95,7 +91,7 @@ public class SemaphoreHandler {
     /**
      * セマフォをリリースする どのように呼び出されても一度しかリリースしない。
      */
-    public synchronized void release() {
+    synchronized void release() {
       if (released)
         return;
       semaphore.release(permits);
@@ -107,7 +103,7 @@ public class SemaphoreHandler {
      * 
      * @return
      */
-    public synchronized boolean notReleased() {
+    synchronized boolean notReleased() {
       return !released;
     }
   }

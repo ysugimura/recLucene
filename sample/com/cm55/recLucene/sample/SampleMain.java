@@ -18,7 +18,7 @@ public class SampleMain {
   public static void main(String[]args) {
     RlDatabase db = RlDatabase.createDir("sampleDb").add(FooRecord.class);
     
-    db.createResetter().resetAndClose();
+    db.reset();
     
     {
       RlWriter writer = db.createWriter();
