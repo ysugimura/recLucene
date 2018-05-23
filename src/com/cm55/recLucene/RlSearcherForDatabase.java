@@ -15,7 +15,7 @@ import com.cm55.recLucene.RlDatabase.*;
 public class RlSearcherForDatabase extends RlSearcher.Impl
     implements RlSearcher {
   
-  private AbstractImpl database;
+  private RlDatabase database;
   
   /** Luceneのインデックスリーダ */
   protected IndexReader indexReader;
@@ -24,7 +24,7 @@ public class RlSearcherForDatabase extends RlSearcher.Impl
   public RlSearcherForDatabase() {
   }
   
-  public RlSearcherForDatabase(RlTable table, AbstractImpl  database) {
+  public RlSearcherForDatabase(RlTable table, RlDatabase  database) {
     this.database = database;
     this.table = table;
   }

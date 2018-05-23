@@ -245,8 +245,7 @@ public class RlWriter {
         // クローズ時にコミットする
         assert config.getCommitOnClose();
         
-        indexWriter = new IndexWriter(
-            ((RlDatabase.AbstractImpl)database).getDirectory(), config);
+        indexWriter = new IndexWriter(database.getDirectory(), config);
 
         // setMaxFieldLengthもdeprecatedとなり、その代わりにLimitTokenCountAnalyzer
         // を使えとドキュメントにあるが、使い方がわからない。
