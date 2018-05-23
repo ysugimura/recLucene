@@ -13,8 +13,7 @@ public class RlResetter {
   }
 
   public void resetAndClose() {
-    this.database.reset();
-    this.write.release();
+    this.database.reset(write);
     this.search.release();
   }
 }

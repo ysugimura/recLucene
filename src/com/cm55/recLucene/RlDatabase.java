@@ -39,8 +39,13 @@ public abstract class RlDatabase {
  * commit（何も書きこむものがなくてもよい）しておかないと、インデックスファイル 構造が作成されず、リアルタイムサーチャが失敗してしまう。
  * 
    */
-  protected void init() {
-    RlWriter writer = this.createWriter();
+  protected void init(SemaphoreHandler.Acquisition ac) {
+    RlWriter writer;
+    if (ac == null) {
+      writer = this.createWriter();
+    } else {
+      writer = new RlWriter(this, ac);
+    }
     writer.commit();
     writer.close();
   }
@@ -165,7 +170,7 @@ public abstract class RlDatabase {
     return directory;
   }
 
-  protected abstract void reset();
+  protected abstract void reset(SemaphoreHandler.Acquisition ac);
 
   /**
    * RAM上に作成されるデータベース
@@ -176,12 +181,12 @@ public abstract class RlDatabase {
 
       this.directory = new RAMDirectory();
       this.tableSet = tableSet;
-      super.init();
+      super.init(null);
     }
 
-    protected void reset() {
+    protected void reset(SemaphoreHandler.Acquisition ac) {
       this.directory = new RAMDirectory();
-      super.init();
+      super.init(ac);
     }
   }
 
@@ -203,10 +208,15 @@ public abstract class RlDatabase {
     Dir(RlTableSet tableSet, String dirName) {
       this.tableSet = tableSet;
       path = FileSystems.getDefault().getPath(dirName);
-      super.init();
+      try {
+        this.directory = FSDirectory.open(path);
+      } catch (IOException ex) {
+        throw new RlException.IO(ex);
+      }
+      super.init(null);
     }
 
-    protected void reset() {
+    protected void reset(SemaphoreHandler.Acquisition ac) {
 
       // luceneデータベースフォルダを削除する
       File dir = path.toFile();
@@ -220,7 +230,7 @@ public abstract class RlDatabase {
         throw new RlException.IO(ex);
       }
       
-      super.init();
+      super.init(ac);
     }
 
     public boolean delete(File file) {
