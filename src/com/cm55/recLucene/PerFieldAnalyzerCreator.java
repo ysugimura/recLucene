@@ -9,9 +9,9 @@ import org.apache.lucene.analysis.miscellaneous.*;
  * 
  * @author ysugimura
  */
-public class PerFieldAnalyzerCreator {
+class PerFieldAnalyzerCreator {
   
-  public static Analyzer create(RlTableSet tableSet) {
+  static Analyzer create(RlTableSet tableSet) {
     Map<String, Analyzer> analyzerMap = new HashMap<String, Analyzer>();
     tableSet.getTables().forEach(table-> {
       for (RlField f: table.getFields()) {
