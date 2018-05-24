@@ -43,7 +43,7 @@ public class RlValuesTotalTest {
     }
     
     table = new RlTable(fields);
-    database = RlDatabase.createRam().add(table);    
+    database = new RlDatabase.Ram().add(table);    
   }
   
   @Test

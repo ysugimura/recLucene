@@ -19,7 +19,7 @@ public class SampleMain {
   public static void main(String[]args) {
     RlDefaults.analyzerClass = JpnStandard3.class;
     
-    RlDatabase db = RlDatabase.createDir("sampleDb").add(FooRecord.class);
+    RlDatabase db = new RlDatabase.Dir("sampleDb").add(FooRecord.class);
     
     db.reset();
     

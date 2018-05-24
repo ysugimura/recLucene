@@ -125,8 +125,8 @@ public class RlTable {
   /**
    * すべてのフィールドを取得する
    */
-  public Collection<RlField> getFields() {
-    return fieldMap.values();
+  public Stream<RlField> getFields() {
+    return fieldMap.values().stream();
   }
 
   /**

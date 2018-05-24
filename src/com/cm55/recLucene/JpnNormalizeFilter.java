@@ -25,11 +25,9 @@ public final class JpnNormalizeFilter extends TokenFilter {
   public boolean incrementToken() throws IOException {
     if (!input.incrementToken()) return false;
     String original = new String(termAtt.buffer(), 0, termAtt.length());
-    @SuppressWarnings("static-access")
     String normalized = Normalizer.normalize(original);
     termAtt.setLength(0);
     termAtt.append(normalized);
     return true;
   }
-
 }

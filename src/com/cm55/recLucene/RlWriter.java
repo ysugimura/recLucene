@@ -111,9 +111,11 @@ public class RlWriter implements Closeable {
   }
 
   /**
-   * レコードを削除する。
+   * 指定レコードを削除する。
    * <p>
    * フィールドとその値を指定する。 フィールドはtokenized=falseでなければいけない。
+   * ※Luceneでは、一つのデータベース中においてフィールド名がユニークであることに注意。
+   * このため、この操作は結局のところ、本システムで言うところの「一つのテーブルのあるフィールドが特定の値のレコードすべて」を削除することになる。
    * </p>
    */
   public synchronized <T> RlWriter delete(RlField field, T value) {
@@ -130,9 +132,13 @@ public class RlWriter implements Closeable {
     }
   }
 
-  /** {@inheritDoc} */
-
-  /** {@inheritDoc} */
+  /**
+   * 指定フィールドが存在するレコードをすべて削除する。
+   * ※Luceneでは、一つのデータベース中においてフィールド名がユニークであることに注意。
+   * このため、この操作は結局のところ、本システムで言うところの「一つのテーブルのレコードすべて」を削除することになる。
+   * @param field
+   * @return
+   */
   public synchronized <T> RlWriter deleteAll(RlField field) {
     try {
       Term term = new Term(field.getName(), "*");

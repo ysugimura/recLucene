@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
+import org.apache.lucene.analysis.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.*;
 
@@ -28,6 +29,9 @@ public abstract class RlDatabase {
 
   /** テーブルセット */
   protected RlTableSet tableSet = new RlTableSet();
+  
+  /** 現在のテーブルセットの全tokenizedフィールドのアナライザ */
+  protected Analyzer analyzer = null;
 
   /** ライタ取得セマフォ。ライターはただ一つしか取得することはできない */
   protected SemaphoreHandler writeSemaphore = new SemaphoreHandler(1);
@@ -92,6 +96,7 @@ public abstract class RlDatabase {
     SemaphoreHandler.Acquisition ac = this.writeSemaphore.acquire();    
     try {
       Arrays.stream(tables).forEach(tableSet::add);
+      analyzer = null;
     } finally {
       ac.release();
     }
@@ -100,31 +105,42 @@ public abstract class RlDatabase {
   
   /**
    * このデータベースに対するライタを作成して返す。
-   * <p>
-   * ただし、一つのディレクトリデータベース対する、生きている(closeされていない){@link RlWriter}は、同時には
-   * ただ一つしか存在できないことに注意する。たとえ、そのディレクトリを指定して{@link RlDatabase}を
-   * 複数作成したとしても、ロックはファイルレベルで行われるため、複数の{@link RlWriter}を作成することは できない。
-   * </p>
-   * 
+   * ライタはただ一つしか存在できず、既にオープン中のライタがある場合は、close()されるまで待つ。
    * @return 新たなライタ
    */
-  public synchronized RlWriter createWriter() {
+  public RlWriter createWriter() {
     SemaphoreHandler.Acquisition ac = writeSemaphore.acquire();
     return newWriter(ac);
   }
 
-  public synchronized RlWriter tryCreateWriter() {
+  /**
+   * このデータベースに対するライタを作成して返す。
+   * ライタはただ一つ歯科存在できず、既にオープン中のライタがある場合は何もせずにnullを返す。
+   * @return
+   */
+  public RlWriter tryCreateWriter() {
     SemaphoreHandler.Acquisition ac = writeSemaphore.tryAcquire();
-    if (ac == null)
-      return null;
+    if (ac == null) return null;
     return newWriter(ac);
   }
 
+  /**
+   * ライタを作成する。既にライタセマフォは取得している。
+   * @param ac
+   * @return
+   */
   private RlWriter newWriter(SemaphoreHandler.Acquisition ac) {
-    IndexWriterConfig config = new IndexWriterConfig(PerFieldAnalyzerCreator.create(tableSet));
+    
+    // アナライザがまだなければ作成する。既にライタセマフォを取得しているため、synchronizedは不要
+    if (analyzer == null) analyzer = PerFieldAnalyzerCreator.create(tableSet);
+    
+    // コンフィギュレーションを作成。これは使い回せるものなのだろうか？
+    IndexWriterConfig config = new IndexWriterConfig(analyzer);
 
-    // クローズ時にコミットする
+    // クローズ時にコミットするモードになっていることを確認
     assert config.getCommitOnClose();
+    
+    // ライタを作成
     return new RlWriter(this, ac, config);    
   }
   
@@ -132,11 +148,9 @@ public abstract class RlDatabase {
    * 指定したクラスオブジェクトのテーブルに対するサーチャを取得する。
    * <p>
    * ここで取得されるサーチャはライタの書き込みに追随しない。 たとえ、それがcommitやcloseされても反映されない。
-   * 反映するには、新たなサーチャをリオープンする必要がある。
+   * 反映するには、新たなサーチャを作成する必要がある。
    * </p>
-   * 
-   * @param recordClass
-   *          レコードクラス
+   * @param recordClass レコードクラス
    * @return サーチャ
    */
   public synchronized RlSearcher createSearcher(Class<?> recordClass) {
@@ -147,7 +161,7 @@ public abstract class RlDatabase {
   }
 
   /**
-   * 指定したテーブルに対するサーチャを取得する
+   * 指定したテーブルに対するサーチャを取得する。サーチ結果はレコードオブジェクトとして返されるため、
    * <p>
    * ここで取得されるサーチャはライタの書き込みに追随しない。 たとえ、それがcommitやcloseされても反映されない。
    * 反映するには、新たなサーチャをリオープンする必要がある。
@@ -245,7 +259,7 @@ public abstract class RlDatabase {
      * @param dirName
      *          ディレクトリパス
      */
-    Dir(String dirName) {
+    public Dir(String dirName) {
       path = FileSystems.getDefault().getPath(dirName);
       try {
         this.directory = FSDirectory.open(path);
@@ -255,7 +269,7 @@ public abstract class RlDatabase {
       super.init(null);
     }
     
-    Dir(File folder) {
+    public Dir(File folder) {
       try {
         this.directory = FSDirectory.open(folder.toPath());
       } catch (IOException ex) {
@@ -309,35 +323,5 @@ public abstract class RlDatabase {
         }
       }.delete(file);
     }
-  }
-
-  /**
-   * RAMデータベースを作成する
-   * 
-   * @param tableSet
-   *          テーブルセット
-   * @return RAMデータベース
-   */
-  public static RlDatabase createRam() {
-    Ram ram = new Ram();
-    return ram;
-  }
-
-
-  /**
-   * ディレクトリデータベースを作成する
-   * 
-   * @param dirName
-   *          ディレクトリ名称
-   * @param tableSet
-   *          テーブルセット
-   * @return ディレクトリデータベース
-   */
-  public static RlDatabase createDir(String dirName) {
-    return new Dir(dirName);
-  }
-  
-  public static RlDatabase createDir(File folder) {
-    return new Dir(folder);
   }
 }

@@ -13,7 +13,7 @@ public class RlSearcherForDatabaseTest {
   
   @Before
   public void before() {
-    database = RlDatabase.createRam().add(Foo.class, Bar.class);
+    database = new RlDatabase.Ram().add(Foo.class, Bar.class);
   }
   
   @Test
