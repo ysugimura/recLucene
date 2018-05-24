@@ -34,6 +34,7 @@ public class SampleMain {
     {
       RlWriter writer = db.createWriter();
       writer.write(new FooRecord(5L, "この書生というのは時々我々を捕えて煮て食うという話である。"));      
+      writer.delete("id", 4L);
       writer.close();
     }
 

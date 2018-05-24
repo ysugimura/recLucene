@@ -254,6 +254,15 @@ public abstract class RlDatabase {
       }
       super.init(null);
     }
+    
+    Dir(File folder) {
+      try {
+        this.directory = FSDirectory.open(folder.toPath());
+      } catch (IOException ex) {
+        throw new RlException.IO(ex);
+      }
+      super.init(null);
+    }
 
     protected void reset(SemaphoreHandler.Acquisition ac) {
 
@@ -326,5 +335,9 @@ public abstract class RlDatabase {
    */
   public static RlDatabase createDir(String dirName) {
     return new Dir(dirName);
+  }
+  
+  public static RlDatabase createDir(File folder) {
+    return new Dir(folder);
   }
 }
