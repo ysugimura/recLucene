@@ -29,7 +29,7 @@ public class DuplicatedIdTest {
     
     // Ramデータベースを作成する
     directory = new RAMDirectory();
-    Analyzer analyzer = new LuceneAnalyzerWrapper(new JpnStandard());
+    Analyzer analyzer = new LuceneAnalyzerWrapper(new JpnStandard2());
     IndexWriter indexWriter = new IndexWriter(directory, new IndexWriterConfig(analyzer));
 
     {

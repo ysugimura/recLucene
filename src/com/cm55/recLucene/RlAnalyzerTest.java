@@ -11,7 +11,7 @@ import com.cm55.recLucene.RlAnalyzer.*;
 public class RlAnalyzerTest {
   @Test
   public void jpnStandardのテスト() {
-    RlAnalyzer analyzer = new JpnStandard();    
+    RlAnalyzer analyzer = new JpnStandard2();    
     
     String[]expanded = analyzer.expandString(
       "ｺﾚﾊ 日本語　漢字カナ混じり\n" +

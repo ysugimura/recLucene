@@ -3,6 +3,7 @@ package com.cm55.recLucene.sample;
 import java.util.*;
 
 import com.cm55.recLucene.*;
+import com.cm55.recLucene.RlAnalyzer.*;
 
 public class SampleMain {
 
@@ -16,6 +17,8 @@ public class SampleMain {
   
   
   public static void main(String[]args) {
+    RlDefaults.analyzerClass = JpnStandard3.class;
+    
     RlDatabase db = RlDatabase.createDir("sampleDb").add(FooRecord.class);
     
     db.reset();
@@ -46,8 +49,7 @@ public class SampleMain {
       list.stream().forEach(System.out::println);
     }
     {
-      List<FooRecord>list = searcher.search(
-          new RlQuery.And(new RlQuery.Word("content", "人間"), new RlQuery.Word("content",  "種族")));
+      List<FooRecord>list = searcher.search(new RlQuery.Word("content", "人間　種族"));
       System.out.println("second");
       list.stream().forEach(System.out::println); 
     }

@@ -81,7 +81,6 @@ public abstract class RlAnalyzer {
   
   /**
    * {@link RlDefaults}にあるアナライザを使用するためのマーカ
-   * @author ysugimura
    */
   public static class Default extends RlAnalyzer {
     @Override
@@ -92,7 +91,6 @@ public abstract class RlAnalyzer {
   
   /**
    * このアナライザをLuceneのアナライザに変換するためのラッパ
-   * @author ysugimura
    */
   public static class LuceneAnalyzerWrapper extends Analyzer {
     private RlAnalyzer analyzer;
@@ -106,17 +104,20 @@ public abstract class RlAnalyzer {
       return analyzer.createComponents();
     }
   }
-  
+
   /**
    * 日本語用標準アナライザ
    * <ul>
    * <li>whitespaceでトークン分割される。
    * <li>各トークンについて、半角->全角変換、カナ->かな変換、小文字->大文字変換を行う。
-   * <li>各トークンをNGram12によりさらに分割する。
+   * <li>各トークンをNGramによりさらに分割する。
    * </ul>
-   * @author ysugimura
    */
-  public static class JpnStandard extends RlAnalyzer { 
+  public static abstract class JpnStandard extends RlAnalyzer {
+    final int numGrams;
+    protected JpnStandard(int numGrams) {
+      this.numGrams = numGrams;
+    }
     @Override
     public TokenStreamComponents createComponents() {
       
@@ -127,9 +128,27 @@ public abstract class RlAnalyzer {
       TokenStream tokenStream = new JpnNormalizeFilter(tokenizer);
       
       // フィルタ
-      NGramTokenFilter filter = new NGramTokenFilter(tokenStream);
+      NGramTokenFilter filter = new NGramTokenFilter(tokenStream, 1, numGrams);
       
       return new TokenStreamComponents(tokenizer, filter);
+    }
+  }
+  
+  /**
+   * トークン分割に2gramを使用する
+   */
+  public static class JpnStandard2 extends JpnStandard { 
+    public JpnStandard2() {
+      super(2);
+    }
+  }
+  
+  /**
+   * トークン分割に3gramを使用する。
+   */
+  public static class JpnStandard3 extends JpnStandard { 
+    public JpnStandard3() {
+      super(3);
     }
   }
   
