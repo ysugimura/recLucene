@@ -11,7 +11,7 @@ import org.apache.lucene.index.*;
  */
 public class RlSearcherForWriter extends RlSearcher {
 
-  
+  /** このサーチャーを取得した元のライター */
   private RlWriter writer;
   
   /** ライタの書き込み数 */
@@ -21,9 +21,8 @@ public class RlSearcherForWriter extends RlSearcher {
   private IndexReader indexReader;
   
   public RlSearcherForWriter(RlTable table, RlWriter writer) {
-    this.writer = writer;
-    this.table = table;
-   
+    super(table);
+    this.writer = writer;   
   }
   
   /**

@@ -21,12 +21,11 @@ import org.apache.lucene.search.*;
  * せずに指定されたソート順でソートする。このため、（スコアを計算せずに済む
  * という）パフォーマンス上の利得がある。Filterは使用しない場合はnullでよい。
  * </p>
- * 
- * 
  * @author ysugimura
  */
 public abstract class RlSearcher implements Closeable {
 
+  /** 対象とするテーブル */
   protected RlTable table;
 
   /** Luceneのインデックスサーチャ */
@@ -35,20 +34,30 @@ public abstract class RlSearcher implements Closeable {
   /** 最大出力結果数。初期値は実質無制限 */
   private int maxCount = Integer.MAX_VALUE / 2;
 
+
   /**
-   * IndexReaderを取得する。下位クラスで実装する。
-   * 
-   * @return
+   * このサーチャー対象とするテーブルを指定する
+   * @param table
    */
-  protected abstract IndexReader getIndexReader();
+  protected RlSearcher(RlTable table) {
+    this.table = table;
+  }
 
-  /** IndexReaderを強制的にクローズする。下位クラスで実装する。 */
-  protected abstract void closeIndexReader();
-
-  /** {@inheritDoc} */
+  /** 対象とするテーブルを取得する */
   public RlTable getTable() {
     return table;
   }
+  
+  /**
+   * IndexReaderを取得する。下位クラスで実装する。
+   * @return
+   */
+  protected abstract IndexReader getIndexReader();
+  
+  /** 
+   * IndexReaderを強制的にクローズする。下位クラスで実装する。
+   */
+  protected abstract void closeIndexReader();
 
   /**
    * LuceneのIndexSearcherを取得する。
@@ -83,7 +92,6 @@ public abstract class RlSearcher implements Closeable {
     }
 
     return indexSearcher;
-
   }
 
   /**
@@ -108,10 +116,11 @@ public abstract class RlSearcher implements Closeable {
     return this;
   }
 
+  /////////////////////////////////////////////////////////////////
+  
   /**
    * 指定条件で検索を行い、結果をオブジェクトリストとして返す。
-   * @param query
-   *          クエリ
+   * @param query クエリ
    * @return 検索結果レコードリスト
    */
   public synchronized <T> List<T> search(RlQuery query) {
@@ -121,21 +130,21 @@ public abstract class RlSearcher implements Closeable {
   /**
    * 検索してプライマリキーセットを取得する
    */
-  public <P, T> Set<P> searchPkSet(RlQuery query) {
+  public <P> Set<P> searchPkSet(RlQuery query) {
     RlField field = table.getPkField();
     if (field == null)
       throw new RlException("プライマリキーフィールドがありません");
     return searchFieldSet(field, query);
   }
 
-  public <P, T> Set<P> searchFieldSet(String fieldName, RlQuery query) {
+  public <P> Set<P> searchFieldSet(String fieldName, RlQuery query) {
     RlField field = table.getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません：" + fieldName);
     return searchFieldSet(field, query);
   }
 
-  <P, T> Set<P> searchFieldSet(RlField field, RlQuery query) {
+  private <P> Set<P> searchFieldSet(RlField field, RlQuery query) {
     if (!field.isStore()) {
       throw new RlException("フィールド値にストア指定がありません：" + field.getName());
     }
@@ -242,14 +251,5 @@ public abstract class RlSearcher implements Closeable {
       indexSearcher = null;
     }
     closeIndexReader();
-
   }
-
-  private RlField getField(String fieldName) {
-    RlField field = this.table.getFieldByName(fieldName);
-    if (field == null)
-      throw new RlException(fieldName + "というフィールドがありません");
-    return field;
-  }
-
 }

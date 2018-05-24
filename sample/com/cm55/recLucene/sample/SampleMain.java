@@ -54,6 +54,10 @@ public class SampleMain {
       System.out.println("second");
       list.stream().forEach(System.out::println); 
     }
+    
+    System.out.println("all");
+    searcher.getAllByField("id").stream().forEach(System.out::println);
+    
     searcher.close();
   }
 

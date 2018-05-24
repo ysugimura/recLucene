@@ -7,24 +7,24 @@ import org.apache.lucene.index.*;
 /**
  * データベース用のサーチャ
  * <p>
- * 
+ * このオブジェクトでは、ライターによって書き込まれたものは、たとえライターがcommitしてもcloseしても読み込むことは無い。
+ * いったんサーチャーをクローズして、再度作成する必要がある。
  * </p>
  */
 public class RlSearcherForDatabase extends RlSearcher {
-  
+
+  /** 検索対象のデータベース */
   private RlDatabase database;
   
   /** Luceneのインデックスリーダ */
   protected IndexReader indexReader;
 
+  /** 読み込み用セマフォ */
   protected SemaphoreHandler.Acquisition ac;
 
-  public RlSearcherForDatabase() {
-  }
-  
   public RlSearcherForDatabase(RlTable table, RlDatabase  database, SemaphoreHandler.Acquisition ac) {
+    super(table);
     this.database = database;
-    this.table = table;
     this.ac = ac;
   }
   
@@ -47,6 +47,7 @@ public class RlSearcherForDatabase extends RlSearcher {
     }
   }
   
+  /** クローズする */
   @Override
   public void close() {
     super.close();
