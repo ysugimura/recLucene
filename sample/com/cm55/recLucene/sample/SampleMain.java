@@ -35,40 +35,32 @@ public class SampleMain {
 
     // データベースを作成する
     RlDatabase db = new RlDatabase.Ram().add(FooRecord.class);
+    RlWriter writer = db.createWriter();
     RlSearcher<FooRecord> searcher = db.createSearcher(FooRecord.class);
     
     // 前半の書き込み
-    {
-      
-      RlWriter writer = db.createWriter();
-      System.out.println("start");
-      Arrays.stream(recs0).forEach(r->writer.write(r));
-
-      writer.close();
-    }
-
+    Arrays.stream(recs0).forEach(r->writer.write(r));
+    
     // 検索
-
     checkIds(searcher, new Word("content", "人間"), 4L, 5L);
     checkIds(searcher, new Word("content", "人間　種族"), 5L);
     checkIds(searcher, new And(new Word("content", "人間"), new Word("content", "種族")), 5L);
 
     // 後半の書き込み
-    {
-      RlWriter writer = db.createWriter();
-      Arrays.stream(recs1).forEach(r->writer.write(r));
-      checkIds(searcher, new Word("content", "人間"), 4L, 5L, 9L);
-      
-      writer.close();
-      //checkIds(realtimeSearcher, new Word("content", "人間"), 4L, 5L, 9L);
-    }
+    Arrays.stream(recs1).forEach(r->writer.write(r));
     
+    // 検索
     checkIds(searcher, new Word("content", "人間"), 4L, 5L, 9L);
+    
+    // 削除
+    writer.delete("id", 5L);
+    
+    // 検索
+    checkIds(searcher, new Word("content", "人間"), 4L, 9L);
   }
   
   void checkIds(RlSearcher<FooRecord>searcher, RlQuery query, Long...ids) {
     Set<Long>set = searcher.searchPkSet(query);
     assertEquals(Arrays.stream(ids).collect(Collectors.toSet()), set);
   }
-
 }
