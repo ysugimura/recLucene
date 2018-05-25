@@ -6,7 +6,7 @@ import java.util.stream.*;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 
-public class RlFieldMap {
+public class RlFieldMap implements RlFieldSet<RlValues> {
 
   /** フィールド名/{@link RlField}マップ */
   private Map<String, RlField> fieldMap = new HashMap<>();

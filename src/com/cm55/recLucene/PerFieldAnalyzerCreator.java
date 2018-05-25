@@ -30,7 +30,7 @@ class PerFieldAnalyzerCreator {
   }
 
   /** {@link RlTable}からフィールド名/{@link Analyzer}のマップエントリストリームを作成する */
-  static Stream<Map.Entry<String, Analyzer>>createStream(RlTable<?> table) {
+  static Stream<Map.Entry<String, Analyzer>>createStream(RlFieldSet<?> table) {
     return table.getFields()
       .filter(f->f.isTokenized())
       .collect(Collectors.toMap(

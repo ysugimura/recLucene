@@ -14,13 +14,13 @@ import java.util.stream.*;
 class RlTableSet {
 
   /** 全テーブル */
-  List<RlTable<?>>tables = new ArrayList<>();
+  List<RlFieldSet<?>>tables = new ArrayList<>();
 
   /** フィールド名/テーブルマップ */
-  Map<String, RlTable<?>> fieldToTable = new HashMap<>();
+  Map<String, RlFieldSet<?>> fieldToTable = new HashMap<>();
 
   /** レコードクラス/テーブルマップ */
-  Map<Class<?>, RlTable<?>> recordToTable = new HashMap<>();
+  Map<Class<?>, RlFieldSet<?>> recordToTable = new HashMap<>();
 
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -29,7 +29,7 @@ class RlTableSet {
     return this;
   }
   
-  RlTableSet add(RlTable<?>... _tables) {
+  RlTableSet add(RlFieldSet<?>... _tables) {
     Arrays.stream(_tables).forEach(table -> {
       tables.add(table);
 
@@ -42,8 +42,8 @@ class RlTableSet {
       }
 
       // レコードクラス/テーブルマップに格納する。ただしレコードクラスがあるもののみ。
-      Class<?> recordClass = table.getRecordClass();
-      if (recordClass != null) {
+      if (table instanceof RlTable) {
+        Class<?> recordClass = ((RlTable<?>)table).getRecordClass(); 
         if (recordToTable.containsKey(recordClass)) {
           throw new RlException("レコードクラスが重複しています:" + recordClass);
         }
@@ -74,7 +74,7 @@ class RlTableSet {
    * @return
    */
   RlField getFieldByName(String fieldName) {
-    RlTable<?> table = fieldToTable.get(fieldName);
+    RlFieldSet<?> table = fieldToTable.get(fieldName);
     if (table == null)
       return null;
     return table.getFieldByName(fieldName);
@@ -85,7 +85,7 @@ class RlTableSet {
    * 
    * @return
    */
-  Stream<RlTable<?>> getTables() {
+  Stream<RlFieldSet<?>> getTables() {
     return tables.stream();
   }
 }

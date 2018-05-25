@@ -37,7 +37,7 @@ import org.apache.lucene.index.*;
  * </p>
  * @author ysugimura
  */
-public class RlTable<T> {
+public class RlTable<T> implements RlFieldSet<T> {
 
   /** 対象とするレコードクラス。ただし、自由フィールドの場合はnull */
   private Class<T> recordClass;
