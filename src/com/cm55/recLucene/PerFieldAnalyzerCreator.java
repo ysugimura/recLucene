@@ -35,7 +35,7 @@ class PerFieldAnalyzerCreator {
       .filter(f->f.isTokenized())
       .collect(Collectors.toMap(
         f->f.getName(),
-        f->new Analyzer() {
+        f->(Analyzer)new Analyzer() {
           protected TokenStreamComponents createComponents(String fieldName) {                  
             return f.getAnalyzer().createComponents();
           }
