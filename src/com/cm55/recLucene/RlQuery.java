@@ -140,7 +140,8 @@ public abstract class RlQuery {
     /** Lucene用Queryを取得する */
     @Override
     public <T>Query getLuceneQuery(RlTable<T> fieldmap) {    
-      RlField<?> field = fieldmap.getFieldByName(fieldName);
+      @SuppressWarnings("unchecked")
+      RlField<Object> field = (RlField<Object>)fieldmap.getFieldByName(fieldName);
       if (field == null) throw new NullPointerException();
       checkValidity(field);
       return new TermQuery(new Term(fieldName, field.toString(value)));
@@ -230,7 +231,8 @@ public abstract class RlQuery {
     
     @Override
     public <T>Query getLuceneQuery(RlTable<T> fieldmap) {   
-      RlField<?> field = fieldmap.getFieldByName(fieldName);
+      @SuppressWarnings("unchecked")
+      RlField<Object> field = (RlField<Object>)fieldmap.getFieldByName(fieldName);
       if (field == null) throw new RuntimeException();
       checkValidity(field);
       Query query = TermRangeQuery.newStringRange(fieldName, 

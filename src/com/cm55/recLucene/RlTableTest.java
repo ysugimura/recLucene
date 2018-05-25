@@ -117,12 +117,11 @@ public class RlTableTest {
   @Test
   public void test6() {
     RlField<?> aField, bField;
-    @SuppressWarnings("rawtypes")
     RlAnyTable table = new RlAnyTable(
-      aField = new RlField.Builder(Integer.class).setName("a")
+      aField = new RlField.Builder<Integer>(Integer.class).setName("a")
  
           .setPk(true).setConverter(RlFieldConverter.IntConv.class).build(),
-      bField = new RlField.Builder(String.class).setName("b").build()
+      bField = new RlField.Builder<String>(String.class).setName("b").build()
     );
     
     RlValues values = new RlValues();

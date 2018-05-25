@@ -10,33 +10,50 @@ import org.apache.lucene.document.*;
  */
 public class RlField<T> {
   
-  /** javaフィールド。自由形式の場合はnull */
+  /** 対象とするJavaフィールド。Javaフィールドが対象でない場合はnull */
   private java.lang.reflect.Field javaField;
 
-  /** 値の型 */
+  /** 値の型。JavaFieldが存在する場合はjavaField.getType() */
   private Class<T> type;
 
   /** フィールドの名称 */
   private String name;
 
-  /** このフィールドがプライマリキーフィールドであることを示す */
-  private boolean isPk;
+  /** 
+   * このフィールドがプライマリキーフィールドであることを示す。
+   * プライマリキーは一つの{@link RlTable}に０個か１個。
+   * pk=trueの場合は、store=true、tokenized=falseに強制される。
+   */
+  private boolean pk;
 
-  /** ストアするか */
+  /** 
+   * ストアするか
+   * falseの場合には、値をLuceneデータベースに保存しない。インデックス情報だけが保存される。
+   */
   private boolean store;
 
-  /** トークン化するか */
+  /** 
+   * トークン化するか
+   * falseの場合には、そのままの値、trueの場合はAnalyzerによって分析された値がインデックス情報になる。
+   */
   private boolean tokenized;
 
-  /** コンバータ */
+  /** 
+   * フィールドコンバータ 。typeがString以外の場合に、type/Stringの相互変換を行う。
+   * LuceneデータベースにはStringしか格納しないため、他のtypeの場合にはStringとの相互変換が必要
+   */
   private RlFieldConverter<T> fieldConverter;
 
-  /** analyzerクラス */
+  /** 
+   * analyzerクラス
+   * tokenized=trueのときには必須
+   */
   private Class<? extends RlAnalyzer> analyzerClass;
 
   private RlField() {    
   }
   
+  /** 対応するJavaフィールドを取得する */
   public java.lang.reflect.Field getJavaField() {
     return javaField;
   }
@@ -66,7 +83,7 @@ public class RlField<T> {
    */
 
   public boolean isPk() {
-    return isPk;
+    return pk;
   }
 
   /**
@@ -113,7 +130,7 @@ public class RlField<T> {
    * @return
    */
   @SuppressWarnings("unchecked")
-  public <V> String toString(V value) {
+  public String toString(T value) {
     if (value == null)
       return null;
     if (getFieldConverter() == null)
@@ -123,12 +140,12 @@ public class RlField<T> {
 
   /** Lucene格納用のStringからフィールド値を取得する */
   @SuppressWarnings("unchecked")
-  public <V> V fromString(String string) {
+  public T fromString(String string) {
     if (string == null)
       return null;
     if (getFieldConverter() == null)
-      return (V) string;
-    return (V) getFieldConverter().fromString(string);
+      return (T)string;
+    return (T)getFieldConverter().fromString(string);
   }
 
   /**
@@ -183,7 +200,7 @@ public class RlField<T> {
   @Override
   public String toString() {
     return "java:" + (javaField == null ? "none" : javaField.toString()) + ",type:" + type.getName() + ",name:" + name
-        + ",pk:" + isPk + ",sto:" + store + ",tok:" + tokenized +  ",analy:"
+        + ",pk:" + pk + ",sto:" + store + ",tok:" + tokenized +  ",analy:"
         + (analyzerClass == null ? "none" : analyzerClass.getName());
   }
 
@@ -262,8 +279,7 @@ public class RlField<T> {
       this.store = value;
       return this;
     }
-    
-    
+        
     public RlField<T> build() {
 
       // 無しとして設定されたクラス。nullにする
@@ -320,7 +336,7 @@ public class RlField<T> {
       f.javaField = javaField;
       f.type = type;
       f.name = name;
-      f.isPk = pk;
+      f.pk = pk;
       f.store = store;
       f.tokenized = tokenized;
       f.fieldConverter = fieldConverter;
