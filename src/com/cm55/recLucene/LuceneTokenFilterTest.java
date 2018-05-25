@@ -50,7 +50,7 @@ public class LuceneTokenFilterTest {
         result.append("," + o.toString());
       }
     }
-    System.out.println("" + result);
+    //ystem.out.println("" + result);
     return result.toString();
   }
 }

@@ -3,28 +3,7 @@ package com.cm55.recLucene;
 import java.lang.annotation.*;
 
 /**
- * データベースに格納するテーブルを表現するクラスのフィールドの属性を定義する。
- * luceneデータベース上に格納するデータは、POJO(Plain Old Java Object)とする。つまり、
- * <pre>
- * public class Sample {
- *   public long id;
- *   public String name;
- *   public String addr;
- * }
- * </pre>
- * <p>
- * のようなものである。しかし、このluceneデータベースへの格納のされ方を制御する必要がある。
- * </p>
- * <ul>
- * <li>どのキーをプライマリキーとするのか、あるいはプライマリキーが必要無いのか。
- * <li>luceneデータベース上でも元のデータを保持するのか。
- * ※通常は、元データからインデックスデータを作成して、それを格納するが、元データ自体は格納されない。
- * <li>インデックスデータ作成の際にトークン化されるのか、つまり、元データをそのままインデックスとして使うのか、
- * あるいは文字列を適当に分割してその複数の文字列をインデックスとして使うのか。
- * <li>トークン化するとすれば、それを担うクラスは何か。
- * <li>文字列以外のデータ（int型など）を格納する際の相互変換オブジェクトの指定。
- * </ul>
- * 
+
  * @author ysugimura
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -35,6 +14,7 @@ public @interface RlFieldAttr {
    * プライマリキーを示す 。
    * {@link RlClassTable}の元となるクラスには、０か１個のプライマリキーフィールドが存在する。
    * プライマリキーの無い場合には、全く同じレコードが複数格納可能になることに注意。
+   * プライマリキーは、必ずstore=trueになり、tokenized=falseになる。
    * @return true:このフィールドはプライマリキー、false:このフィールドはプライマリキーではない。
    */
   public boolean pk() default false;
@@ -84,6 +64,7 @@ public @interface RlFieldAttr {
   /**
    * アナライザの指定
    * <p>
+   * tokenized=trueの場合に指定する必要がある。
    * デフォルトのRlAnalyzer.Default.classの場合、{@link RlDefaults}にて指定されたアナライザが使用される。
    * それ以外のアナライザを使用したいときは、そのアナライザクラスを指定する。
    * ただし、tokenized=falseの場合はここに何を指定しても無視される。
@@ -92,57 +73,4 @@ public @interface RlFieldAttr {
    */
   public Class<? extends RlAnalyzer>analyzer() default RlAnalyzer.Default.class;
 
-  /**
-   * デフォルトオブジェクトクラス
-   * <p>
-   * クラスフィールドのアノテーションを取得するのではなく、明示的にオブジェクトを作成する場合に使用する。
-   * </p>
-   * @author ysugimura
-   */
-  public static class Default implements RlFieldAttr {
-    
-    private boolean pk = false;
-    private boolean store = false;
-    private boolean tokenized = true;
-    private Class<? extends RlFieldConverter<?>>converter
-         = RlFieldConverter.None.class;
-    private Class<? extends RlAnalyzer>analyzer = RlAnalyzer.Default.class;
-    
-    public Class<? extends Annotation> annotationType() {
-      return RlFieldAttr.class;
-    }
-
-    public Default setPk(boolean pk) {
-      this.pk = pk;
-      return this;
-    }
-    public Default setStore(boolean store) {
-      this.store = store;
-      return this;
-    }
-    public Default setTokenized(boolean tokenized) {
-      this.tokenized = tokenized;
-      return this;
-    }
-    public Default setConverter(Class<? extends RlFieldConverter<?>> converter) {
-      this.converter = converter;
-      return this;
-    }
-    public Default setAnalyzer(Class<? extends RlAnalyzer> analyzer) {
-      this.analyzer = analyzer;
-      return this;
-    }    
-    
-    public boolean pk() {  return pk; }
-    public boolean store() { return store; }
-    public boolean tokenized() { return tokenized; }
-    
-    public Class<? extends RlFieldConverter<?>> converter() {
-      return converter;
-    }
-    
-    public Class<? extends RlAnalyzer> analyzer() {
-      return analyzer;
-    }    
-  }
 }

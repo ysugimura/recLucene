@@ -28,9 +28,6 @@ public class RlField<T> {
   /** トークン化するか */
   private boolean tokenized;
 
-  /** フィールドコンバータ クラス */
-  private Class<? extends RlFieldConverter<T>> converterClass;
-
   /** コンバータ */
   private RlFieldConverter<T> fieldConverter;
 
@@ -186,189 +183,149 @@ public class RlField<T> {
   @Override
   public String toString() {
     return "java:" + (javaField == null ? "none" : javaField.toString()) + ",type:" + type.getName() + ",name:" + name
-        + ",pk:" + isPk + ",sto:" + store + ",tok:" + tokenized + ",conv:"
-        + (converterClass == null ? "none" : converterClass.getName()) + ",analy:"
+        + ",pk:" + isPk + ",sto:" + store + ",tok:" + tokenized +  ",analy:"
         + (analyzerClass == null ? "none" : analyzerClass.getName());
   }
 
 
   /////////////////////////////////////////////////////////
 
+  /**
+   * {@link RlField}のビルダ
+   * 
+   * @param <T>
+   */
   public static class Builder<T> {
-    
 
-    java.lang.reflect.Field javaField;
-    Class<T>type;
-    String name;
-    boolean isPk;
-    boolean store;
-    boolean tokenized = true;
+    private java.lang.reflect.Field javaField;
+    
+    private final Class<T>type;
+    
+    private String name;
+    private boolean pk = false;
+    private boolean store = false;
+    private boolean tokenized = true;
     @SuppressWarnings("unchecked")
-    Class<? extends RlFieldConverter<T>>converterClass = (Class<? extends RlFieldConverter<T>>)RlFieldConverter.None.class;
-    
+    private Class<? extends RlFieldConverter<T>>converter
+         = (Class<? extends RlFieldConverter<T>>)RlFieldConverter.None.class;
+    private Class<? extends RlAnalyzer>analyzer = RlAnalyzer.Default.class;
 
-    /** コンバータ */
-    private RlFieldConverter<T> fieldConverter;
-
-    /** analyzerクラス */
-    private Class<? extends RlAnalyzer> analyzerClass;
-
-    public RlField<T> build() {
-      RlField<T> f = new RlField<T>();
-      f.javaField = javaField;
-      f.type = type;
-      f.name = name;
-      f.isPk = isPk;
-      f.store = store;
-      f.tokenized = tokenized;
-      f.converterClass = converterClass;
-      f.fieldConverter = fieldConverter;
-      f.analyzerClass = analyzerClass;
-      return f;
+    /** デフォルト値で作成する */
+    public Builder(Class<T>type) {
+      this.type = type;
     }
-    
-    
+
+    /** 指定されたJavaフィールドの{@link RlFieldAttr}アノテーションから作成する */
+    @SuppressWarnings("unchecked")
+    public Builder(java.lang.reflect.Field javaField) {
+      this.javaField = javaField;
+      javaField.setAccessible(true);
+      this.name = javaField.getName();
+      this.type = (Class<T>) javaField.getType();
+      //ystem.out.println("" + type);
+      RlFieldAttr attr = javaField.getAnnotation(RlFieldAttr.class);
+      if (attr != null) {
+        this.pk = attr.pk();
+        this.store = attr.store();
+        this.tokenized = attr.tokenized();
+        this.converter = (Class<? extends RlFieldConverter<T>>)attr.converter();
+        this.analyzer = attr.analyzer();
+      }
+    }
     
     public Builder<T> setConverter(Class<? extends RlFieldConverter<T>>converter) {
-      this.converterClass = converter;
+      this.converter = converter;
       return this;      
     }
+    
     public Builder<T> setAnalyzer(Class<? extends RlAnalyzer>analyzer) {
-      this.analyzerClass = analyzer;
+      this.analyzer = analyzer;
       return this;
     }
-    public Builder() {}
-    @SuppressWarnings("unchecked")
-    public Builder(java.lang.reflect.Field javaField) {      
-
-
-        // Javaのフィールドを取得してaccessibleにしておく
-        this.javaField = javaField;
-        javaField.setAccessible(true);
-
-        this.name = javaField.getName();
-        this.type = (Class<T>)javaField.getType();
-
-        setupFieldAttr(javaField.getAnnotation(RlFieldAttr.class));
-
-        checkConverter();      
-    }
-    
-    /**
-     * フィールド名称、{@link RlFieldAttr}オブジェクトを指定して作成する。 タイプはコンバータから取得する。
-     * 
-     * @param fieldName
-     * @param fieldAttr
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public Builder(String fieldName, RlFieldAttr fieldAttr) {
-      this.name = fieldName;
-      type = (Class<T>)String.class;
-      setupFieldAttr(fieldAttr);
-      if (fieldConverter != null)
-        type = fieldConverter.getType();
-      checkConverter();
-    }
-    
+            
     public Builder<T> setName(String name) {
       this.name = name;
       return this;
-    }    
+    }   
+    
     public Builder<T> setPk(boolean value) {
-      this.isPk = value;
+      this.pk = value;
       return this;
     }
+    
     public Builder<T> setTokenized(boolean value) {
       this.tokenized = value;
       return this;
     }
     
-
-    private void checkConverter() {
-      // 文字列の場合はコンバータ無しでよい
-      if (type == String.class)
-        return;
-
-      // 文字列以外の場合はコンバータが必須。
-      if (converterClass == null) {
-        throw new RlException("フィールドがString以外の場合にはコンバータが必要：" + name);
-      }
-
-      // コンバータのタイプと設定されているタイプが一致すること
-      // ただし、このフィールドタイプがプリミティブの場合には参照型を考慮する。
-      Class<?> converterType = fieldConverter.getType();
-      Class<?> refType = null;
-      if (type.isPrimitive()) {
-        refType = Misc.getReferenceClass(type);
-      }
-      if (!converterType.equals(type) && !converterType.equals(refType)) {
-        throw new RlException("フィールドタイプがコンバータタイプと一致しません:" + type + "," + fieldConverter.getType());
-      }
+    public Builder<T>setStore(boolean value) {
+      this.store = value;
+      return this;
     }
+    
+    
+    public RlField<T> build() {
 
-    private void setupFieldAttr(RlFieldAttr fieldAttr) {
-      if (fieldAttr == null) {
-        setupWithoutAttr();
-      } else {
-        setupWithAttr(fieldAttr);
-      }
-    }
-
-    /**
-     * {@link RlFieldAttr}アノテーションの無いときのセットアップ
-     */
-    private void setupWithoutAttr() {
-      isPk = false;
-      store = false;
-      tokenized = true;
-      analyzerClass = null;
-      converterClass = null;
-      fieldConverter = null;
-    }
-
-    /**
-     * {@link RlFieldAttr}アノテーションのあるときのセットアップ
-     * 
-     * @param fieldAttr
-     */
-    @SuppressWarnings("unchecked")
-    private void setupWithAttr(RlFieldAttr fieldAttr) {
-
-      // フラグを取得
-      isPk = fieldAttr.pk();
-      if (isPk) {
-        // プライマリキーの場合にはフラグを無視する
+      // 無しとして設定されたクラス。nullにする
+      if (converter == RlFieldConverter.None.class)
+        converter = null;
+      
+      // 無しとして設定されたクラス。nullにする
+      if (analyzer == RlAnalyzer.Default.class) 
+        analyzer = null;
+      
+      if (pk) {
         store = true;
         tokenized = false;
-
-        // プライマリキーの場合にはアナライザ無し
-        analyzerClass = null;
-
-      } else {
-        // プライマリキーでない場合
-        store = fieldAttr.store();
-        tokenized = fieldAttr.tokenized();
-
-        // デフォルトが指定されていたらnullにする。それ以外はそのまま格納
-        analyzerClass = fieldAttr.analyzer();
-        if (analyzerClass == RlAnalyzer.Default.class) {
-          analyzerClass = null;
-        }
+        analyzer = null;
       }
 
       // フィールド値コンバータを取得する
-      converterClass = (Class<? extends RlFieldConverter<T>>)fieldAttr.converter();
-      if (converterClass == RlFieldConverter.None.class) {
-        converterClass = null;
-      }
-      if (converterClass != null) {
+      RlFieldConverter<T> fieldConverter = null;
+      if (converter != null) {
         try {
-          fieldConverter = converterClass.newInstance();
+          fieldConverter = converter.newInstance();
         } catch (Exception ex) {
           throw new RuntimeException(ex);
         }
+
+        // コンバータのタイプと設定されているタイプが一致すること
+        // ただし、このフィールドタイプがプリミティブの場合には参照型を考慮する。
+        Class<?> converterType = fieldConverter.getType();
+        Class<?> refType = null;
+        if (type.isPrimitive()) {
+          refType = Misc.getReferenceClass(type);
+        }
+        if (!converterType.equals(type) && !converterType.equals(refType)) {
+          StringBuilder s = new StringBuilder();
+          s.append("フィールドタイプがコンバータタイプと一致しません:" + type + "," + fieldConverter.getType() + "\n");
+          if (javaField != null) {
+            s.append(javaField.getDeclaringClass() + "#" + javaField.getName());
+          }
+          throw new RlException(s.toString());
+        }
       }
+
+      // 文字列以外の場合はコンバータが必須。
+      if (type != String.class && fieldConverter == null) {
+        StringBuilder s = new StringBuilder();
+        s.append("フィールドがString以外の場合にはコンバータが必要：" + name + "\n");
+        if (javaField != null) {
+          s.append(javaField.getDeclaringClass() + "#" + javaField.getName());
+        }
+        throw new RlException(s.toString());       
+      }
+
+      RlField<T> f = new RlField<T>();
+      f.javaField = javaField;
+      f.type = type;
+      f.name = name;
+      f.isPk = pk;
+      f.store = store;
+      f.tokenized = tokenized;
+      f.fieldConverter = fieldConverter;
+      f.analyzerClass = analyzer;
+      return f;
     }
   }
 }

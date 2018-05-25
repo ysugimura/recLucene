@@ -12,29 +12,32 @@ public class RlValuesTotalTest {
 
   
 
-  private RlFieldAttr idAttr;
-  private RlFieldAttr matchAttr;
-  private RlFieldAttr tokenAttr;
+
 
   RlAnyTable table;
   RlDatabase database;
   
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Before
   public void before() {
     
-    idAttr = new RlFieldAttr.Default().setPk(true).setConverter(RlFieldConverter.LongConv.class);
-    matchAttr = new RlFieldAttr.Default().setStore(false).setAnalyzer(RlAnalyzer.Newlines.class);
-    tokenAttr = new RlFieldAttr.Default().setStore(false);
+
     
     List<RlField<?>>fields = new ArrayList<RlField<?>>();
 
-    fields.add(new RlField.Builder("id", idAttr).build());
+    fields.add(
+        new RlField.Builder(Long.class).setPk(true).setConverter(RlFieldConverter.LongConv.class).setName("id").build()
+     
+    );
     for (int i = 0; i < 2; i++) {
-      fields.add(new RlField.Builder("match" + i, matchAttr).build());
+      RlField field = new RlField.Builder(String.class)
+          .setName("match" + i)
+          .setStore(false).setAnalyzer(RlAnalyzer.Newlines.class).build();
+      fields.add(field);
     }
     for (int i = 0; i < 2; i++) {
-      fields.add(new RlField.Builder("token" + i, tokenAttr).build());
+      RlField field = new RlField.Builder(String.class).setStore(false).setName("token" + i).build();
+      fields.add(field);
     }
     
     table = new RlAnyTable(fields);

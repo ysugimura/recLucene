@@ -17,7 +17,7 @@ public class RlAnalyzerTest {
       "ｺﾚﾊ 日本語　漢字カナ混じり\n" +
       "this SHOLDn't REAL!"
     );
-    Arrays.stream(expanded).forEach(System.out::println);
+    //Arrays.stream(expanded).forEach(System.out::println);
     assertArrayEquals(new String[] {
         "こ","これ","れ","れは","は","日","日本","本","本語","語",
         "漢","漢字","字","字か","か","かな","な","な混","混","混じ",

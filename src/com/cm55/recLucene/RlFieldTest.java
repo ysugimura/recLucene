@@ -18,7 +18,7 @@ public class RlFieldTest {
       new RlField.Builder(field1).build();
       fail();
     } catch (Exception ex) {
-      assertTrue(ex.getMessage().startsWith("フィールドがString以外の場合には"));
+
     }
   }
   
@@ -105,11 +105,14 @@ public class RlFieldTest {
   }
   
   @Test
-  public void testValues0() {
-    @SuppressWarnings("rawtypes")
-    RlField<?> field1 = new RlField.Builder("testField",  null).build();
+  public void testValues0() throws Exception {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    RlField<Id> field1 = new RlField.Builder(String.class).setName("field2").build();
+    
+    //ystem.out.println(field1.toString());
+    
     assertEquals(
-      "java:none,type:java.lang.String,name:testField,pk:false,sto:false,tok:true,conv:none,analy:none", 
+      "java:none,type:java.lang.String,name:field2,pk:false,sto:false,tok:true,analy:none", 
       field1.toString()
     );  
     /*

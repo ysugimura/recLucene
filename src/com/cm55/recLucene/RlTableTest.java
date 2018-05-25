@@ -119,17 +119,10 @@ public class RlTableTest {
     RlField<?> aField, bField;
     @SuppressWarnings("rawtypes")
     RlAnyTable table = new RlAnyTable(
-      aField = new RlField.Builder("a", new RlFieldAttr.Default() {
-        @Override
-        public boolean pk() {
-          return true;
-        }
-        @Override
-        public Class<? extends RlFieldConverter<?>> converter() {
-          return RlFieldConverter.IntConv.class;
-        }
-      }).build(),
-      bField = new RlField.Builder("b", null).build()
+      aField = new RlField.Builder(Integer.class).setName("a")
+ 
+          .setPk(true).setConverter(RlFieldConverter.IntConv.class).build(),
+      bField = new RlField.Builder(String.class).setName("b").build()
     );
     
     RlValues values = new RlValues();

@@ -11,7 +11,7 @@ public class RlValuesTest {
   @Test
   public void test1() {
     @SuppressWarnings("rawtypes")
-    RlField<?> field = new RlField.Builder("test",  null).build();
+    RlField<?> field = new RlField.Builder(String.class).setName("test").build();
     RlValues values = new RlValues();
     values.put("test",  "abc123");
     assertEquals("abc123", values.get("test"));    
@@ -22,11 +22,8 @@ public class RlValuesTest {
   @Test
   public void test2() {
     @SuppressWarnings("rawtypes")
-    RlField<?> field = new RlField.Builder("test",  new RlFieldAttr.Default() {
-      public Class<? extends RlFieldConverter<?>> converter() {
-        return RlFieldConverter.LongConv.class;
-      }
-    }).build();
+    RlField<?> field = new RlField.Builder(Long.class).setName("test")
+      .setConverter(RlFieldConverter.LongConv.class).build();
     RlValues values = new RlValues();
     values.put("test",  111L);
     assertEquals((Long)111L, (Long)values.get("test"));    

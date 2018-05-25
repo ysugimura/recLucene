@@ -106,7 +106,7 @@ public class LuceneTokenizerTest {
 
     // 読み込み
     String s= read(tok);
-    System.out.println("" + s);
+    //ystem.out.println("" + s);
     assertEquals(
       ":,吾輩:,は:,猫て゛ある:,の:,研究ＡＢ＇",
       s
