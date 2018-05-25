@@ -18,24 +18,24 @@ package com.cm55.recLucene;
 public class RlSortField {
 
   /** フィールド*/
-  public final RlField field;
+  public final RlField<?> field;
   
   /** 降順 */
   public final boolean desc;
 
   /** 昇順ソートフィールドを指定する */
-  public RlSortField(RlField field) {
+  public RlSortField(RlField<?> field) {
     this(field, false);
   }
   
   /** 降順もしくは昇順ソートフィールドを指定する */
-  public RlSortField(RlField field, boolean desc) {
+  public RlSortField(RlField<?> field, boolean desc) {
     this.field = field;
     this.desc = desc;
   }
 
   /** フィールドを取得する */
-  public RlField getField() {
+  public RlField<?> getField() {
     return field;
   }
   

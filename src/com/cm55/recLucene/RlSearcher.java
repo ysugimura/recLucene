@@ -119,20 +119,22 @@ public abstract class RlSearcher<T> implements Closeable {
    * 検索してプライマリキーセットを取得する
    */
   public <P> Set<P> searchPkSet(RlQuery query) {
-    RlField field = table.getPkField();
+    @SuppressWarnings("unchecked")
+    RlField<P> field = (RlField<P>)table.getPkField();
     if (field == null)
       throw new RlException("プライマリキーフィールドがありません");
     return searchFieldSet(field, query);
   }
 
   public <P> Set<P> searchFieldSet(String fieldName, RlQuery query) {
-    RlField field = table.getFieldByName(fieldName);
+    @SuppressWarnings("unchecked")
+    RlField<P> field = (RlField<P>)table.getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません：" + fieldName);
     return searchFieldSet(field, query);
   }
 
-  private <P> Set<P> searchFieldSet(RlField field, RlQuery query) {
+  private <P> Set<P> searchFieldSet(RlField<P> field, RlQuery query) {
     if (!field.isStore()) {
       throw new RlException("フィールド値にストア指定がありません：" + field.getName());
     }
@@ -189,20 +191,20 @@ public abstract class RlSearcher<T> implements Closeable {
   }
 
   public synchronized List<T> getAllByPk() {
-    RlField field = table.getPkField();
+    RlField<?> field = table.getPkField();
     if (field == null)
       throw new RlException("プライマリキーフィールドがありません");
     return getAllByField(field);
   }
 
   public List<T> getAllByField(String fieldName) {
-    RlField field = table.getFieldByName(fieldName);
+    RlField<?> field = table.getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません：" + fieldName);
     return getAllByField(field);
   }
 
-  List<T> getAllByField(RlField field) {
+  List<T> getAllByField(RlField<?> field) {
     if (field.isTokenized()) {
       throw new RlException("トークン化フィールドは指定できません");
     }

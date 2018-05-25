@@ -209,7 +209,7 @@ public abstract class RlDatabase {
    * フィールド名はデータベース中で一意であるので、フィールドも一意に決定する。
    * </p>
    */
-  public RlField getFieldFromName(String fieldName) {
+  public RlField<?> getFieldFromName(String fieldName) {
     return tableSet.getFieldByName(fieldName);
   }
 

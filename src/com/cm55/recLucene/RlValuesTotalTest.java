@@ -19,6 +19,7 @@ public class RlValuesTotalTest {
   RlAnyTable table;
   RlDatabase database;
   
+  @SuppressWarnings("rawtypes")
   @Before
   public void before() {
     
@@ -26,7 +27,7 @@ public class RlValuesTotalTest {
     matchAttr = new RlFieldAttr.Default().setStore(false).setAnalyzer(RlAnalyzer.Newlines.class);
     tokenAttr = new RlFieldAttr.Default().setStore(false);
     
-    List<RlField>fields = new ArrayList<RlField>();
+    List<RlField<?>>fields = new ArrayList<RlField<?>>();
 
     fields.add(new RlField.Builder("id", idAttr).build());
     for (int i = 0; i < 2; i++) {

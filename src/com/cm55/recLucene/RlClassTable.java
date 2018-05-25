@@ -28,7 +28,8 @@ public class RlClassTable<T> implements RlTable<T> {
     this.recordClass = recordClass;
 
     // このクラスで宣言されたすべてのフィールドを取得する。static/transientを除く
-    List<RlField>fieldsFromClass = Arrays.stream(recordClass.getDeclaredFields())
+    @SuppressWarnings("rawtypes")
+    List<RlField<?>>fieldsFromClass = Arrays.stream(recordClass.getDeclaredFields())
       .filter(javaField-> {
         int mod = javaField.getModifiers();
         if (Modifier.isTransient(mod))
@@ -58,7 +59,7 @@ public class RlClassTable<T> implements RlTable<T> {
    * すべてのフィールドを取得する
    */
   @Override
-  public Stream<RlField> getFields() {
+  public Stream<RlField<?>> getFields() {
     return anyTable.getFields();
   }
 
@@ -68,7 +69,7 @@ public class RlClassTable<T> implements RlTable<T> {
    * @return 唯一のプライマリキーフィールド。無い場合はnull。
    */
   @Override
-  public RlField getPkField() {
+  public RlField<?> getPkField() {
     return anyTable.getPkField();
   }
 
@@ -89,7 +90,7 @@ public class RlClassTable<T> implements RlTable<T> {
    * @return {@link RlField}
    */
   @Override
-  public RlField getFieldByName(String fieldName) {
+  public RlField<?> getFieldByName(String fieldName) {
     return anyTable.getFieldByName(fieldName);
   }
   
@@ -97,7 +98,7 @@ public class RlClassTable<T> implements RlTable<T> {
    * 指定されたレコードオブジェクトのプライマリキー{@link Term}を取得する。
    */
   public Term getPkTerm(Object object) {
-    RlField pkField = anyTable.getPkField();
+    RlField<?> pkField = anyTable.getPkField();
     if (pkField == null) return null;
     return anyTable.getPkTerm(convertToValues(object));
   }

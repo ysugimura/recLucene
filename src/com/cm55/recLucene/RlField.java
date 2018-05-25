@@ -5,14 +5,16 @@ import org.apache.lucene.document.*;
 /**
  * フィールド定義
  * @author ysugimura
+ *
+ * @param <T> フィールドの値の型
  */
-public class RlField {
+public class RlField<T> {
   
   /** javaフィールド。自由形式の場合はnull */
   private java.lang.reflect.Field javaField;
 
   /** 値の型 */
-  private Class<?> type;
+  private Class<T> type;
 
   /** フィールドの名称 */
   private String name;
@@ -27,11 +29,10 @@ public class RlField {
   private boolean tokenized;
 
   /** フィールドコンバータ クラス */
-  private Class<? extends RlFieldConverter<?>> converterClass;
+  private Class<? extends RlFieldConverter<T>> converterClass;
 
   /** コンバータ */
-  @SuppressWarnings("rawtypes")
-  private RlFieldConverter fieldConverter;
+  private RlFieldConverter<T> fieldConverter;
 
   /** analyzerクラス */
   private Class<? extends RlAnalyzer> analyzerClass;
@@ -138,7 +139,7 @@ public class RlField {
    * @param values 値セット
    * @return 文字列として取得した「このフィールド」の値
    */
-  public <T>String getStringValue(RlValues values) {
+  public String getStringValue(RlValues values) {
     return toString(values.get(name));
   }
   
@@ -150,7 +151,7 @@ public class RlField {
    * @param value
    *          値
    */  
-  public <T> void setStringValue(RlValues values, String value) {
+  public void setStringValue(RlValues values, String value) {
     values.put(name, fromString(value));
   }
 
@@ -193,27 +194,27 @@ public class RlField {
 
   /////////////////////////////////////////////////////////
 
-  public static class Builder {
+  public static class Builder<T> {
     
 
     java.lang.reflect.Field javaField;
-    Class<?>type;
+    Class<T>type;
     String name;
     boolean isPk;
     boolean store;
     boolean tokenized = true;
-    Class<? extends RlFieldConverter<?>>converterClass = RlFieldConverter.None.class;
+    @SuppressWarnings("unchecked")
+    Class<? extends RlFieldConverter<T>>converterClass = (Class<? extends RlFieldConverter<T>>)RlFieldConverter.None.class;
     
 
     /** コンバータ */
-    @SuppressWarnings("rawtypes")
-    private RlFieldConverter fieldConverter;
+    private RlFieldConverter<T> fieldConverter;
 
     /** analyzerクラス */
     private Class<? extends RlAnalyzer> analyzerClass;
 
-    public RlField build() {
-      RlField f = new RlField();
+    public RlField<T> build() {
+      RlField<T> f = new RlField<T>();
       f.javaField = javaField;
       f.type = type;
       f.name = name;
@@ -228,15 +229,16 @@ public class RlField {
     
     
     
-    public Builder setConverter(Class<? extends RlFieldConverter<?>>converter) {
+    public Builder<T> setConverter(Class<? extends RlFieldConverter<T>>converter) {
       this.converterClass = converter;
       return this;      
     }
-    public Builder setAnalyzer(Class<? extends RlAnalyzer>analyzer) {
+    public Builder<T> setAnalyzer(Class<? extends RlAnalyzer>analyzer) {
       this.analyzerClass = analyzer;
       return this;
     }
     public Builder() {}
+    @SuppressWarnings("unchecked")
     public Builder(java.lang.reflect.Field javaField) {      
 
 
@@ -245,7 +247,7 @@ public class RlField {
         javaField.setAccessible(true);
 
         this.name = javaField.getName();
-        this.type = javaField.getType();
+        this.type = (Class<T>)javaField.getType();
 
         setupFieldAttr(javaField.getAnnotation(RlFieldAttr.class));
 
@@ -259,24 +261,25 @@ public class RlField {
      * @param fieldAttr
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Builder(String fieldName, RlFieldAttr fieldAttr) {
       this.name = fieldName;
-      type = String.class;
+      type = (Class<T>)String.class;
       setupFieldAttr(fieldAttr);
       if (fieldConverter != null)
         type = fieldConverter.getType();
       checkConverter();
     }
     
-    public Builder setName(String name) {
+    public Builder<T> setName(String name) {
       this.name = name;
       return this;
     }    
-    public Builder setPk(boolean value) {
+    public Builder<T> setPk(boolean value) {
       this.isPk = value;
       return this;
     }
-    public Builder setTokenized(boolean value) {
+    public Builder<T> setTokenized(boolean value) {
       this.tokenized = value;
       return this;
     }
@@ -329,6 +332,7 @@ public class RlField {
      * 
      * @param fieldAttr
      */
+    @SuppressWarnings("unchecked")
     private void setupWithAttr(RlFieldAttr fieldAttr) {
 
       // フラグを取得
@@ -354,7 +358,7 @@ public class RlField {
       }
 
       // フィールド値コンバータを取得する
-      converterClass = fieldAttr.converter();
+      converterClass = (Class<? extends RlFieldConverter<T>>)fieldAttr.converter();
       if (converterClass == RlFieldConverter.None.class) {
         converterClass = null;
       }

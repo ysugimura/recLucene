@@ -10,23 +10,23 @@ import org.apache.lucene.index.*;
 public class RlAnyTable implements RlTable<RlValues> {
 
   /** フィールド名/{@link RlField}マップ */
-  private final Map<String, RlField> fieldMap = new HashMap<>();
+  private final Map<String, RlField<?>> fieldMap = new HashMap<>();
   
   /** プライマリキーフィールド 。プライマリキーの無い場合にはnull */
-  private final RlField pkField;
+  private final RlField<?> pkField;
   
   private final Map<String, Analyzer>fieldAnalyzers;
   
   
-  public RlAnyTable(Collection<RlField>fields) {
+  public RlAnyTable(Collection<RlField<?>>fields) {
     this(fields.toArray(new RlField[0]));
   }
   
-  public RlAnyTable(RlField... fields) {
+  public RlAnyTable(RlField<?>... fields) {
 
-    RlField _pkField = null;
+    RlField<?> _pkField = null;
     
-    for (RlField field : fields) {
+    for (RlField<?> field : fields) {
 
       // フィールド名重複チェック
       if (fieldMap.containsKey(field.getName())) {
@@ -53,16 +53,16 @@ public class RlAnyTable implements RlTable<RlValues> {
     return fieldAnalyzers.entrySet().stream();
   }
   
-  public RlField getPkField() {
+  public RlField<?> getPkField() {
     return pkField;
   }
   
   @Override
-  public Stream<RlField> getFields() {
+  public Stream<RlField<?>> getFields() {
     return fieldMap.values().stream();
   }
  
-  public Stream<Map.Entry<String, RlField>>getEntries() {
+  public Stream<Map.Entry<String, RlField<?>>>getEntries() {
     return fieldMap.entrySet().stream();
   }
   
@@ -72,7 +72,7 @@ public class RlAnyTable implements RlTable<RlValues> {
   }
   
   @Override
-  public RlField getFieldByName(String fieldName) {
+  public RlField<?> getFieldByName(String fieldName) {
     return fieldMap.get(fieldName);
   }
   
@@ -93,7 +93,7 @@ public class RlAnyTable implements RlTable<RlValues> {
 
     getEntries().forEach(e-> {
       String fieldName = e.getKey();
-      RlField field = e.getValue();
+      RlField<?> field = e.getValue();
       field.setStringValue(result, doc.get(fieldName));
     });
     
@@ -120,7 +120,7 @@ public class RlAnyTable implements RlTable<RlValues> {
   }
   
   /** {@link RlClassTable}からフィールド名/{@link Analyzer}のマップエントリストリームを作成する */
-  static Map<String, Analyzer>createFieldAnalyzers(Collection<RlField>fields) {
+  static Map<String, Analyzer>createFieldAnalyzers(Collection<RlField<?>>fields) {
     return fields.stream()
       .filter(f->f.isTokenized())
       .collect(Collectors.toMap(

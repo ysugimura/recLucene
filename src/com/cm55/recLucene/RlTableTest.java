@@ -59,11 +59,11 @@ public class RlTableTest {
 
 
     // 各フィールド
-    RlField idField = table.getFieldByName("id");
+    RlField<?> idField = table.getFieldByName("id");
     assertTrue(idField.isPk());
     assertEquals("id", idField.getName());
     
-    RlField fld1Field = table.getFieldByName("fld1");
+    RlField<?> fld1Field = table.getFieldByName("fld1");
     assertFalse(fld1Field.isPk());
     assertEquals("fld1", fld1Field.getName());
 
@@ -116,7 +116,8 @@ public class RlTableTest {
   
   @Test
   public void test6() {
-    RlField aField, bField;
+    RlField<?> aField, bField;
+    @SuppressWarnings("rawtypes")
     RlAnyTable table = new RlAnyTable(
       aField = new RlField.Builder("a", new RlFieldAttr.Default() {
         @Override

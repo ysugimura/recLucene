@@ -9,6 +9,7 @@ import org.junit.*;
 public class RlFieldTest {
 
   
+  @SuppressWarnings("rawtypes")
   @Test
   public void test0() throws Exception {
     Class<?>clazz = Test0.class;
@@ -33,15 +34,18 @@ public class RlFieldTest {
     Field field2 = clazz.getDeclaredField("field2");
     Field field3 = clazz.getDeclaredField("field3");
     
-    RlField rlField1 = new RlField.Builder(field1).build();
+    @SuppressWarnings("rawtypes")
+    RlField<?> rlField1 = new RlField.Builder(field1).build();
     assertTrue(rlField1.isPk());
     assertTrue(rlField1.isStore());
     
-    RlField rlField2 = new RlField.Builder(field2).build();
+    @SuppressWarnings("rawtypes")
+    RlField<?> rlField2 = new RlField.Builder(field2).build();
     assertFalse(rlField2.isPk()); 
     assertFalse(rlField2.isStore());
 
-    RlField rlField3 = new RlField.Builder(field3).build();
+    @SuppressWarnings("rawtypes")
+    RlField<?> rlField3 = new RlField.Builder(field3).build();
     assertFalse(rlField3.isPk());
     assertTrue(rlField3.isStore());
     
@@ -102,7 +106,8 @@ public class RlFieldTest {
   
   @Test
   public void testValues0() {
-    RlField field1 = new RlField.Builder("testField",  null).build();
+    @SuppressWarnings("rawtypes")
+    RlField<?> field1 = new RlField.Builder("testField",  null).build();
     assertEquals(
       "java:none,type:java.lang.String,name:testField,pk:false,sto:false,tok:true,conv:none,analy:none", 
       field1.toString()

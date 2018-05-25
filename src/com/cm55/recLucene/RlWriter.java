@@ -118,7 +118,7 @@ public class RlWriter implements Closeable {
    * このため、この操作は結局のところ、本システムで言うところの「一つのテーブルのあるフィールドが特定の値のレコードすべて」を削除することになる。
    * </p>
    */
-  public synchronized <T> RlWriter delete(RlField field, T value) {
+  public synchronized <T> RlWriter delete(RlField<?> field, T value) {
     if (field.isTokenized()) {
       throw new RlException("tokenized=trueのフィールドを指定して削除はできません");
     }
@@ -139,7 +139,7 @@ public class RlWriter implements Closeable {
    * @param field
    * @return
    */
-  public synchronized <T> RlWriter deleteAll(RlField field) {
+  public synchronized <T> RlWriter deleteAll(RlField<?> field) {
     try {
       Term term = new Term(field.getName(), "*");
       Query query = new WildcardQuery(term);
@@ -229,7 +229,7 @@ public class RlWriter implements Closeable {
    * @return
    */
   public <T> RlWriter delete(String fieldName, T value) {
-    RlField field = database.getFieldFromName(fieldName);
+    RlField<?> field = database.getFieldFromName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません:" + fieldName);
     return delete(field, value);
@@ -243,7 +243,7 @@ public class RlWriter implements Closeable {
    * @return
    */
   public synchronized <T> RlWriter deleteAll(String fieldName) {
-    RlField field = database.getFieldFromName(fieldName);
+    RlField<?> field = database.getFieldFromName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません：" + fieldName);
     return deleteAll(field);

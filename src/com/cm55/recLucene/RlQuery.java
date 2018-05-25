@@ -140,13 +140,13 @@ public abstract class RlQuery {
     /** Lucene用Queryを取得する */
     @Override
     public <T>Query getLuceneQuery(RlTable<T> fieldmap) {    
-      RlField field = fieldmap.getFieldByName(fieldName);
+      RlField<?> field = fieldmap.getFieldByName(fieldName);
       if (field == null) throw new NullPointerException();
       checkValidity(field);
       return new TermQuery(new Term(fieldName, field.toString(value)));
     }
 
-    private void checkValidity(RlField field) {
+    private void checkValidity(RlField<?> field) {
       if (field.isTokenized()) {
         throw new RlException("tokenized=trueのフィールドにMatchクエリは使用できません:" + field.getName());
       }
@@ -198,7 +198,7 @@ public abstract class RlQuery {
 
     @Override
     public <T> Query getLuceneQuery(RlTable<T> fieldmap) {              
-      RlField field = fieldmap.getFieldByName(fieldName);
+      RlField<?> field = fieldmap.getFieldByName(fieldName);
       if (field == null) throw new RuntimeException();
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (String s: field.getAnalyzer().expandString(new StringReader("" + value))) {
@@ -230,7 +230,7 @@ public abstract class RlQuery {
     
     @Override
     public <T>Query getLuceneQuery(RlTable<T> fieldmap) {   
-      RlField field = fieldmap.getFieldByName(fieldName);
+      RlField<?> field = fieldmap.getFieldByName(fieldName);
       if (field == null) throw new RuntimeException();
       checkValidity(field);
       Query query = TermRangeQuery.newStringRange(fieldName, 
@@ -238,7 +238,7 @@ public abstract class RlQuery {
       return query;
     }
     
-    private void checkValidity(RlField field) {
+    private void checkValidity(RlField<?> field) {
       if (field.isTokenized()) {
         throw new RlException("tokenized=trueのフィールドにRangeクエリは使用できません:" + field.getName());
       }

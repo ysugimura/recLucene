@@ -12,7 +12,8 @@ public class RlFieldConverterTest {
   @Test
   public void test() throws Exception {
     Field field = Target.class.getDeclaredField("booleanValue");
-    RlField rlField = new RlField.Builder(field).build();
+    @SuppressWarnings("rawtypes")
+    RlField<?> rlField = new RlField.Builder(field).build();
     RlValues target = new RlValues();
     target.put("booleanValue",  false);
     assertEquals("0", rlField.getStringValue(target));

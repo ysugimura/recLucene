@@ -75,7 +75,7 @@ class RlTableSet {
    * @param fieldName
    * @return
    */
-  RlField getFieldByName(String fieldName) {
+   RlField<?> getFieldByName(String fieldName) {
     RlTable<?> table = fieldToTable.get(fieldName);
     if (table == null)
       return null;
