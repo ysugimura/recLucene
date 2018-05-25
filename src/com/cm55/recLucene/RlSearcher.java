@@ -26,12 +26,12 @@ public class RlSearcher<T> implements Closeable {
   /** 最大出力結果数。初期値は実質無制限 */
   private int maxCount = Integer.MAX_VALUE / 2;
 
-  SemaphoreHandler.Acquisition ac;
+  RlSemaphore.Ac ac;
   /**
    * 
    * このサーチャー対象とするテーブルを指定する
    */
-  protected RlSearcher(RlTable<T>table, SearcherManager searcherManager, SemaphoreHandler.Acquisition ac) {
+  protected RlSearcher(RlTable<T>table, SearcherManager searcherManager, RlSemaphore.Ac ac) {
     this.table = table;
     
     this.searcherManager = searcherManager;

@@ -51,10 +51,10 @@ public class RlWriter implements Closeable {
    */
   private IndexWriter indexWriter;
 
-  private SemaphoreHandler.Acquisition acquisition;
+  private RlSemaphore.Ac acquisition;
   
   /** 初期化 */
-  public RlWriter(RlTableSet tableSet, IndexWriter indexWriter, SemaphoreHandler.Acquisition acquisition) {
+  public RlWriter(RlTableSet tableSet, IndexWriter indexWriter, RlSemaphore.Ac acquisition) {
 
     this.tableSet = tableSet;
     this.indexWriter = indexWriter;

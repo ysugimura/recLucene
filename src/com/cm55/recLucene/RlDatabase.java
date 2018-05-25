@@ -30,19 +30,23 @@ public abstract class RlDatabase {
   /** テーブルセット */
   protected RlTableSet tableSet = new RlTableSet();
   
-  protected RlWriterReader writerReader;
+  protected RlWriterReader writerReader = new RlWriterReader();
   
   /** ライタ取得セマフォ。ライターはただ一つしか取得することはできない */
-  protected SemaphoreHandler writeSemaphore = new SemaphoreHandler(1);
+  protected RlSemaphore writeｒSemaphore = new RlSemaphore(1);
 
-  /** リーダ取得セマフォ。最大100個 */
-  protected SemaphoreHandler searchSemaphore = new SemaphoreHandler(100);
+  /** サーチャー取得セマフォ。最大100個 */
+  protected RlSemaphore searcherSemaphore = new RlSemaphore(100);
 
+  /** ライタ・サーチャー取得セマフォのすべて */
+  protected RlSemaphoreMulti allSemaphore = new RlSemaphoreMulti(writeｒSemaphore, searcherSemaphore);
+  
   protected RlDatabase() {  
   }
   
-  protected void reset(Directory directory) {
+  protected void setDirectory(Directory directory) {
     this.directory = directory;
+    writerReader.reset(directory, tableSet);
   }
   
   /**
@@ -56,11 +60,14 @@ public abstract class RlDatabase {
 
   /** データベースをクローズする */
   public void close() {
+    RlSemaphoreMulti.Ac ac = allSemaphore.acquireAll();
     try {
+      writerReader.close();
       directory.close();
     } catch (IOException ex) {
       throw new RlException(ex);
     }
+    ac.release();
     directory = null;
   }
 
@@ -81,15 +88,10 @@ public abstract class RlDatabase {
    * @return
    */
   public RlDatabase add(RlTable<?>...tables) {
-    SemaphoreHandler.Acquisition ac = this.writeSemaphore.acquire();    
+    RlSemaphoreMulti.Ac ac = allSemaphore.acquireAll();    
     try {
       Arrays.stream(tables).forEach(tableSet::add);
-      if (writerReader != null) {        
-      
-        writerReader.close();
-        writerReader = null;
-      }
-      
+      writerReader.reset(directory, tableSet);
     } finally {
       ac.release();
     }
@@ -102,7 +104,7 @@ public abstract class RlDatabase {
    * @return 新たなライタ
    */
   public RlWriter createWriter() {
-    SemaphoreHandler.Acquisition ac = writeSemaphore.acquire();
+    RlSemaphore.Ac ac = writeｒSemaphore.acquire();
     return newWriter(ac);
   }
 
@@ -112,7 +114,7 @@ public abstract class RlDatabase {
    * @return
    */
   public RlWriter tryCreateWriter() {
-    SemaphoreHandler.Acquisition ac = writeSemaphore.tryAcquire();
+    RlSemaphore.Ac ac = writeｒSemaphore.tryAcquire();
     if (ac == null) return null;
     return newWriter(ac);
   }
@@ -122,15 +124,10 @@ public abstract class RlDatabase {
    * @param ac
    * @return
    */
-  private RlWriter newWriter(SemaphoreHandler.Acquisition ac) {
-    
-    // アナライザがまだなければ作成する。既にライタセマフォを取得しているため、synchronizedは不要
-    if (writerReader == null) {
-      writerReader = new RlWriterReader(getDirectory(), tableSet);
-    }
+  private RlWriter newWriter(RlSemaphore.Ac ac) {
     
     // ライタを作成
-    return new RlWriter(tableSet, writerReader.indexWriter, ac);    
+    return new RlWriter(tableSet, writerReader.getIndexWriter(), ac);    
   }
   
   /**
@@ -161,38 +158,24 @@ public abstract class RlDatabase {
    * @return サーチャ
    */
   public synchronized <T>RlSearcher<T> createSearcher(RlTable<T>table) {
-    if (writerReader == null) {
-      writerReader = new RlWriterReader(getDirectory(), tableSet);
-    }
-    SemaphoreHandler.Acquisition ac = searchSemaphore.acquire();
-    return new RlSearcher<T>(table, writerReader.searcherManager, ac);
+
+    RlSemaphore.Ac ac = searcherSemaphore.acquire();
+    return new RlSearcher<T>(table, writerReader.getSearcherManager(), ac);
   }
 
   /** このデータベースをリセットする */
   public synchronized void reset() {
-    reset( writeSemaphore.acquireAll(), searchSemaphore.acquireAll());
+    RlSemaphoreMulti.Ac ac = allSemaphore.acquireAll();
+    doReset();
+    ac.release();
   }
 
   public synchronized boolean tryReset() {
-    SemaphoreHandler.Acquisition write = writeSemaphore.tryAcquireAll();
-    if (write == null)
-      return false;
-    SemaphoreHandler.Acquisition search = searchSemaphore.tryAcquireAll();
-    if (search == null) {
-      write.release();
-      return false;
-    }
-    reset(write, search);
+    RlSemaphoreMulti.Ac ac = allSemaphore.tryAcquireAll();
+    if (ac == null) return false;
+    doReset();
+    ac.release();
     return true;
-  }
-
-  private void reset(SemaphoreHandler.Acquisition write, SemaphoreHandler.Acquisition search) {
-    try {
-      doReset();
-    } finally {
-      write.release();
-      search.release();
-    }
   }
 
   /** IndexReaderを取得する */
@@ -217,11 +200,11 @@ public abstract class RlDatabase {
   public static class Ram extends RlDatabase {
 
     public Ram() {
-      reset(new RAMDirectory());
+      setDirectory(new RAMDirectory());
     }
 
     protected void doReset() {
-      reset(new RAMDirectory());
+      setDirectory(new RAMDirectory());
     }
   }
 
@@ -243,7 +226,7 @@ public abstract class RlDatabase {
     public Dir(String dirName) {
       path = FileSystems.getDefault().getPath(dirName);
       try {
-        reset(FSDirectory.open(path));
+        setDirectory(FSDirectory.open(path));
       } catch (IOException ex) {
         throw new RlException.IO(ex);
       }
@@ -252,7 +235,7 @@ public abstract class RlDatabase {
     
     public Dir(File folder) {
       try {
-        reset(FSDirectory.open(folder.toPath()));
+        setDirectory(FSDirectory.open(folder.toPath()));
       } catch (IOException ex) {
         throw new RlException.IO(ex);
       }
@@ -267,7 +250,7 @@ public abstract class RlDatabase {
         System.err.println("!!! DIRECTORY LEFT !!!!");
       }
       try {
-        reset(FSDirectory.open(path));
+        setDirectory(FSDirectory.open(path));
       } catch (IOException ex) {
         throw new RlException.IO(ex);
       }

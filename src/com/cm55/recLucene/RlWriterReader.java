@@ -7,10 +7,30 @@ import org.apache.lucene.store.*;
 
 public class RlWriterReader {
 
-  IndexWriter indexWriter;
-  SearcherManager searcherManager;
+  private Directory directory;
+  private RlTableSet tableSet;
+  private IndexWriter indexWriter;
+  private SearcherManager searcherManager;
   
-  public RlWriterReader(Directory directory, RlTableSet tableSet) {
+  public void reset(Directory directory, RlTableSet tableSet) {
+    close();
+    this.directory = directory;
+    this.tableSet = tableSet;
+  }
+  
+  public IndexWriter getIndexWriter() {
+    ensure();
+    return indexWriter;
+  }
+  
+  public SearcherManager getSearcherManager() {
+    ensure();
+    return searcherManager;
+  }
+  
+  private void ensure() {
+    if (indexWriter != null) return;
+    
     System.out.println("creating");
     Analyzer analyzer = tableSet.getPerFieldAnalyzer();
     
@@ -21,7 +41,7 @@ public class RlWriterReader {
     assert config.getCommitOnClose();
 
     try {
-    indexWriter = new IndexWriter(directory, config);
+      indexWriter = new IndexWriter(directory, config);
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
@@ -31,15 +51,14 @@ public class RlWriterReader {
       throw new RuntimeException(ex);
     }
 
-
     System.out.println("created");
   }
   
   
   public void close() {
+    if (indexWriter == null) return;
     System.out.println("closing");
-    try {
-     
+    try {     
       searcherManager.close();
     } catch (Exception ex) {
       throw new RuntimeException(ex);
@@ -50,6 +69,8 @@ public class RlWriterReader {
       throw new RuntimeException(ex);
     }
     System.out.println("closed");
+    indexWriter = null;
+    searcherManager = null;
   }
 
 }

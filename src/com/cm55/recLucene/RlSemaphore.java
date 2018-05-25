@@ -2,28 +2,28 @@ package com.cm55.recLucene;
 
 import java.util.concurrent.*;
 
-class SemaphoreHandler {
+class RlSemaphore {
 
   /** Javaのセマフォ */
-  Semaphore semaphore;
+  java.util.concurrent.Semaphore semaphore;
 
   /** 最大許可数 */
   private int permits;
 
-  SemaphoreHandler(int permits) {
+  RlSemaphore(int permits) {
     this.permits = permits;
     semaphore = new Semaphore(permits);
   }
 
   /**
-   * セマフォを取得する。取得できた場合は{@link Acquisition}オブジェクトを返す。 できない場合はnullを返す。
+   * セマフォを取得する。取得できた場合は{@link Ac}オブジェクトを返す。 できない場合はnullを返す。
    * 
-   * @return セマフォを取得した場合は{@link Acquisition}、そうでなければnull
+   * @return セマフォを取得した場合は{@link Ac}、そうでなければnull
    */
-  Acquisition tryAcquire() {
+  Ac tryAcquire() {
     if (!semaphore.tryAcquire())
       return null;
-    return new Acquisition(semaphore, 1);
+    return new Ac(semaphore, 1);
   }
 
   /**
@@ -32,13 +32,13 @@ class SemaphoreHandler {
    * @return
    * @throws InterruptedException
    */
-  Acquisition acquire() {
+  Ac acquire() {
     try {
       semaphore.acquire();
     } catch (InterruptedException ex) {
       throw new RuntimeException(ex);
     }
-    return new Acquisition(semaphore, 1);
+    return new Ac(semaphore, 1);
   }
 
   /**
@@ -46,11 +46,11 @@ class SemaphoreHandler {
    * 
    * @return
    */
-  Acquisition tryAcquireAll() {
+  Ac tryAcquireAll() {
     if (!semaphore.tryAcquire(permits)) {
       return null;
     }
-    return new Acquisition(semaphore, permits);
+    return new Ac(semaphore, permits);
   }
 
   /**
@@ -58,13 +58,13 @@ class SemaphoreHandler {
    * 
    * @return
    */
-  Acquisition acquireAll() {
+  Ac acquireAll() {
     try {
       semaphore.acquire(permits);
     } catch (InterruptedException ex) {
       throw new RuntimeException(ex);
     }
-    return new Acquisition(semaphore, permits);
+    return new Ac(semaphore, permits);
   }
 
   /**
@@ -72,7 +72,7 @@ class SemaphoreHandler {
    * 
    * @author ysugimura
    */
-  class Acquisition {
+  class Ac {
 
     /** セマフォ */
     private final Semaphore semaphore;
@@ -83,7 +83,7 @@ class SemaphoreHandler {
     /** リリース済フラグ */
     private boolean released;
 
-    private Acquisition(Semaphore semaphore, int permits) {
+    private Ac(Semaphore semaphore, int permits) {
       this.semaphore = semaphore;
       this.permits = permits;
     }
@@ -107,4 +107,5 @@ class SemaphoreHandler {
       return !released;
     }
   }
+
 }
