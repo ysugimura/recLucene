@@ -6,7 +6,7 @@ import java.util.stream.*;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 
-public class RlFieldMap implements RlFieldSet<RlValues> {
+public class RlAnyTable implements RlTable<RlValues> {
 
   /** フィールド名/{@link RlField}マップ */
   private Map<String, RlField> fieldMap = new HashMap<>();
@@ -14,11 +14,11 @@ public class RlFieldMap implements RlFieldSet<RlValues> {
   /** プライマリキーフィールド 。プライマリキーの無い場合にはnull */
   private RlField pkField;
   
-  public RlFieldMap(Collection<RlField>fields) {
+  public RlAnyTable(Collection<RlField>fields) {
     this(fields.toArray(new RlField[0]));
   }
   
-  public RlFieldMap(RlField... fields) {
+  public RlAnyTable(RlField... fields) {
 
     for (RlField field : fields) {
 

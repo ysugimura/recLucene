@@ -13,7 +13,7 @@ import org.apache.lucene.analysis.miscellaneous.*;
 class PerFieldAnalyzerCreator {
 
   /** 
-   * {@link RlTableSet}中のすべての{@link RlTable}のtokenizeされるすべてのフィールドについてのそれぞれの{@link Analyzer}
+   * {@link RlTableSet}中のすべての{@link RlClassTable}のtokenizeされるすべてのフィールドについてのそれぞれの{@link Analyzer}
    * の集めた単一の{@link Analyzer}を作成する。
    * @param tableSet
    * @return
@@ -29,8 +29,8 @@ class PerFieldAnalyzerCreator {
     return tableSet.getTables().flatMap(table->createStream(table));
   }
 
-  /** {@link RlTable}からフィールド名/{@link Analyzer}のマップエントリストリームを作成する */
-  static Stream<Map.Entry<String, Analyzer>>createStream(RlFieldSet<?> table) {
+  /** {@link RlClassTable}からフィールド名/{@link Analyzer}のマップエントリストリームを作成する */
+  static Stream<Map.Entry<String, Analyzer>>createStream(RlTable<?> table) {
     return table.getFields()
       .filter(f->f.isTokenized())
       .collect(Collectors.toMap(

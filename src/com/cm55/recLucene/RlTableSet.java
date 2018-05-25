@@ -14,22 +14,22 @@ import java.util.stream.*;
 class RlTableSet {
 
   /** 全テーブル */
-  List<RlFieldSet<?>>tables = new ArrayList<>();
+  List<RlTable<?>>tables = new ArrayList<>();
 
   /** フィールド名/テーブルマップ */
-  Map<String, RlFieldSet<?>> fieldToTable = new HashMap<>();
+  Map<String, RlTable<?>> fieldToTable = new HashMap<>();
 
   /** レコードクラス/テーブルマップ */
-  Map<Class<?>, RlFieldSet<?>> recordToTable = new HashMap<>();
+  Map<Class<?>, RlTable<?>> recordToTable = new HashMap<>();
 
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   RlTableSet add(Class<?>...classes) {
-    Arrays.stream(classes).map(c->new RlTable(c)).forEach(this::add);
+    Arrays.stream(classes).map(c->new RlClassTable(c)).forEach(this::add);
     return this;
   }
   
-  RlTableSet add(RlFieldSet<?>... _tables) {
+  RlTableSet add(RlTable<?>... _tables) {
     Arrays.stream(_tables).forEach(table -> {
       tables.add(table);
 
@@ -42,8 +42,8 @@ class RlTableSet {
       }
 
       // レコードクラス/テーブルマップに格納する。ただしレコードクラスがあるもののみ。
-      if (table instanceof RlTable) {
-        Class<?> recordClass = ((RlTable<?>)table).getRecordClass(); 
+      if (table instanceof RlClassTable) {
+        Class<?> recordClass = ((RlClassTable<?>)table).getRecordClass(); 
         if (recordToTable.containsKey(recordClass)) {
           throw new RlException("レコードクラスが重複しています:" + recordClass);
         }
@@ -58,11 +58,11 @@ class RlTableSet {
    * 
    * @param clazz
    *          レコードクラス
-   * @return {@link RlTable}
+   * @return {@link RlClassTable}
    */
    @SuppressWarnings("unchecked")
-  <T> RlTable<T> getTable(Class<T> clazz) {
-    return (RlTable<T>)recordToTable.get(clazz);
+  <T> RlClassTable<T> getTable(Class<T> clazz) {
+    return (RlClassTable<T>)recordToTable.get(clazz);
   }
 
   /**
@@ -74,7 +74,7 @@ class RlTableSet {
    * @return
    */
   RlField getFieldByName(String fieldName) {
-    RlFieldSet<?> table = fieldToTable.get(fieldName);
+    RlTable<?> table = fieldToTable.get(fieldName);
     if (table == null)
       return null;
     return table.getFieldByName(fieldName);
@@ -85,7 +85,7 @@ class RlTableSet {
    * 
    * @return
    */
-  Stream<RlFieldSet<?>> getTables() {
+  Stream<RlTable<?>> getTables() {
     return tables.stream();
   }
 }

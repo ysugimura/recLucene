@@ -22,7 +22,7 @@ public class RlSearcherForDatabase<T> extends RlSearcher<T> {
   /** 読み込み用セマフォ */
   protected SemaphoreHandler.Acquisition ac;
 
-  public RlSearcherForDatabase(RlFieldSet<T> fieldSet, RlDatabase  database, SemaphoreHandler.Acquisition ac) {
+  public RlSearcherForDatabase(RlTable<T> fieldSet, RlDatabase  database, SemaphoreHandler.Acquisition ac) {
     super(fieldSet);
     this.database = database;
     this.ac = ac;

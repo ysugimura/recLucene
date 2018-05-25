@@ -20,7 +20,7 @@ public class RlSearcherForWriter<T> extends RlSearcher<T> {
   /** Luceneのインデックスリーダ */
   private IndexReader indexReader;
   
-  public RlSearcherForWriter(RlFieldSet<T> fieldSet, RlWriter writer) {
+  public RlSearcherForWriter(RlTable<T> fieldSet, RlWriter writer) {
     super(fieldSet);
     this.writer = writer;   
   }

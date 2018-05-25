@@ -167,7 +167,7 @@ public class RlWriter implements Closeable {
 
     // プライマリキータームを作成する
     @SuppressWarnings("unchecked")
-    RlTable<T> table = database.getTableSet().getTable((Class<T>)rec.getClass());
+    RlClassTable<T> table = database.getTableSet().getTable((Class<T>)rec.getClass());
     Term pkTerm = table.getPkTerm(rec);
 
     return write(pkTerm, doc);
@@ -182,7 +182,7 @@ public class RlWriter implements Closeable {
    *          値マップ
    * @return このインデックスライタ
    */
-  public synchronized RlWriter write(RlFieldMap table, RlValues values) {
+  public synchronized RlWriter write(RlAnyTable table, RlValues values) {
     return write(table.getPkTerm(values), getLuceneDocument(table, values));
   }
 
@@ -197,7 +197,7 @@ public class RlWriter implements Closeable {
     Class<T> clazz = (Class<T>) rec.getClass();
 
     // クラスのマッピング情報を取得する
-    RlTable<T> table = database.getTableSet().getTable(clazz);
+    RlClassTable<T> table = database.getTableSet().getTable(clazz);
     if (table == null) {
       throw new RlException(clazz.getName() + "は登録されていません");
     }
@@ -215,7 +215,7 @@ public class RlWriter implements Closeable {
    *          値マップ
    * @return Luceneドキュメント
    */
-  public Document getLuceneDocument(RlFieldMap table, RlValues values) {
+  public Document getLuceneDocument(RlAnyTable table, RlValues values) {
     return table.getDocument(values);
   }
 
@@ -279,7 +279,7 @@ public class RlWriter implements Closeable {
    * </p>
    */
   public synchronized <T>RlSearcher<T> getSearcher(Class<T> recordClass) {
-    RlTable<T> table = database.getTableSet().getTable(recordClass);
+    RlClassTable<T> table = database.getTableSet().getTable(recordClass);
     if (table == null)
       throw new RlException("テーブルがありません：" + recordClass);
     return getSearcher(table);
@@ -291,7 +291,7 @@ public class RlWriter implements Closeable {
    * ここで取得されるサーチャはライタの書き込みに即座に追随する。 たとえそれがcommitあるいはcloseされてなくてもよい。
    * </p>
    */
-  public synchronized <T>RlSearcher<T> getSearcher(RlTable<T> table) {
+  public synchronized <T>RlSearcher<T> getSearcher(RlClassTable<T> table) {
     if (table == null)
       throw new NullPointerException();
     return new RlSearcherForWriter<T>(table, this);

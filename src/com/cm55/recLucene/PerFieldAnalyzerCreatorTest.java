@@ -11,7 +11,7 @@ public class PerFieldAnalyzerCreatorTest {
 
   @Test
   public void testForTable() {
-    RlTable<Foo> table = new RlTable<Foo>(Foo.class);
+    RlClassTable<Foo> table = new RlClassTable<Foo>(Foo.class);
     Stream<Map.Entry<String, Analyzer>>stream = PerFieldAnalyzerCreator.createStream(table);    
     assertEquals("a=Analyzer\nb=Analyzer", stream.map(s->s.toString()).sorted().collect(Collectors.joining("\n")));    
   }

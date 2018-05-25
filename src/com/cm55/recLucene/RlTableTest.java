@@ -16,7 +16,7 @@ public class RlTableTest {
   @Test
   public void test2() {
     try {
-      new RlTable<Table2>(Table2.class);
+      new RlClassTable<Table2>(Table2.class);
       fail();
     } catch (Exception ex) {
       assertTrue(ex.getMessage().startsWith("プライマリキー指定が複数あります"));
@@ -33,7 +33,7 @@ public class RlTableTest {
   @Test
   public void test3() {
     try {
-      new RlTable<Table3>(Table3.class);
+      new RlClassTable<Table3>(Table3.class);
       fail();
     } catch (Exception ex) {
       assertTrue(ex.getMessage().startsWith("フィールドがString以外の場合には"));
@@ -49,7 +49,7 @@ public class RlTableTest {
  
   @Test
   public void test4() {
-    RlTable<Table4> table = new RlTable<>(Table4.class);
+    RlClassTable<Table4> table = new RlClassTable<>(Table4.class);
     
     // フィールドの数と名称
     assertEquals(new HashSet<String>() {{
@@ -94,7 +94,7 @@ public class RlTableTest {
     doc.add(new StringField("id", "ID", Field.Store.YES));
     doc.add(new TextField("fld3", "FLD2", Field.Store.NO));
     
-    RlTable<Table4> table = new RlTable<>(Table4.class);
+    RlClassTable<Table4> table = new RlClassTable<>(Table4.class);
     Table4 object = table.fromDocument(doc);
     
     assertEquals("id:ID,fld1:null,fld2:null", object.toString());
@@ -117,7 +117,7 @@ public class RlTableTest {
   @Test
   public void test6() {
     RlField aField, bField;
-    RlFieldMap table = new RlFieldMap(
+    RlAnyTable table = new RlAnyTable(
       aField = new RlField("a", new RlFieldAttr.Default() {
         @Override
         public boolean pk() {

@@ -8,25 +8,15 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 
 /**
- * LuceneのSearcherのラッパ
- * <p>
- * サーチャーには二種類ある。 データベースから取得できる通常のサーチャと ライタから取得できるニアリアル タイムサーチャである。 が、使い方はどちらも同じ。
- * </p>
- * <p>
- * Second Edition P156を参照のこと。
- * </p>
- * <p>
- * Lucene-Searcherのsearchメソッドのうち、search(Query, int)を使うと、スコアに
- * よるソートを行うが、search(Query, Filter, int Sort)をつかうと、スコアは使用
- * せずに指定されたソート順でソートする。このため、（スコアを計算せずに済む
- * という）パフォーマンス上の利得がある。Filterは使用しない場合はnullでよい。
- * </p>
+ * 
  * @author ysugimura
+ *
+ * @param <T> 検索対象のテーブルオブジェクトの型
  */
 public abstract class RlSearcher<T> implements Closeable {
 
-  /** 対象とするフィールドセット */
-  protected RlFieldSet<T> fieldSet;
+  /** 対象とするテーブル */
+  protected RlTable<T> table;
 
   /** Luceneのインデックスサーチャ */
   private IndexSearcher indexSearcher;
@@ -36,15 +26,14 @@ public abstract class RlSearcher<T> implements Closeable {
 
   /**
    * このサーチャー対象とするテーブルを指定する
-   * @param table
    */
-  protected RlSearcher(RlFieldSet<T>fieldSet) {
-    this.fieldSet = fieldSet;
+  protected RlSearcher(RlTable<T>table) {
+    this.table = table;
   }
 
-  /** 対象とするフィールドセットを取得する */
-  public RlFieldSet<T> getFieldSet() {
-    return fieldSet;
+  /** 対象とするテーブルを取得する */
+  public RlTable<T> getTable() {
+    return table;
   }
   
   /**
@@ -120,7 +109,7 @@ public abstract class RlSearcher<T> implements Closeable {
   /**
    * 指定条件で検索を行い、結果をオブジェクトリストとして返す。
    * @param query クエリ
-   * @return 検索結果レコードリスト
+   * @return 検索結果オブジェクトリスト
    */
   public synchronized List<T> search(RlQuery query) {
     return search(query, new RlSortFields());
@@ -130,14 +119,14 @@ public abstract class RlSearcher<T> implements Closeable {
    * 検索してプライマリキーセットを取得する
    */
   public <P> Set<P> searchPkSet(RlQuery query) {
-    RlField field = fieldSet.getPkField();
+    RlField field = table.getPkField();
     if (field == null)
       throw new RlException("プライマリキーフィールドがありません");
     return searchFieldSet(field, query);
   }
 
   public <P> Set<P> searchFieldSet(String fieldName, RlQuery query) {
-    RlField field = fieldSet.getFieldByName(fieldName);
+    RlField field = table.getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません：" + fieldName);
     return searchFieldSet(field, query);
@@ -170,18 +159,14 @@ public abstract class RlSearcher<T> implements Closeable {
 
   /** 検索する。ソート指定あり */
   public synchronized List<T> search(RlQuery query, RlSortFields sorts) {
-
     try {
       TopDocs hits = searchHits(query, sorts);
-
       List<T> result = new ArrayList<T>();
       for (ScoreDoc scoreDoc : hits.scoreDocs) {
         Document doc = getIndexSearcher().doc(scoreDoc.doc);
-        result.add(fieldSet.fromDocument(doc));
+        result.add(table.fromDocument(doc));
       }
-
       return result;
-
     } catch (IOException ex) {
       throw new RlException.IO(ex);
     }
@@ -190,7 +175,7 @@ public abstract class RlSearcher<T> implements Closeable {
   private synchronized TopDocs searchHits(RlQuery query, RlSortFields sorts) {
     try {
       TopDocs hits;
-      Query luceneQuery = query.getLuceneQuery(fieldSet);
+      Query luceneQuery = query.getLuceneQuery(table);
       if (sorts == null || sorts.rlSortFields.length == 0) {
         hits = getIndexSearcher().search(luceneQuery, maxCount);
       } else {
@@ -204,14 +189,14 @@ public abstract class RlSearcher<T> implements Closeable {
   }
 
   public synchronized List<T> getAllByPk() {
-    RlField field = fieldSet.getPkField();
+    RlField field = table.getPkField();
     if (field == null)
       throw new RlException("プライマリキーフィールドがありません");
     return getAllByField(field);
   }
 
   public List<T> getAllByField(String fieldName) {
-    RlField field = fieldSet.getFieldByName(fieldName);
+    RlField field = table.getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません：" + fieldName);
     return getAllByField(field);
@@ -234,7 +219,7 @@ public abstract class RlSearcher<T> implements Closeable {
     List<T> result = new ArrayList<T>();
     for (ScoreDoc scoreDoc : hits.scoreDocs) {
       Document doc = getIndexSearcher().doc(scoreDoc.doc);
-      result.add(fieldSet.fromDocument(doc));
+      result.add(table.fromDocument(doc));
     }
     return result;
   }
