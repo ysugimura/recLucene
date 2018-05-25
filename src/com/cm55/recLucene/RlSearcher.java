@@ -28,7 +28,7 @@ public class RlSearcher<T> implements Closeable {
   private int maxCount = Integer.MAX_VALUE / 2;
 
   /** セマフォ保持オブジェクト */
-  private RlSemaphore.Holder ac;
+  private RlSemaphore.Holder semHolder;
   
   /**
    * 
@@ -39,7 +39,7 @@ public class RlSearcher<T> implements Closeable {
   RlSearcher(RlTable<T>table, SearcherManager searcherManager, RlSemaphore.Holder ac) {
     this.table = table;    
     this.searcherManager = searcherManager;
-    this.ac = ac;
+    this.semHolder = ac;
   }
 
   
@@ -62,7 +62,7 @@ public class RlSearcher<T> implements Closeable {
   /** クローズする */
   public void close() {
     closeSearcher();
-    ac.release();
+    semHolder.release();
     searcherManager = null;
   }
 
@@ -70,10 +70,10 @@ public class RlSearcher<T> implements Closeable {
   void closeSearcher() {
     if (indexSearcher == null) return;
     try {
-    searcherManager.release(indexSearcher);
-    indexSearcher = null;
+      searcherManager.release(indexSearcher);
+      indexSearcher = null;
     } catch (Exception ex) {
-      throw new RuntimeException(ex);
+      throw new RlException(ex);
     }
   }
   
@@ -84,7 +84,7 @@ public class RlSearcher<T> implements Closeable {
       searcherManager.maybeRefreshBlocking();
       indexSearcher = searcherManager.acquire();
     } catch (Exception ex) {
-      throw new RuntimeException(ex);
+      throw new RlException(ex);
     }    
   }
   

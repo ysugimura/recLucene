@@ -177,7 +177,7 @@ public class RlField<T> {
         return cachedAnalyzer = analyzerClass.newInstance();
       return cachedAnalyzer = RlDefaults.analyzerClass.newInstance();
     } catch (Exception ex) {
-      throw new RuntimeException();
+      throw new RlException(ex);
     }
   }
   
@@ -281,7 +281,7 @@ public class RlField<T> {
         try {
           fieldConverter = converter.newInstance();
         } catch (Exception ex) {
-          throw new RuntimeException(ex);
+          throw new RlException(ex);
         }
 
         // コンバータのタイプと設定されているタイプが一致すること

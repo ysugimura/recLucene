@@ -42,12 +42,12 @@ public class RlWriterHolder {
     try {
       indexWriter = new IndexWriter(directory, config);
     } catch (Exception ex) {
-      throw new RuntimeException(ex);
+      throw new RlException(ex);
     }
     try {
       searcherManager = new SearcherManager(indexWriter, true, true, null);
     } catch (Exception ex) {
-      throw new RuntimeException(ex);
+      throw new RlException(ex);
     }
   }
   
@@ -56,12 +56,12 @@ public class RlWriterHolder {
     try {     
       searcherManager.close();
     } catch (Exception ex) {
-      throw new RuntimeException(ex);
+      throw new RlException(ex);
     }
     try {
       indexWriter.close();
     } catch (Exception ex) {
-      throw new RuntimeException(ex);
+      throw new RlException(ex);
     }
     indexWriter = null;
     searcherManager = null;

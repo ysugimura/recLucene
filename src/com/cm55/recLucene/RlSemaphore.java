@@ -36,7 +36,7 @@ class RlSemaphore {
     try {
       semaphore.acquire();
     } catch (InterruptedException ex) {
-      throw new RuntimeException(ex);
+      throw new RlException(ex);
     }
     return new Holder(semaphore, 1);
   }
@@ -62,7 +62,7 @@ class RlSemaphore {
     try {
       semaphore.acquire(permits);
     } catch (InterruptedException ex) {
-      throw new RuntimeException(ex);
+      throw new RlException(ex);
     }
     return new Holder(semaphore, permits);
   }

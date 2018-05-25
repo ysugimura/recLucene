@@ -23,6 +23,6 @@ public class RlSortFields {
   
   /** LuceneのSortオブジェクトを取得する */
   public Sort getSort() {
-    throw new RuntimeException();
+    throw new RlException("not supported yet");
   }
 }

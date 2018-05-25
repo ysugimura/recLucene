@@ -200,7 +200,7 @@ public abstract class RlQuery {
     @Override
     public <T> Query getLuceneQuery(RlTable<T> fieldmap) {              
       RlField<?> field = fieldmap.getFieldByName(fieldName);
-      if (field == null) throw new RuntimeException();
+      if (field == null) throw new RlException("field not found:" + fieldName);
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (String s: field.getAnalyzer().expandString(new StringReader("" + value))) {
         builder.add(
@@ -233,7 +233,7 @@ public abstract class RlQuery {
     public <T>Query getLuceneQuery(RlTable<T> fieldmap) {   
       @SuppressWarnings("unchecked")
       RlField<Object> field = (RlField<Object>)fieldmap.getFieldByName(fieldName);
-      if (field == null) throw new RuntimeException();
+      if (field == null) throw new RlException("field not found:" + fieldName);
       checkValidity(field);
       Query query = TermRangeQuery.newStringRange(fieldName, 
           field.toString(min), field.toString(max), incMin, incMax);

@@ -123,7 +123,7 @@ public class RlClassTable<T> implements RlTable<T> {
       try {
         result.put(f.getName(), f.getJavaField().get(o));
       } catch (Exception ex) {
-        throw new RuntimeException(ex);
+        throw new RlException(ex);
       }
     });
     return result;
@@ -140,12 +140,12 @@ public class RlClassTable<T> implements RlTable<T> {
         try {
           f.getJavaField().set(object, values.get(f.getName()));
         } catch (Exception ex) {
-          throw new RuntimeException(ex);
+          throw new RlException(ex);
         }
       });
       return object;
     } catch (Exception ex) {
-      throw new RuntimeException(ex);
+      throw new RlException(ex);
     }
   }
 }
