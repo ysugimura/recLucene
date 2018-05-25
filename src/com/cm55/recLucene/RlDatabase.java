@@ -30,7 +30,7 @@ public abstract class RlDatabase {
   /** テーブルセット */
   protected RlTableSet tableSet = new RlTableSet();
   
-  protected RlWriterReader writerReader = new RlWriterReader();
+  protected RlWriterHolder writerHolder = new RlWriterHolder();
   
   /** ライタ取得セマフォ。ライターはただ一つしか取得することはできない */
   protected RlSemaphore writeｒSemaphore = new RlSemaphore(1);
@@ -46,7 +46,7 @@ public abstract class RlDatabase {
   
   protected void setDirectory(Directory directory) {
     this.directory = directory;
-    writerReader.reset(directory, tableSet);
+    writerHolder.reset(directory, tableSet);
   }
   
   /**
@@ -62,7 +62,7 @@ public abstract class RlDatabase {
   public void close() {
     RlSemaphoreMulti.Ac ac = allSemaphore.acquireAll();
     try {
-      writerReader.close();
+      writerHolder.close();
       directory.close();
     } catch (IOException ex) {
       throw new RlException(ex);
@@ -91,7 +91,7 @@ public abstract class RlDatabase {
     RlSemaphoreMulti.Ac ac = allSemaphore.acquireAll();    
     try {
       Arrays.stream(tables).forEach(tableSet::add);
-      writerReader.reset(directory, tableSet);
+      writerHolder.reset(directory, tableSet);
     } finally {
       ac.release();
     }
@@ -105,29 +105,18 @@ public abstract class RlDatabase {
    */
   public RlWriter createWriter() {
     RlSemaphore.Ac ac = writeｒSemaphore.acquire();
-    return newWriter(ac);
+    return new RlWriter(tableSet, writerHolder.getIndexWriter(), ac); 
   }
 
   /**
    * このデータベースに対するライタを作成して返す。
-   * ライタはただ一つ歯科存在できず、既にオープン中のライタがある場合は何もせずにnullを返す。
+   * ライタはただ一つしか存在できず、既にオープン中のライタがある場合は何もせずにnullを返す。
    * @return
    */
   public RlWriter tryCreateWriter() {
     RlSemaphore.Ac ac = writeｒSemaphore.tryAcquire();
     if (ac == null) return null;
-    return newWriter(ac);
-  }
-
-  /**
-   * ライタを作成する。既にライタセマフォは取得している。
-   * @param ac
-   * @return
-   */
-  private RlWriter newWriter(RlSemaphore.Ac ac) {
-    
-    // ライタを作成
-    return new RlWriter(tableSet, writerReader.getIndexWriter(), ac);    
+    return new RlWriter(tableSet, writerHolder.getIndexWriter(), ac); 
   }
   
   /**
@@ -160,7 +149,7 @@ public abstract class RlDatabase {
   public synchronized <T>RlSearcher<T> createSearcher(RlTable<T>table) {
 
     RlSemaphore.Ac ac = searcherSemaphore.acquire();
-    return new RlSearcher<T>(table, writerReader.getSearcherManager(), ac);
+    return new RlSearcher<T>(table, writerHolder.getSearcherManager(), ac);
   }
 
   /** このデータベースをリセットする */

@@ -5,14 +5,14 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.*;
 
-public class RlWriterReader {
+public class RlWriterHolder {
 
   private Directory directory;
   private RlTableSet tableSet;
   private IndexWriter indexWriter;
   private SearcherManager searcherManager;
   
-  public void reset(Directory directory, RlTableSet tableSet) {
+  public synchronized void reset(Directory directory, RlTableSet tableSet) {
     close();
     this.directory = directory;
     this.tableSet = tableSet;
@@ -28,10 +28,9 @@ public class RlWriterReader {
     return searcherManager;
   }
   
-  private void ensure() {
+  private synchronized void ensure() {
     if (indexWriter != null) return;
     
-    System.out.println("creating");
     Analyzer analyzer = tableSet.getPerFieldAnalyzer();
     
     // コンフィギュレーションを作成。これは使い回せるものなのだろうか？
@@ -50,14 +49,10 @@ public class RlWriterReader {
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
-
-    System.out.println("created");
   }
   
-  
-  public void close() {
+  public synchronized void close() {
     if (indexWriter == null) return;
-    System.out.println("closing");
     try {     
       searcherManager.close();
     } catch (Exception ex) {
@@ -68,9 +63,7 @@ public class RlWriterReader {
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
-    System.out.println("closed");
     indexWriter = null;
     searcherManager = null;
   }
-
 }
