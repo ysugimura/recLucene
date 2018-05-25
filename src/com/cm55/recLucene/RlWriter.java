@@ -54,9 +54,6 @@ public class RlWriter implements Closeable {
   /** LuceneのIndexWriterConfig */
   private IndexWriterConfig config;
 
-  /** 書込み回数 */
-  private int writtenCount;
-
   private SemaphoreHandler.Acquisition acquisition;
   
   /** 初期化 */
@@ -101,7 +98,6 @@ public class RlWriter implements Closeable {
       throw new RlException.IO(ex);
     }
 
-    writtenCount++;
     return this;
   }
 
@@ -120,7 +116,7 @@ public class RlWriter implements Closeable {
     try {
       String string = field.toString(value);
       indexWriter.deleteDocuments(new Term(field.getName(), string));
-      writtenCount++;
+
       return this;
     } catch (IOException ex) {
       throw new RlException.IO(ex);
@@ -139,7 +135,7 @@ public class RlWriter implements Closeable {
       Term term = new Term(field.getName(), "*");
       Query query = new WildcardQuery(term);
       indexWriter.deleteDocuments(query);
-      writtenCount++;
+
     } catch (IOException ex) {
       throw new RlException.IO(ex);
     }
@@ -251,22 +247,13 @@ public class RlWriter implements Closeable {
   public synchronized <T> RlWriter deleteAll() {
     try {
       indexWriter.deleteAll();
-      writtenCount++;
+
     } catch (IOException ex) {
       throw new RlException.IO(ex);
     }
     return this;
   }
 
-  /**
-   * 書込みあるいは削除を行った回数を取得する。
-   * <p>
-   * ライタから取得したサーチャを内部的にリオープンするためのもの。
-   * </p>
-   */
-  public int writtenCount() {
-    return writtenCount;
-  }
 
   /**
    * サーチャを取得する。

@@ -78,7 +78,9 @@ public abstract class RlSearcher<T> implements Closeable {
       indexSearcher.getIndexReader().close();
     } catch (IOException ex) {
     }
-    indexSearcher = null;    
+    indexSearcher = null;  
+    
+    
   }
   
   /** クローズする */
