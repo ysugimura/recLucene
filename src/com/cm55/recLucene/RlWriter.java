@@ -225,7 +225,7 @@ public class RlWriter implements Closeable {
    */
   public <T> RlWriter delete(String fieldName, T value) {
     @SuppressWarnings("unchecked")
-    RlField<T> field = (RlField<T>)database.getFieldFromName(fieldName);
+    RlField<T> field = (RlField<T>)database.getTableSet().getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません:" + fieldName);
     return delete(field, value);
@@ -239,7 +239,7 @@ public class RlWriter implements Closeable {
    * @return
    */
   public synchronized <T> RlWriter deleteAll(String fieldName) {
-    RlField<?> field = database.getFieldFromName(fieldName);
+    RlField<?> field = database.getTableSet().getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません：" + fieldName);
     return deleteAll(field);

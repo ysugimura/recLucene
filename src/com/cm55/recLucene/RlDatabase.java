@@ -177,7 +177,7 @@ public abstract class RlDatabase {
     return new RlSearcherForDatabase<T>(table, this, ac);
   }
 
-  /** このデータベースに対するリセッタを取得する */
+  /** このデータベースをリセットする */
   public synchronized void reset() {
     reset( writeSemaphore.acquireAll(), searchSemaphore.acquireAll());
   }
@@ -201,16 +201,6 @@ public abstract class RlDatabase {
     } finally {
       search.release();
     }
-  }
-  
-  /**
-   * テーブルのフィールド名からRlFieldを取得する。
-   * <p>
-   * フィールド名はデータベース中で一意であるので、フィールドも一意に決定する。
-   * </p>
-   */
-  public RlField<?> getFieldFromName(String fieldName) {
-    return tableSet.getFieldByName(fieldName);
   }
 
   /** IndexReaderを取得する */
