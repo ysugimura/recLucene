@@ -44,10 +44,7 @@ public class RlTable {
   private Class<?> recordClass;
 
   /** フィールド名/{@link RlField}マップ */
-  private Map<String, RlField> fieldMap;
-
-  /** プライマリキーフィールド 。プライマリキーの無い場合にはnull */
-  private RlField pkField;
+  private RlFieldMap fieldMap = new RlFieldMap();
 
   /**
    * クラスを指定してマッピングを作成する
@@ -93,28 +90,13 @@ public class RlTable {
 
   /** 作成時の初期化 */
   private void init(RlField... fields) {
-    
-    fieldMap = new HashMap<String, RlField>();
-    for (RlField field : fields) {
-
-      // フィールド名重複チェック
-      if (fieldMap.containsKey(field.getName())) {
-        throw new RlException("フィールド名が重複しています:" + field.getName());
-      }
-      fieldMap.put(field.getName(), field);
-
-      // プライマリキーの重複チェック
-      if (field.isPk()) {
-
-        // プライマリキーフィールドの重複チェック
-        if (pkField != null) {
-          throw new RlException("プライマリキー指定が複数あります");
-        }
-        pkField = field;
-      }
-    }
+    fieldMap = new RlFieldMap(fields);
   }
 
+ public RlFieldMap getFieldMap() {
+   return fieldMap;
+ }
+ 
   /**
    * レコードクラスを取得する。自由形式の場合はnullが返る。
    */
@@ -126,7 +108,7 @@ public class RlTable {
    * すべてのフィールドを取得する
    */
   public Stream<RlField> getFields() {
-    return fieldMap.values().stream();
+    return fieldMap.getFields();
   }
 
   /**
@@ -135,7 +117,7 @@ public class RlTable {
    * @return 唯一のプライマリキーフィールド。無い場合はnull。
    */
   public RlField getPkField() {
-    return pkField;
+    return fieldMap.getPkField();
   }
 
   /**
@@ -144,7 +126,7 @@ public class RlTable {
    * @return 全フィールド名称の集合
    */
   public Set<String> getFieldNames() {
-    return new HashSet<String>(fieldMap.keySet());
+    return fieldMap.getFieldNames();
   }
 
   /**
@@ -154,7 +136,7 @@ public class RlTable {
    * @return {@link RlField}
    */
   public RlField getFieldByName(String fieldName) {
-    return fieldMap.get(fieldName);
+    return fieldMap.getFieldByName(fieldName);
   }
   
   /**
@@ -163,6 +145,7 @@ public class RlTable {
    * @return
    */
   public Term getPkTerm(Object object) {
+    RlField pkField = fieldMap.getPkField();
     if (pkField == null)
       return null;
     
@@ -219,12 +202,13 @@ public class RlTable {
     }
 
     Document doc = new Document();
-    for (RlField field : fieldMap.values()) {
+    fieldMap.getFields().forEach(field-> {
+    
       Field lField = field.getLuceneField(values);
       if (lField == null)
-        continue; // 値がnullの場合はnullのフィールドが返る。登録しない。
+        return; // 値がnullの場合はnullのフィールドが返る。登録しない。
       doc.add(lField);
-    }
+    });
     return doc;
   }
 
@@ -247,11 +231,11 @@ public class RlTable {
   public <T> T fromDocument(Document doc) {
     RlValues result = new RlValues();
 
-    for (Map.Entry<String, RlField> e : fieldMap.entrySet()) {
+    fieldMap.getEntries().forEach(e-> {
       String fieldName = e.getKey();
       RlField field = e.getValue();
       field.setStringValue(result, doc.get(fieldName));
-    }
+    });
     
     if (recordClass == null) return (T)result;
     return this.convertFromValues(result);
@@ -260,7 +244,7 @@ public class RlTable {
   public RlValues convertToValues(Object o) {
     if (o instanceof RlValues) return (RlValues)o;
     RlValues result = new RlValues();
-    fieldMap.values().forEach(f-> {
+    fieldMap.getFields().forEach(f-> {
       try {
         result.put(f.getName(), f.getJavaField().get(o));
       } catch (Exception ex) {
@@ -276,7 +260,7 @@ public class RlTable {
       return (T) values;
     try {
       T object = (T) recordClass.newInstance();
-      fieldMap.values().forEach(f -> {
+      fieldMap.getFields().forEach(f -> {
         try {
           f.getJavaField().set(object, values.get(f.getName()));
         } catch (Exception ex) {

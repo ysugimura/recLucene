@@ -191,7 +191,7 @@ public abstract class RlSearcher implements Closeable {
   private synchronized TopDocs searchHits(RlQuery query, RlSortFields sorts) {
     try {
       TopDocs hits;
-      Query luceneQuery = query.getLuceneQuery(table);
+      Query luceneQuery = query.getLuceneQuery(table.getFieldMap());
       if (sorts == null || sorts.rlSortFields.length == 0) {
         hits = getIndexSearcher().search(luceneQuery, maxCount);
       } else {
