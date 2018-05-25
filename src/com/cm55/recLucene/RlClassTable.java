@@ -38,7 +38,7 @@ public class RlClassTable<T> implements RlTable<T> {
           return false;
         return true;
       })
-      .map(javaField->new RlField.Builder(javaField).build())
+      .map(javaField->(RlField<?>)new RlField.Builder(javaField).build())
       .collect(Collectors.toList());
 
     anyTable = new RlAnyTable(fieldsFromClass);

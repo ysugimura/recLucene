@@ -209,10 +209,8 @@ public class RlField<T> {
     private boolean pk = false;
     private boolean store = false;
     private boolean tokenized = true;
-    @SuppressWarnings("unchecked")
-    private Class<? extends RlFieldConverter<T>>converter
-         = (Class<? extends RlFieldConverter<T>>)RlFieldConverter.None.class;
-    private Class<? extends RlAnalyzer>analyzer = RlAnalyzer.Default.class;
+    private Class<? extends RlFieldConverter<T>>converter = null;
+    private Class<? extends RlAnalyzer>analyzer = null;
 
     /** デフォルト値で作成する */
     public Builder(Class<T>type) {
@@ -232,8 +230,10 @@ public class RlField<T> {
         this.pk = attr.pk();
         this.store = attr.store();
         this.tokenized = attr.tokenized();
-        this.converter = (Class<? extends RlFieldConverter<T>>)attr.converter();
-        this.analyzer = attr.analyzer();
+        if (attr.converter() != RlFieldConverter.None.class)
+          this.converter = (Class<? extends RlFieldConverter<T>>)attr.converter();
+        if (attr.analyzer() != RlAnalyzer.Default.class)
+          this.analyzer = attr.analyzer();
       }
     }
     
@@ -268,14 +268,6 @@ public class RlField<T> {
     }
         
     public RlField<T> build() {
-
-      // 無しとして設定されたクラス。nullにする
-      if (converter == RlFieldConverter.None.class)
-        converter = null;
-      
-      // 無しとして設定されたクラス。nullにする
-      if (analyzer == RlAnalyzer.Default.class) 
-        analyzer = null;
       
       if (pk) {
         store = true;
