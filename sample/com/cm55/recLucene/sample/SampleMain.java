@@ -1,64 +1,74 @@
 package com.cm55.recLucene.sample;
 
 import java.util.*;
+import java.util.stream.*;
+
+import org.junit.*;
+import static org.junit.Assert.*;
 
 import com.cm55.recLucene.*;
 import com.cm55.recLucene.RlAnalyzer.*;
+import static com.cm55.recLucene.RlQuery.*;
 
 public class SampleMain {
 
-  static FooRecord[]recs = new FooRecord[] {
+  static FooRecord[]recs0 = new FooRecord[] {
       new FooRecord(1L, "吾輩は猫である。名前はまだ無い。"),
       new FooRecord(2L, "どこで生れたかとんと見当がつかぬ。"),
       new FooRecord(3L, "何でも薄暗いじめじめした所でニャーニャー泣いていた事だけは記憶している。"),
       new FooRecord(4L, "吾輩はここで始めて人間というものを見た"),
       new FooRecord(5L, "しかもあとで聞くとそれは書生という人間中で一番獰悪な種族であったそうだ。")
   };
+  static FooRecord[]recs1 = new FooRecord[] {
+      new FooRecord(6L, "この書生というのは時々我々を捕えて煮て食うという話である。"),
+      new FooRecord(7L, "しかしその当時は何という考もなかったから別段恐しいとも思わなかった。"),
+      new FooRecord(8L, "ただ彼の掌に載せられてスーと持ち上げられた時何だかフワフワした感じがあったばかりである。"),
+      new FooRecord(9L, "掌の上で少し落ちついて書生の顔を見たのがいわゆる人間というものの見始であろう。"),
+      new FooRecord(10L, "この時妙なものだと思った感じが今でも残っている。第一毛をもって装飾されべきはずの顔がつるつるしてまるで薬缶だ。")
+  };
   
-  
-  public static void main(String[]args) {
+  @Test
+  public void test() {
+
+    // デフォルトの日本語アナライザを3gramにする
     RlDefaults.analyzerClass = JpnStandard3.class;
-    
-    RlDatabase db = new RlDatabase.Dir("sampleDb").add(FooRecord.class);
-    
-    db.reset();
-    
+
+    // データベースを作成する
+    RlDatabase db = new RlDatabase.Ram().add(FooRecord.class);
+
+    // 前半の書き込み
     {
       RlWriter writer = db.createWriter();
-      Arrays.stream(recs).forEach(r->writer.write(r));
-      writer.close();
-    }
-    
-    show(db);
-    
-    {
-      RlWriter writer = db.createWriter();
-      writer.write(new FooRecord(5L, "この書生というのは時々我々を捕えて煮て食うという話である。"));      
-      writer.delete("id", 4L);
+      Arrays.stream(recs0).forEach(r->writer.write(r));
       writer.close();
     }
 
-    show(db);
- 
+    // 検索
+    RlSearcher<FooRecord> searcher = db.createSearcher(FooRecord.class);
+    checkIds(searcher, new Word("content", "人間"), 4L, 5L);
+    checkIds(searcher, new Word("content", "人間　種族"), 5L);
+    checkIds(searcher, new And(new Word("content", "人間"), new Word("content", "種族")), 5L);
+
+    // 後半の書き込み
+    {
+      RlWriter writer = db.createWriter();
+      RlSearcher<FooRecord> realtimeSearcher = writer.getSearcher(FooRecord.class);
+      Arrays.stream(recs1).forEach(r->writer.write(r));
+      checkIds(realtimeSearcher, new Word("content", "人間"), 4L, 5L, 9L);
+      
+      writer.close();
+      checkIds(realtimeSearcher, new Word("content", "人間"), 4L, 5L, 9L);
+    }
+    
+    checkIds(searcher, new Word("content", "人間"), 4L, 5L);
+    
+    searcher.reopen();
+    checkIds(searcher, new Word("content", "人間"), 4L, 5L, 9L);
   }
   
-  static void show(RlDatabase db) {
-    RlSearcher<FooRecord> searcher = db.createSearcher(FooRecord.class);
-    {
-      List<FooRecord>list = searcher.search(new RlQuery.Word("content", "人間"));
-      System.out.println("first");
-      list.stream().forEach(System.out::println);
-    }
-    {
-      List<FooRecord>list = searcher.search(new RlQuery.Word("content", "人間　種族"));
-      System.out.println("second");
-      list.stream().forEach(System.out::println); 
-    }
-    
-    System.out.println("all");
-    searcher.getAllByField("id").stream().forEach(System.out::println);
-    
-    searcher.close();
+  void checkIds(RlSearcher<FooRecord>searcher, RlQuery query, Long...ids) {
+    Set<Long>set = searcher.searchPkSet(query);
+    assertEquals(Arrays.stream(ids).collect(Collectors.toSet()), set);
   }
 
 }

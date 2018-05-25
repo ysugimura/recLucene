@@ -83,14 +83,9 @@ public class RlWriter implements Closeable {
    * 内部的なIndexWriterを取得する
    */
   IndexReader getIndexReader() {
-    throw new RuntimeException();
-    /*
-     * try { // return indexWriter.getReader(); // 上の呼び出しはdeprecatedになった return
-     * IndexReader.open(indexWriter, true);
-     * 
-     * } catch (IOException ex) { throw new RlException.IO(ex); }
-     */
-
+    try {        
+      return DirectoryReader.open(indexWriter, true, true);
+     } catch (IOException ex) { throw new RlException.IO(ex); }    
   }
 
   private synchronized RlWriter write(Term pkTerm, Document doc) {
