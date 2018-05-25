@@ -57,6 +57,7 @@ public class SampleMain {
     
     // 検索
     checkIds(searcher, new Word("content", "人間"), 4L, 9L);
+    checkIds(searcher, new And(new Word("content", "人間"), new Not(new Word("content", "書生"))), 4L);
   }
   
   void checkIds(RlSearcher<FooRecord>searcher, RlQuery query, Long...ids) {
