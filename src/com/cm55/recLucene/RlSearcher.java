@@ -18,7 +18,8 @@ public class RlSearcher<T> implements Closeable {
   /** 対象とするテーブル */
   protected RlTable<T> table;
 
-  SearcherManager searcherManager;
+  /** サーチャーマネージャ */
+  private SearcherManager searcherManager;
   
   /** Luceneのインデックスサーチャ */
   private IndexSearcher indexSearcher;
@@ -26,17 +27,57 @@ public class RlSearcher<T> implements Closeable {
   /** 最大出力結果数。初期値は実質無制限 */
   private int maxCount = Integer.MAX_VALUE / 2;
 
-  RlSemaphore.Ac ac;
+  /** セマフォ保持オブジェクト */
+  private RlSemaphore.Holder ac;
+  
   /**
    * 
-   * このサーチャー対象とするテーブルを指定する
+   * @param table
+   * @param searcherManager
+   * @param ac
    */
-  protected RlSearcher(RlTable<T>table, SearcherManager searcherManager, RlSemaphore.Ac ac) {
+  RlSearcher(RlTable<T>table, SearcherManager searcherManager, RlSemaphore.Holder ac) {
     this.table = table;    
     this.searcherManager = searcherManager;
     this.ac = ac;
   }
 
+  
+  /** 対象とするテーブルを取得する */
+  public RlTable<T> getTable() {
+    return table;
+  }
+
+  /** 検索結果最大数の取得 */
+  public int getMaxCount() {
+    return maxCount;
+  }
+
+  /** 検索結果最大数の設定 */
+  public RlSearcher<T> setMaxCount(int value) {
+    maxCount = value;
+    return this;
+  }
+  
+  /** クローズする */
+  public void close() {
+    closeSearcher();
+    ac.release();
+    searcherManager = null;
+  }
+
+  /** サーチャーをクローズする */
+  void closeSearcher() {
+    if (indexSearcher == null) return;
+    try {
+    searcherManager.release(indexSearcher);
+    indexSearcher = null;
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+  
+  /** インデックス更新を確実にする */
   void ensureUpdate() {
     closeSearcher();
     try {
@@ -47,38 +88,6 @@ public class RlSearcher<T> implements Closeable {
     }    
   }
   
-  /** 対象とするテーブルを取得する */
-  public RlTable<T> getTable() {
-    return table;
-  }
-
-  /** 検索結果最大数の取得 */
-  public synchronized int getMaxCount() {
-    return maxCount;
-  }
-
-  /** 検索結果最大数の設定 */
-  public synchronized RlSearcher<T> setMaxCount(int value) {
-    maxCount = value;
-    return this;
-  }
-
-  
-  void closeSearcher() {
-    if (indexSearcher == null) return;
-    try {
-    searcherManager.release(indexSearcher);
-    indexSearcher = null;
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
-    }
-  }
-  /** クローズする */
-  public synchronized void close() {
-    closeSearcher();
-    ac.release();
-  }
-
   /////////////////////////////////////////////////////////////////
   
   /**
@@ -86,7 +95,7 @@ public class RlSearcher<T> implements Closeable {
    * @param query クエリ
    * @return 検索結果オブジェクトリスト
    */
-  public synchronized List<T> search(RlQuery query) {
+  public List<T> search(RlQuery query) {
     return search(query, new RlSortFields());
   }
 
@@ -135,7 +144,7 @@ public class RlSearcher<T> implements Closeable {
   }
 
   /** 検索する。ソート指定あり */
-  public synchronized List<T> search(RlQuery query, RlSortFields sorts) {
+  public List<T> search(RlQuery query, RlSortFields sorts) {
     try {
       TopDocs hits = searchHits(query, sorts);
       List<T> result = new ArrayList<T>();
@@ -149,7 +158,7 @@ public class RlSearcher<T> implements Closeable {
     }
   }
 
-  private synchronized TopDocs searchHits(RlQuery query, RlSortFields sorts) {
+  private TopDocs searchHits(RlQuery query, RlSortFields sorts) {
     try {
       TopDocs hits;
       Query luceneQuery = query.getLuceneQuery(table);
@@ -166,7 +175,7 @@ public class RlSearcher<T> implements Closeable {
     }
   }
 
-  public synchronized List<T> getAllByPk() {
+  public List<T> getAllByPk() {
     RlField<?> field = table.getPkField();
     if (field == null)
       throw new RlException("プライマリキーフィールドがありません");
@@ -202,5 +211,4 @@ public class RlSearcher<T> implements Closeable {
     }
     return result;
   }
-
 }

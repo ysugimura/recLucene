@@ -23,10 +23,10 @@ public class RlWriter implements Closeable {
   private IndexWriter indexWriter;
 
   /** セマフォ保持オブジェクト。クローズ時にリリースされる */
-  private RlSemaphore.Ac acquisition;
+  private RlSemaphore.Holder acquisition;
   
   /** 初期化 */
-  RlWriter(RlTableSet tableSet, IndexWriter indexWriter, RlSemaphore.Ac acquisition) {
+  RlWriter(RlTableSet tableSet, IndexWriter indexWriter, RlSemaphore.Holder acquisition) {
     this.tableSet = tableSet;
     this.indexWriter = indexWriter;
     this.acquisition = acquisition;

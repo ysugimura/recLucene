@@ -10,21 +10,21 @@ public class RlSemaphoreMulti {
     this.handlers = Arrays.asList(handlers);
   }
   
-  Ac acquireAll() {
-    return new Ac(handlers.stream().map(h->h.acquireAll()).collect(Collectors.toList()));
+  Holder acquireAll() {
+    return new Holder(handlers.stream().map(h->h.acquireAll()).collect(Collectors.toList()));
   }
 
-  Ac tryAcquireAll() {
-    List<RlSemaphore.Ac>acs = 
+  Holder tryAcquireAll() {
+    List<RlSemaphore.Holder>acs = 
       handlers.stream().map(h->h.acquireAll()).filter(ac->ac != null).collect(Collectors.toList());
-    if (acs.size() == handlers.size()) return new Ac(acs);
+    if (acs.size() == handlers.size()) return new Holder(acs);
     acs.forEach(ac->ac.release());
     return null;
   }
   
-  class Ac {
-    List<RlSemaphore.Ac>acs;
-    public Ac(List<RlSemaphore.Ac>acs) {
+  class Holder {
+    List<RlSemaphore.Holder>acs;
+    public Holder(List<RlSemaphore.Holder>acs) {
       this.acs = acs;
     }
     public void release() {

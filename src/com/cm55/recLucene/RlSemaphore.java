@@ -16,14 +16,14 @@ class RlSemaphore {
   }
 
   /**
-   * セマフォを取得する。取得できた場合は{@link Ac}オブジェクトを返す。 できない場合はnullを返す。
+   * セマフォを取得する。取得できた場合は{@link Holder}オブジェクトを返す。 できない場合はnullを返す。
    * 
-   * @return セマフォを取得した場合は{@link Ac}、そうでなければnull
+   * @return セマフォを取得した場合は{@link Holder}、そうでなければnull
    */
-  Ac tryAcquire() {
+  Holder tryAcquire() {
     if (!semaphore.tryAcquire())
       return null;
-    return new Ac(semaphore, 1);
+    return new Holder(semaphore, 1);
   }
 
   /**
@@ -32,13 +32,13 @@ class RlSemaphore {
    * @return
    * @throws InterruptedException
    */
-  Ac acquire() {
+  Holder acquire() {
     try {
       semaphore.acquire();
     } catch (InterruptedException ex) {
       throw new RuntimeException(ex);
     }
-    return new Ac(semaphore, 1);
+    return new Holder(semaphore, 1);
   }
 
   /**
@@ -46,11 +46,11 @@ class RlSemaphore {
    * 
    * @return
    */
-  Ac tryAcquireAll() {
+  Holder tryAcquireAll() {
     if (!semaphore.tryAcquire(permits)) {
       return null;
     }
-    return new Ac(semaphore, permits);
+    return new Holder(semaphore, permits);
   }
 
   /**
@@ -58,13 +58,13 @@ class RlSemaphore {
    * 
    * @return
    */
-  Ac acquireAll() {
+  Holder acquireAll() {
     try {
       semaphore.acquire(permits);
     } catch (InterruptedException ex) {
       throw new RuntimeException(ex);
     }
-    return new Ac(semaphore, permits);
+    return new Holder(semaphore, permits);
   }
 
   /**
@@ -72,7 +72,7 @@ class RlSemaphore {
    * 
    * @author ysugimura
    */
-  class Ac {
+  class Holder {
 
     /** セマフォ */
     private final Semaphore semaphore;
@@ -83,7 +83,7 @@ class RlSemaphore {
     /** リリース済フラグ */
     private boolean released;
 
-    private Ac(Semaphore semaphore, int permits) {
+    private Holder(Semaphore semaphore, int permits) {
       this.semaphore = semaphore;
       this.permits = permits;
     }

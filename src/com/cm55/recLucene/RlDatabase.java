@@ -61,7 +61,7 @@ public abstract class RlDatabase {
 
   /** データベースをクローズする */
   public void close() {
-    RlSemaphoreMulti.Ac ac = allSemaphore.acquireAll();
+    RlSemaphoreMulti.Holder ac = allSemaphore.acquireAll();
     try {
       writerHolder.close();
       directory.close();
@@ -89,7 +89,7 @@ public abstract class RlDatabase {
    * @return
    */
   public RlDatabase add(RlTable<?>...tables) {
-    RlSemaphoreMulti.Ac ac = allSemaphore.acquireAll();    
+    RlSemaphoreMulti.Holder ac = allSemaphore.acquireAll();    
     try {
       Arrays.stream(tables).forEach(tableSet::add);
       writerHolder.reset(directory, tableSet);
@@ -105,7 +105,7 @@ public abstract class RlDatabase {
    * @return 新たなライタ
    */
   public RlWriter createWriter() {
-    RlSemaphore.Ac ac = writeｒSemaphore.acquire();
+    RlSemaphore.Holder ac = writeｒSemaphore.acquire();
     return new RlWriter(tableSet, writerHolder.getIndexWriter(), ac); 
   }
 
@@ -115,7 +115,7 @@ public abstract class RlDatabase {
    * @return
    */
   public RlWriter tryCreateWriter() {
-    RlSemaphore.Ac ac = writeｒSemaphore.tryAcquire();
+    RlSemaphore.Holder ac = writeｒSemaphore.tryAcquire();
     if (ac == null) return null;
     return new RlWriter(tableSet, writerHolder.getIndexWriter(), ac); 
   }
@@ -149,19 +149,19 @@ public abstract class RlDatabase {
    */
   public synchronized <T>RlSearcher<T> createSearcher(RlTable<T>table) {
 
-    RlSemaphore.Ac ac = searcherSemaphore.acquire();
+    RlSemaphore.Holder ac = searcherSemaphore.acquire();
     return new RlSearcher<T>(table, writerHolder.getSearcherManager(), ac);
   }
 
   /** このデータベースをリセットする */
   public synchronized void reset() {
-    RlSemaphoreMulti.Ac ac = allSemaphore.acquireAll();
+    RlSemaphoreMulti.Holder ac = allSemaphore.acquireAll();
     doReset();
     ac.release();
   }
 
   public synchronized boolean tryReset() {
-    RlSemaphoreMulti.Ac ac = allSemaphore.tryAcquireAll();
+    RlSemaphoreMulti.Holder ac = allSemaphore.tryAcquireAll();
     if (ac == null) return false;
     doReset();
     ac.release();
