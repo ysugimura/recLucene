@@ -94,7 +94,7 @@ public class RlDatabaseTest {
     
     writer.write(new LongTest(10001, "test1"));
     writer.write(new LongTest(10001, "test2"));
-    writer.commit();
+    writer.close();
     
     RlSearcher<LongTest> s = database.createSearcher(LongTest.class);
     Set<Long>ids = s.searchFieldSet("id", new RlQuery.And(new RlQuery.Match("id", 10001L)));

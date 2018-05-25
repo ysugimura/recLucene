@@ -28,27 +28,27 @@ public class SampleMain {
   };
   
   @Test
-  public void test() {
+  public void test() throws Exception {
 
     // デフォルトの日本語アナライザを3gramにする
     RlDefaults.analyzerClass = JpnStandard3.class;
 
     // データベースを作成する
     RlDatabase db = new RlDatabase.Ram().add(FooRecord.class);
-
+    RlSearcher<FooRecord> searcher = db.createSearcher(FooRecord.class);
+    
     // 前半の書き込み
     {
       
       RlWriter writer = db.createWriter();
       System.out.println("start");
       Arrays.stream(recs0).forEach(r->writer.write(r));
-      RlSearcher<FooRecord> searcher = db.createSearcher(FooRecord.class);
-      checkIds(searcher, new Word("content", "人間"), 4L, 5L);
+
       writer.close();
     }
 
     // 検索
-    RlSearcher<FooRecord> searcher = db.createSearcher(FooRecord.class);
+
     checkIds(searcher, new Word("content", "人間"), 4L, 5L);
     checkIds(searcher, new Word("content", "人間　種族"), 5L);
     checkIds(searcher, new And(new Word("content", "人間"), new Word("content", "種族")), 5L);
@@ -56,17 +56,13 @@ public class SampleMain {
     // 後半の書き込み
     {
       RlWriter writer = db.createWriter();
-    //  RlSearcher<FooRecord> realtimeSearcher = writer.getSearcher(FooRecord.class);
       Arrays.stream(recs1).forEach(r->writer.write(r));
-    //  checkIds(realtimeSearcher, new Word("content", "人間"), 4L, 5L, 9L);
+      checkIds(searcher, new Word("content", "人間"), 4L, 5L, 9L);
       
       writer.close();
-    //  checkIds(realtimeSearcher, new Word("content", "人間"), 4L, 5L, 9L);
+      //checkIds(realtimeSearcher, new Word("content", "人間"), 4L, 5L, 9L);
     }
     
-    checkIds(searcher, new Word("content", "人間"), 4L, 5L);
-    
-    searcher.reopen();
     checkIds(searcher, new Word("content", "人間"), 4L, 5L, 9L);
   }
   

@@ -13,7 +13,7 @@ public class RlDatabaseResetTest {
     RlDatabase database = new RlDatabase.Ram().add(Sample.class);
     RlWriter writer = database.createWriter();
     writer.write(new Sample());
-    writer.commit();
+
     writer.close();
     RlSearcher<Sample> searcher = database.createSearcher(Sample.class);
     List<Sample>list = searcher.search(new RlQuery.Word("test", "abc"));
@@ -33,7 +33,7 @@ public class RlDatabaseResetTest {
     RlDatabase database = new RlDatabase.Dir("sampleDb").add(Sample.class);
     RlWriter writer = database.createWriter();
     writer.write(new Sample());
-    writer.commit();
+
     writer.close();
     RlSearcher<Sample> searcher = database.createSearcher(Sample.class);
     List<Sample>list = searcher.search(new RlQuery.Word("test", "abc"));

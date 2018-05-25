@@ -43,23 +43,20 @@ import org.apache.lucene.search.*;
  */
 public class RlWriter implements Closeable {
 
-  /** データベース */
-  private RlDatabase database;
+  /** テーブルセット */
+  private RlTableSet tableSet;
 
   /**
    * LuceneのIndexWriter。初期化時に作成される。クローズ時にnullが代入される。
    */
   private IndexWriter indexWriter;
 
-  /** LuceneのIndexWriterConfig */
-  private IndexWriterConfig config;
-
   private SemaphoreHandler.Acquisition acquisition;
   
   /** 初期化 */
-  public RlWriter(RlDatabase database, IndexWriter indexWriter, SemaphoreHandler.Acquisition acquisition) {
+  public RlWriter(RlTableSet tableSet, IndexWriter indexWriter, SemaphoreHandler.Acquisition acquisition) {
 
-    this.database = database;
+    this.tableSet = tableSet;
     this.indexWriter = indexWriter;
     this.acquisition = acquisition;
   }
@@ -146,7 +143,7 @@ public class RlWriter implements Closeable {
 
     // プライマリキータームを作成する
     @SuppressWarnings("unchecked")
-    RlClassTable<T> table = database.getTableSet().getTable((Class<T>)rec.getClass());
+    RlClassTable<T> table = tableSet.getTable((Class<T>)rec.getClass());
     Term pkTerm = table.getPkTerm(rec);
 
     return write(pkTerm, doc);
@@ -176,7 +173,7 @@ public class RlWriter implements Closeable {
     Class<T> clazz = (Class<T>) rec.getClass();
 
     // クラスのマッピング情報を取得する
-    RlClassTable<T> table = database.getTableSet().getTable(clazz);
+    RlClassTable<T> table = tableSet.getTable(clazz);
     if (table == null) {
       throw new RlException(clazz.getName() + "は登録されていません");
     }
@@ -209,7 +206,7 @@ public class RlWriter implements Closeable {
    */
   public <T> RlWriter delete(String fieldName, T value) {
     @SuppressWarnings("unchecked")
-    RlField<T> field = (RlField<T>)database.getTableSet().getFieldByName(fieldName);
+    RlField<T> field = (RlField<T>)tableSet.getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません:" + fieldName);
     return delete(field, value);
@@ -223,7 +220,7 @@ public class RlWriter implements Closeable {
    * @return
    */
   public synchronized <T> RlWriter deleteAll(String fieldName) {
-    RlField<?> field = database.getTableSet().getFieldByName(fieldName);
+    RlField<?> field = tableSet.getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません：" + fieldName);
     return deleteAll(field);
@@ -235,53 +232,22 @@ public class RlWriter implements Closeable {
   public synchronized <T> RlWriter deleteAll() {
     try {
       indexWriter.deleteAll();
-
     } catch (IOException ex) {
       throw new RlException.IO(ex);
     }
     return this;
   }
 
-  /**
-   * コミットする。
-   * <p>
-   * これまでの書き込みをフラッシュする。通常のサーチャ（このライタから 取得したサーチャではなくデータベースから取得したもの）は、コミット後に
-   * リオープンすることで、フラッシュされたデータを検索することができる。
-   * </p>
-   */
-  public synchronized RlWriter commit() {
-    try {
-      indexWriter.commit();
-    } catch (IOException ex) {
-      throw new RlException.IO(ex);
-    }
-    return this;
-  }
 
   /**
    * クローズする。コミットされていなければ自動的にコミットする。
-   * <p>
-   * 書き込みをコミットし、ライタを終了する。 
-   * 通常のデータベースシステムとは異なり、ロールバック操作は無いため、 書き込みをキャンセルする方法はない。
-   * </p>
    */
   @Override
   public synchronized void close() {
+    try {
+      indexWriter.commit();    
+    } catch (Exception ex) {}
       acquisition.release();
   }
-
-  /**
-   * 内部的なIndexWriterConfigを取得する
-   */
-  @SuppressWarnings("unchecked")
-  public <T> T getIndexWriterConfig() {
-    return (T) config;
-  }
-
-  /** クローズされたか */
-  public synchronized boolean isClosed() {
-    return indexWriter == null;
-  }
-
 
 }

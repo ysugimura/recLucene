@@ -49,7 +49,7 @@ public class RlValuesTotalTest {
     RlWriter writer = database.createWriter();
     writer.write(table, new Record(1L, "abc\ndef\nghi", "www\nxyz", "吾輩は猫である", "夏目漱石").getValues());
     writer.write(table, new Record(2L, "abc\ndef", "xxx", "吾輩は猫ではない", "テスト").getValues());
-    writer.commit();
+    writer.close();
     
     RlSearcher<RlValues> searcher = database.createSearcher(table);
     

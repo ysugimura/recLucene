@@ -41,7 +41,7 @@ public class RlWriterTest {
     writer.write(new Foo("1", "test1"));
     writer.write(new Foo("1", "test1"));
     writer.write(new Bar("1", "sample1"));    
-    writer.commit();
+    // writer.commit();
     
     // ライタをクローズ。あるいはコミットしてからデータベースサーチャを作成
     // その際、どのテーブルをサーチするのか指定する。
@@ -55,7 +55,7 @@ public class RlWriterTest {
     
     // もう一つレコードを書き込みしてコミット
     writer.write(new Foo("2", "test2"));
-    writer.commit();
+    // writer.commit();
 
     // しかし探せるのは一つだけ
     assertEquals(1, searcher.getAllByPk().size());
@@ -116,7 +116,7 @@ public class RlWriterTest {
     writer.write(new FooBar(100, "sample fooBar"));
     writer.write(new FooBar(222, "test"));
     
-    writer.commit();
+    // writer.commit();
     
     RlSearcher<FooBar> s = database.createSearcher(FooBar.class);
 
@@ -137,14 +137,14 @@ public class RlWriterTest {
     }
     
     writer.delete("id3", 100L);
-    writer.commit();
+    // writer.commit();
     
     s = database.createSearcher(FooBar.class);
     
     assertEquals(1, s.getAllByField("id3").size());
 
     writer.deleteAll("id3");
-    writer.commit();
+    // writer.commit();
     
     s = database.createSearcher(FooBar.class);
     assertEquals(0, s.getAllByField("id3").size());
@@ -186,7 +186,7 @@ public class RlWriterTest {
     writer.write(new FooBar(1, "foobar1"));
     writer.write(new FooBar(1, "foobar2"));
     writer.write(new FooBar(1, "foobar3"));
-    writer.commit();
+    // writer.commit();
  
     RlSearcher<Foo> fooSearcher;
     RlSearcher<Bar> barSearcher;
@@ -210,7 +210,7 @@ public class RlWriterTest {
     fooSearcher.close();
     
     writer.deleteAll("id1");
-    writer.commit();
+    // writer.commit();
     
     fooSearcher =  this.database.createSearcher(Foo.class);
     assertEquals(0, fooSearcher.getAllByPk().size());
@@ -225,7 +225,7 @@ public class RlWriterTest {
     fooSearcher.close();
     
     writer.deleteAll("id2");
-    writer.commit();
+    // writer.commit();
     
     fooSearcher =  this.database.createSearcher(Foo.class);
     assertEquals(0, fooSearcher.getAllByPk().size());
@@ -240,7 +240,7 @@ public class RlWriterTest {
     fooSearcher.close();
     
     writer.deleteAll();
-    writer.commit();
+    // writer.commit();
     
     fooSearcher =  this.database.createSearcher(Foo.class);
     assertEquals(0, fooSearcher.getAllByPk().size());

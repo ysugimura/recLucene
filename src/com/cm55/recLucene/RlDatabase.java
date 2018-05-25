@@ -32,30 +32,17 @@ public abstract class RlDatabase {
   
   protected RlWriterReader writerReader;
   
-
   /** ライタ取得セマフォ。ライターはただ一つしか取得することはできない */
   protected SemaphoreHandler writeSemaphore = new SemaphoreHandler(1);
 
   /** リーダ取得セマフォ。最大100個 */
   protected SemaphoreHandler searchSemaphore = new SemaphoreHandler(100);
 
-  protected RlDatabase() {
-    
+  protected RlDatabase() {  
   }
-  /**
-   *  ※lucene3.3.0でのバグに注意：インデックスデータベースの作成時には、一度でも
-   * commit（何も書きこむものがなくてもよい）しておかないと、インデックスファイル 構造が作成されず、リアルタイムサーチャが失敗してしまう。
-   * 
-   */
-  protected void init(SemaphoreHandler.Acquisition ac) {
-    RlWriter writer;
-    if (ac == null) {
-      writer = this.createWriter();
-    } else {
-      writer = newWriter(ac);
-    }
-    writer.commit();
-    writer.close();
+  
+  protected void reset(Directory directory) {
+    this.directory = directory;
   }
   
   /**
@@ -143,7 +130,7 @@ public abstract class RlDatabase {
     }
     
     // ライタを作成
-    return new RlWriter(this, writerReader.indexWriter, ac);    
+    return new RlWriter(tableSet, writerReader.indexWriter, ac);    
   }
   
   /**
@@ -178,7 +165,7 @@ public abstract class RlDatabase {
       writerReader = new RlWriterReader(getDirectory(), tableSet);
     }
     SemaphoreHandler.Acquisition ac = searchSemaphore.acquire();
-    return new RlSearcher<T>(table, writerReader.indexReader, ac);
+    return new RlSearcher<T>(table, writerReader.searcherManager, ac);
   }
 
   /** このデータベースをリセットする */
@@ -201,8 +188,9 @@ public abstract class RlDatabase {
 
   private void reset(SemaphoreHandler.Acquisition write, SemaphoreHandler.Acquisition search) {
     try {
-      reset(write);
+      doReset();
     } finally {
+      write.release();
       search.release();
     }
   }
@@ -221,7 +209,7 @@ public abstract class RlDatabase {
     return directory;
   }
 
-  protected abstract void reset(SemaphoreHandler.Acquisition ac);
+  protected abstract void doReset();
 
   /**
    * RAM上に作成されるデータベース
@@ -229,13 +217,11 @@ public abstract class RlDatabase {
   public static class Ram extends RlDatabase {
 
     public Ram() {
-      this.directory = new RAMDirectory();
-      super.init(null);
+      reset(new RAMDirectory());
     }
 
-    protected void reset(SemaphoreHandler.Acquisition ac) {
-      this.directory = new RAMDirectory();
-      super.init(ac);
+    protected void doReset() {
+      reset(new RAMDirectory());
     }
   }
 
@@ -257,23 +243,22 @@ public abstract class RlDatabase {
     public Dir(String dirName) {
       path = FileSystems.getDefault().getPath(dirName);
       try {
-        this.directory = FSDirectory.open(path);
+        reset(FSDirectory.open(path));
       } catch (IOException ex) {
         throw new RlException.IO(ex);
       }
-      super.init(null);
     }
+    
     
     public Dir(File folder) {
       try {
-        this.directory = FSDirectory.open(folder.toPath());
+        reset(FSDirectory.open(folder.toPath()));
       } catch (IOException ex) {
         throw new RlException.IO(ex);
       }
-      super.init(null);
     }
 
-    protected void reset(SemaphoreHandler.Acquisition ac) {
+    protected void doReset() {
 
       // luceneデータベースフォルダを削除する
       File dir = path.toFile();
@@ -282,12 +267,11 @@ public abstract class RlDatabase {
         System.err.println("!!! DIRECTORY LEFT !!!!");
       }
       try {
-        this.directory = FSDirectory.open(path);
+        reset(FSDirectory.open(path));
       } catch (IOException ex) {
         throw new RlException.IO(ex);
       }
       
-      super.init(ac);
     }
 
     public boolean delete(File file) {

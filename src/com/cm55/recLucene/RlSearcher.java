@@ -17,6 +17,8 @@ public class RlSearcher<T> implements Closeable {
 
   /** 対象とするテーブル */
   protected RlTable<T> table;
+
+  SearcherManager searcherManager;
   
   /** Luceneのインデックスサーチャ */
   private IndexSearcher indexSearcher;
@@ -26,29 +28,30 @@ public class RlSearcher<T> implements Closeable {
 
   SemaphoreHandler.Acquisition ac;
   /**
+   * 
    * このサーチャー対象とするテーブルを指定する
    */
-  protected RlSearcher(RlTable<T>table, IndexReader indexReader, SemaphoreHandler.Acquisition ac) {
+  protected RlSearcher(RlTable<T>table, SearcherManager searcherManager, SemaphoreHandler.Acquisition ac) {
     this.table = table;
-    indexSearcher = new IndexSearcher(indexReader);
     
+    this.searcherManager = searcherManager;
+
     this.ac = ac;
   }
 
+  void open() {
+    closeSearcher();
+    try {
+      searcherManager.maybeRefreshBlocking();
+      indexSearcher = searcherManager.acquire();
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }    
+  }
+  
   /** 対象とするテーブルを取得する */
   public RlTable<T> getTable() {
     return table;
-  }
-
-  /**
-   * サーチャをリオープンする。
-   * <p>
-   * 通常のサーチャでは、ライタがインデックス書き込みを行い、さらにcommit/close を行った後でリオープンしないと書き込みが反映されない
-   * （もちろんリオープンの代わりに、一度クローズして再作成してもよい）。
-   * </p>
-   */
-  public synchronized void reopen() {
-
   }
 
   /** 検索結果最大数の取得 */
@@ -63,8 +66,18 @@ public class RlSearcher<T> implements Closeable {
   }
 
   
+  void closeSearcher() {
+    if (indexSearcher == null) return;
+    try {
+    searcherManager.release(indexSearcher);
+    indexSearcher = null;
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
   /** クローズする */
   public synchronized void close() {
+    closeSearcher();
     ac.release();
   }
 
@@ -142,8 +155,9 @@ public class RlSearcher<T> implements Closeable {
     try {
       TopDocs hits;
       Query luceneQuery = query.getLuceneQuery(table);
+      open();
       if (sorts == null || sorts.rlSortFields.length == 0) {
-        hits = indexSearcher.search(luceneQuery, maxCount);
+        hits = indexSearcher.search(luceneQuery, maxCount);        
       } else {
         hits = indexSearcher.search(luceneQuery, maxCount, sorts.getSort());
       }
@@ -174,6 +188,7 @@ public class RlSearcher<T> implements Closeable {
     }
     try {
       Term pkWildTerm = new Term(field.getName(), "*");
+      open();
       TopDocs hits = indexSearcher.search(new WildcardQuery(pkWildTerm), maxCount);
       return getObjects(hits);
     } catch (IOException ex) {
