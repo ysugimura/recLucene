@@ -29,9 +29,7 @@ public abstract class RlDatabase {
 
   /** テーブルセット */
   protected RlTableSet tableSet = new RlTableSet();
-  
-  protected RlWriterHolder writerHolder = new RlWriterHolder();
-  
+    
   /** ライタ取得セマフォ。ライターはただ一つしか取得することはできない */
   protected RlSemaphore writeｒSemaphore = new RlSemaphore(1);
 
@@ -40,6 +38,9 @@ public abstract class RlDatabase {
 
   /** ライタ・サーチャー取得セマフォのすべて */
   protected RlSemaphoreMulti allSemaphore = new RlSemaphoreMulti(writeｒSemaphore, searcherSemaphore);
+
+  /** インデックスライタホルダー */
+  protected RlWriterHolder writerHolder = new RlWriterHolder();
   
   protected RlDatabase() {  
   }

@@ -32,14 +32,12 @@ public class RlSearcher<T> implements Closeable {
    * このサーチャー対象とするテーブルを指定する
    */
   protected RlSearcher(RlTable<T>table, SearcherManager searcherManager, RlSemaphore.Ac ac) {
-    this.table = table;
-    
+    this.table = table;    
     this.searcherManager = searcherManager;
-
     this.ac = ac;
   }
 
-  void open() {
+  void ensureUpdate() {
     closeSearcher();
     try {
       searcherManager.maybeRefreshBlocking();
@@ -155,7 +153,7 @@ public class RlSearcher<T> implements Closeable {
     try {
       TopDocs hits;
       Query luceneQuery = query.getLuceneQuery(table);
-      open();
+      ensureUpdate();
       if (sorts == null || sorts.rlSortFields.length == 0) {
         hits = indexSearcher.search(luceneQuery, maxCount);        
       } else {
@@ -188,7 +186,7 @@ public class RlSearcher<T> implements Closeable {
     }
     try {
       Term pkWildTerm = new Term(field.getName(), "*");
-      open();
+      ensureUpdate();
       TopDocs hits = indexSearcher.search(new WildcardQuery(pkWildTerm), maxCount);
       return getObjects(hits);
     } catch (IOException ex) {

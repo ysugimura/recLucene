@@ -7,38 +7,11 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 
 /**
- * <h1>インデックスライタ</h1>
- * 
- * <h2>インデックスライタのロック</h2>
- * <p>
- * 一つLuceneインデックス（このパッケージではRlDatabase）については、
- * ただ一つのライタがオープンしうる。luceneはこれを保証するため、ロック
- * ファイルを用いている。RlWriter内でIndexWriterが生成されるとすぐに書き込み ロックが取得される。
- * </p>
- * <p>
- * つまり、他のRlWriterを作成しても前のRlWriterがクローズされるまでは使用 することはできない。
- * </p>
- * <h2>セグメント数とマージ</h2>
- * <p>
- * ライタがコミットやクローズを行うと、その度にインデックスセグメントは増加して いく。これがあまりに大量になると検索スピードに影響を及ぼす。
- * Luceneでは自動的にこの数を減らす方策が二つ用意されている。一つはmergeであり、
- * もう一つはoptimizeである。optimizeは基本的に、検索操作をしない夜間等に行う ものらしい。以下ではmergeについて説明する。
- * </p>
- * <p>
- * mergeとは複数のセグメントを束ね、単一のセグメントにすることである。これに より、検索の際にオープンしなければならないセグメント数が減り、インデックス
- * それ自体のサイズも現象する。これをいつどのようにしておこなうかはMergePolicy
- * によって決定されるが、デフォルトはLogByteSizeMergePolicyになっている。
- * </p>
- * <p>
- * 参考としては以下。
- * </p>
- * <ul>
- * <li>http://ameblo.jp/principia-ca/entry-10892036569.html
- * </ul>
- * 
- * <h2>バグ</h2> ※lucene3.3.0でのバグに注意：インデックスデータベースの作成時には、一度でも
- * commit（何も書きこむものがなくてもよい）しておかないと、インデックスファイル 構造が作成されず、リアルタイムサーチャが失敗してしまう。
- * 
+ * インデックスライタは{@link RlDatabase}から取得され、{@link #close()}するまで使用することができる。
+ * 内部で使用するLuceneの{@link IndexWriter}はスレッドセーフであるが、このオブジェクトはスレッドセーフではなく、
+ * 単一のスレッドで使用することを前提としている。
+ * また、一度に複数の{@link RlWriter}を取得することはできない。{@link #close()}されていない{@link RlWriter}が
+ * 存在する場合は、{@link RlDatabase}の取得メソッドでブロックされる。
  * @author ysugimura
  */
 public class RlWriter implements Closeable {
@@ -46,31 +19,20 @@ public class RlWriter implements Closeable {
   /** テーブルセット */
   private RlTableSet tableSet;
 
-  /**
-   * LuceneのIndexWriter。初期化時に作成される。クローズ時にnullが代入される。
-   */
+  /** LuceneのIndexWriter */
   private IndexWriter indexWriter;
 
+  /** セマフォ保持オブジェクト。クローズ時にリリースされる */
   private RlSemaphore.Ac acquisition;
   
   /** 初期化 */
-  public RlWriter(RlTableSet tableSet, IndexWriter indexWriter, RlSemaphore.Ac acquisition) {
-
+  RlWriter(RlTableSet tableSet, IndexWriter indexWriter, RlSemaphore.Ac acquisition) {
     this.tableSet = tableSet;
     this.indexWriter = indexWriter;
     this.acquisition = acquisition;
   }
 
-  /**
-   * 内部的なIndexWriterを取得する
-   */
-  IndexReader getIndexReader() {
-    try {        
-      return DirectoryReader.open(indexWriter, true, true);
-     } catch (IOException ex) { throw new RlException.IO(ex); }    
-  }
-
-  private synchronized RlWriter write(Term pkTerm, Document doc) {
+  private RlWriter write(Term pkTerm, Document doc) {
     // 書込み
     try {
       if (pkTerm == null) {
@@ -94,7 +56,7 @@ public class RlWriter implements Closeable {
    * このため、この操作は結局のところ、本システムで言うところの「一つのテーブルのあるフィールドが特定の値のレコードすべて」を削除することになる。
    * </p>
    */
-  public synchronized <T> RlWriter delete(RlField<T> field, T value) {
+  public <T> RlWriter delete(RlField<T> field, T value) {
     if (field.isTokenized()) {
       throw new RlException("tokenized=trueのフィールドを指定して削除はできません");
     }
@@ -115,7 +77,7 @@ public class RlWriter implements Closeable {
    * @param field
    * @return
    */
-  public synchronized <T> RlWriter deleteAll(RlField<?> field) {
+  public <T> RlWriter deleteAll(RlField<?> field) {
     try {
       Term term = new Term(field.getName(), "*");
       Query query = new WildcardQuery(term);
@@ -137,8 +99,7 @@ public class RlWriter implements Closeable {
    *          書き込みレコード
    * @return このインデックスライタ
    */
-  public synchronized <T> RlWriter write(T rec) {
-
+  public <T> RlWriter write(T rec) {
     Document doc = getLuceneDocument(rec);
 
     // プライマリキータームを作成する
@@ -151,19 +112,64 @@ public class RlWriter implements Closeable {
 
   /**
    * 自由形式の値を書き込む。テーブルを指定する必要がある。
-   * 
-   * @param table
-   *          テーブル
-   * @param values
-   *          値マップ
-   * @return このインデックスライタ
+   * @param table テーブル
+   * @param values 値マップ
    */
-  public synchronized RlWriter write(RlAnyTable table, RlValues values) {
-    return write(table.getPkTerm(values), getLuceneDocument(table, values));
+  public void write(RlAnyTable table, RlValues values) {
+    write(table.getPkTerm(values), getLuceneDocument(table, values));
   }
 
-  public <T> Document getLuceneDocument(T rec) {
+  /**
+   * 指定フィールドが指定値のレコードを削除する
+   * 
+   * @param field フィールド名称
+   * @param value 値
+   */
+  public <T> void delete(String fieldName, T value) {
+    @SuppressWarnings("unchecked")
+    RlField<T> field = (RlField<T>)tableSet.getFieldByName(fieldName);
+    if (field == null)
+      throw new RlException("フィールドがありません:" + fieldName);
+    delete(field, value);
+  }
 
+  /**
+   * 指定フィールドのあるすべてのレコードを削除する
+   * @param field フィールド名称
+   */
+  public <T> void deleteAll(String fieldName) {
+    RlField<?> field = tableSet.getFieldByName(fieldName);
+    if (field == null)
+      throw new RlException("フィールドがありません：" + fieldName);
+    deleteAll(field);
+  }
+
+  /**
+   * このインデックスデータベースのすべてのレコードを削除する
+   */
+  public <T> void deleteAll() {
+    try {
+      indexWriter.deleteAll();
+    } catch (IOException ex) {
+      throw new RlException.IO(ex);
+    }
+  }
+
+  /**
+   * クローズする
+   */
+  @Override
+  public void close() {
+    try {
+      indexWriter.commit();    
+      indexWriter = null;
+    } catch (Exception ex) {}
+      acquisition.release();
+  }
+  
+  ////////////////////////////////////////////////////////
+  
+  <T> Document getLuceneDocument(T rec) {
     if (rec instanceof RlValues) {
       throw new RlException("RlValuesは使用できません");
     }
@@ -185,69 +191,11 @@ public class RlWriter implements Closeable {
   /**
    * テーブルと値マップを指定してLuceneの{@link Document}を取得する
    * 
-   * @param table
-   *          テーブル
-   * @param values
-   *          値マップ
+   * @param table テーブル
+   * @param values 値マップ
    * @return Luceneドキュメント
    */
-  public Document getLuceneDocument(RlAnyTable table, RlValues values) {
+  Document getLuceneDocument(RlAnyTable table, RlValues values) {
     return table.getDocument(values);
   }
-
-  /**
-   * 指定フィールドが指定値のレコードを削除する
-   * 
-   * @param field
-   *          フィールド名称
-   * @param value
-   *          値
-   * @return
-   */
-  public <T> RlWriter delete(String fieldName, T value) {
-    @SuppressWarnings("unchecked")
-    RlField<T> field = (RlField<T>)tableSet.getFieldByName(fieldName);
-    if (field == null)
-      throw new RlException("フィールドがありません:" + fieldName);
-    return delete(field, value);
-  }
-
-  /**
-   * 指定フィールドのあるすべてのレコードを削除する
-   * 
-   * @param field
-   *          フィールド名称
-   * @return
-   */
-  public synchronized <T> RlWriter deleteAll(String fieldName) {
-    RlField<?> field = tableSet.getFieldByName(fieldName);
-    if (field == null)
-      throw new RlException("フィールドがありません：" + fieldName);
-    return deleteAll(field);
-  }
-
-  /**
-   * このインデックスデータベースのすべてのレコードを削除する
-   */
-  public synchronized <T> RlWriter deleteAll() {
-    try {
-      indexWriter.deleteAll();
-    } catch (IOException ex) {
-      throw new RlException.IO(ex);
-    }
-    return this;
-  }
-
-
-  /**
-   * クローズする。コミットされていなければ自動的にコミットする。
-   */
-  @Override
-  public synchronized void close() {
-    try {
-      indexWriter.commit();    
-    } catch (Exception ex) {}
-      acquisition.release();
-  }
-
 }
