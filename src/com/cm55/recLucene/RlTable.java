@@ -5,7 +5,6 @@ import java.util.*;
 import java.util.stream.*;
 
 import org.apache.lucene.document.*;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.index.*;
 
 /**
@@ -172,74 +171,23 @@ public class RlTable {
   }
 
   public <T>Document getDocumentFromRecord(T object) {
-    return getDocument(object);
+    return fieldMap.getDocument(convertToValues(object));
   }
   
   public Document getDocumentFromValues(RlValues values) {
-    return getDocument(values);
+    return fieldMap.getDocument(values);
   }
-  
-  /**
-   * 指定されたオブジェクトの内容から{@link Document}を作成する
-   * 
-   * @param object オブジェクト。クラスは{@link #recordClass}であること
-   * @return luceneの{@link Document}
-   */
-  private <T> Document getDocument(T object) {
-    RlValues values;
-    if (recordClass == null) {
-      // レコードクラスが無い場合。自由形式
-      if (object == null || !(object instanceof RlValues)) {
-        throw new RlException("getDocumentの引数オブジェクトのクラスが違います");
-      }
-      values = (RlValues)object;
-    } else {
-      // レコードクラスがある場合
-      if (object == null || object.getClass() != recordClass) {
-        throw new RlException("getDocumentの引数オブジェクトのクラスが違います");
-      }
-      values = this.convertToValues(object);
-    }
 
-    Document doc = new Document();
-    fieldMap.getFields().forEach(field-> {
-    
-      Field lField = field.getLuceneField(values);
-      if (lField == null)
-        return; // 値がnullの場合はnullのフィールドが返る。登録しない。
-      doc.add(lField);
-    });
-    return doc;
-  }
 
   @SuppressWarnings("unchecked")
   public <T>T recordFromDocument(Document doc) {
-    return (T)fromDocument(doc);    
+    return (T)convertFromValues(fieldMap.fromDocument(doc));    
   }
 
   public RlValues valuesFromDocument(Document doc) {
-    return (RlValues)fromDocument(doc);
+    return fieldMap.fromDocument(doc);
   }
-  
-  /**
-   * Documentの内容からオブジェクトを作成する。自由形式の場合は{@link RlValues}を作成する
-   * 
-   * @param document
-   * @return
-   */
-  @SuppressWarnings("unchecked")
-  public <T> T fromDocument(Document doc) {
-    RlValues result = new RlValues();
 
-    fieldMap.getEntries().forEach(e-> {
-      String fieldName = e.getKey();
-      RlField field = e.getValue();
-      field.setStringValue(result, doc.get(fieldName));
-    });
-    
-    if (recordClass == null) return (T)result;
-    return this.convertFromValues(result);
-  }
   
   public RlValues convertToValues(Object o) {
     if (o instanceof RlValues) return (RlValues)o;

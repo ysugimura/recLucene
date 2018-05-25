@@ -95,7 +95,7 @@ public class RlTableTest {
     doc.add(new TextField("fld3", "FLD2", Field.Store.NO));
     
     RlTable table = new RlTable(Table4.class);
-    Table4 object = table.fromDocument(doc);
+    Table4 object = table.recordFromDocument(doc);
     
     assertEquals("id:ID,fld1:null,fld2:null", object.toString());
   }
@@ -139,7 +139,7 @@ public class RlTableTest {
     assertEquals("123", document.get("a")); // 文字列に変換されていることに注意
     assertEquals("abc", document.get("b"));
     
-    RlValues dup = table.fromDocument(document);
+    RlValues dup = table.recordFromDocument(document);
     assertEquals(123, (int)dup.get("a"));
     assertEquals("abc", dup.get("b"));
    

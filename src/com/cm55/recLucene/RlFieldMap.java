@@ -3,6 +3,8 @@ package com.cm55.recLucene;
 import java.util.*;
 import java.util.stream.*;
 
+import org.apache.lucene.document.*;
+
 public class RlFieldMap {
 
   /** フィールド名/{@link RlField}マップ */
@@ -53,5 +55,27 @@ public class RlFieldMap {
     return fieldMap.get(fieldName);
   }
   
+  public Document getDocument(RlValues values) {
+    Document doc = new Document();
+    getFields().forEach(field-> {
+    
+      Field lField = field.getLuceneField(values);
+      if (lField == null)
+        return; // 値がnullの場合はnullのフィールドが返る。登録しない。
+      doc.add(lField);
+    });
+    return doc;
+  }
   
+  public RlValues fromDocument(Document doc) {
+    RlValues result = new RlValues();
+
+    getEntries().forEach(e-> {
+      String fieldName = e.getKey();
+      RlField field = e.getValue();
+      field.setStringValue(result, doc.get(fieldName));
+    });
+    
+    return result;
+  }
 }
