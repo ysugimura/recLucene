@@ -21,7 +21,7 @@ public abstract class RlQuery {
    * @param fieldmap 対象とすうテーブル
    * @return Lucene用のクエリオブジェクト
    */
-  public abstract Query getLuceneQuery(RlFieldMap fieldmap);
+  public abstract <T> Query getLuceneQuery(RlFieldSet<T> fieldmap);
   
   /**
    * フィールド名を指定するクエリ
@@ -139,7 +139,7 @@ public abstract class RlQuery {
 
     /** Lucene用Queryを取得する */
     @Override
-    public Query getLuceneQuery(RlFieldMap fieldmap) {    
+    public <T>Query getLuceneQuery(RlFieldSet<T> fieldmap) {    
       RlField field = fieldmap.getFieldByName(fieldName);
       if (field == null) throw new NullPointerException();
       checkValidity(field);
@@ -177,7 +177,7 @@ public abstract class RlQuery {
 
     /** Lucene用Queryを取得する */
     @Override
-    public Query getLuceneQuery(RlFieldMap fieldmap) {
+    public <T>Query getLuceneQuery(RlFieldSet<T> fieldmap) {
       return new PrefixQuery(new Term(fieldName, "" + value));
     }
 
@@ -197,7 +197,7 @@ public abstract class RlQuery {
     }
 
     @Override
-    public Query getLuceneQuery(RlFieldMap fieldmap) {              
+    public <T> Query getLuceneQuery(RlFieldSet<T> fieldmap) {              
       RlField field = fieldmap.getFieldByName(fieldName);
       if (field == null) throw new RuntimeException();
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
@@ -229,7 +229,7 @@ public abstract class RlQuery {
     }
     
     @Override
-    public Query getLuceneQuery(RlFieldMap fieldmap) {   
+    public <T>Query getLuceneQuery(RlFieldSet<T> fieldmap) {   
       RlField field = fieldmap.getFieldByName(fieldName);
       if (field == null) throw new RuntimeException();
       checkValidity(field);
@@ -271,7 +271,7 @@ public abstract class RlQuery {
     
     /** Lucene用のQueryを取得する */
     @Override
-    public Query getLuceneQuery(RlFieldMap fieldmap) {
+    public <S> Query getLuceneQuery(RlFieldSet<S> fieldmap) {
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (RlQuery query : queryList) {
         builder.add(query.getLuceneQuery(fieldmap), getOccur());
@@ -378,7 +378,7 @@ public abstract class RlQuery {
 
     /** クエリを取得する */
     @Override
-    public Query getLuceneQuery(RlFieldMap fieldmap) {
+    public <T>Query getLuceneQuery(RlFieldSet<T> fieldmap) {
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
       for (RlQuery query : queryList) {

@@ -26,7 +26,7 @@ import org.apache.lucene.search.*;
 public abstract class RlSearcher<T> implements Closeable {
 
   /** 対象とするテーブル */
-  protected RlTable<T> table;
+  protected RlFieldSet<T> table;
 
   /** Luceneのインデックスサーチャ */
   private IndexSearcher indexSearcher;
@@ -39,12 +39,12 @@ public abstract class RlSearcher<T> implements Closeable {
    * このサーチャー対象とするテーブルを指定する
    * @param table
    */
-  protected RlSearcher(RlTable<T> table) {
+  protected RlSearcher(RlFieldSet<T> table) {
     this.table = table;
   }
 
   /** 対象とするテーブルを取得する */
-  public RlTable<T> getTable() {
+  public RlFieldSet<T> getTable() {
     return table;
   }
   
@@ -191,7 +191,7 @@ public abstract class RlSearcher<T> implements Closeable {
   private synchronized TopDocs searchHits(RlQuery query, RlSortFields sorts) {
     try {
       TopDocs hits;
-      Query luceneQuery = query.getLuceneQuery(table.getFieldMap());
+      Query luceneQuery = query.getLuceneQuery(table);
       if (sorts == null || sorts.rlSortFields.length == 0) {
         hits = getIndexSearcher().search(luceneQuery, maxCount);
       } else {
