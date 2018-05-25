@@ -18,10 +18,10 @@ public abstract class RlQuery {
 
   /**
    * LuceneのSearcherに与えるQueryを取得する。
-   * @param table 対象とすうテーブル
+   * @param fieldmap 対象とすうテーブル
    * @return Lucene用のクエリオブジェクト
    */
-  public abstract Query getLuceneQuery(RlFieldMap table);
+  public abstract Query getLuceneQuery(RlFieldMap fieldmap);
   
   /**
    * フィールド名を指定するクエリ
@@ -139,8 +139,8 @@ public abstract class RlQuery {
 
     /** Lucene用Queryを取得する */
     @Override
-    public Query getLuceneQuery(RlFieldMap table) {    
-      RlField field = table.getFieldByName(fieldName);
+    public Query getLuceneQuery(RlFieldMap fieldmap) {    
+      RlField field = fieldmap.getFieldByName(fieldName);
       if (field == null) throw new NullPointerException();
       checkValidity(field);
       return new TermQuery(new Term(fieldName, field.toString(value)));
@@ -177,7 +177,7 @@ public abstract class RlQuery {
 
     /** Lucene用Queryを取得する */
     @Override
-    public Query getLuceneQuery(RlFieldMap table) {
+    public Query getLuceneQuery(RlFieldMap fieldmap) {
       return new PrefixQuery(new Term(fieldName, "" + value));
     }
 
@@ -197,8 +197,8 @@ public abstract class RlQuery {
     }
 
     @Override
-    public Query getLuceneQuery(RlFieldMap table) {              
-      RlField field = table.getFieldByName(fieldName);
+    public Query getLuceneQuery(RlFieldMap fieldmap) {              
+      RlField field = fieldmap.getFieldByName(fieldName);
       if (field == null) throw new RuntimeException();
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (String s: field.getAnalyzer().expandString(new StringReader("" + value))) {
@@ -229,8 +229,8 @@ public abstract class RlQuery {
     }
     
     @Override
-    public Query getLuceneQuery(RlFieldMap table) {   
-      RlField field = table.getFieldByName(fieldName);
+    public Query getLuceneQuery(RlFieldMap fieldmap) {   
+      RlField field = fieldmap.getFieldByName(fieldName);
       if (field == null) throw new RuntimeException();
       checkValidity(field);
       Query query = TermRangeQuery.newStringRange(fieldName, 
@@ -271,10 +271,10 @@ public abstract class RlQuery {
     
     /** Lucene用のQueryを取得する */
     @Override
-    public Query getLuceneQuery(RlFieldMap table) {
+    public Query getLuceneQuery(RlFieldMap fieldmap) {
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (RlQuery query : queryList) {
-        builder.add(query.getLuceneQuery(table), getOccur());
+        builder.add(query.getLuceneQuery(fieldmap), getOccur());
       }
       return builder.build();
     }
@@ -378,11 +378,11 @@ public abstract class RlQuery {
 
     /** クエリを取得する */
     @Override
-    public Query getLuceneQuery(RlFieldMap table) {
+    public Query getLuceneQuery(RlFieldMap fieldmap) {
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
       for (RlQuery query : queryList) {
-        builder.add(query.getLuceneQuery(table), BooleanClause.Occur.MUST_NOT);
+        builder.add(query.getLuceneQuery(fieldmap), BooleanClause.Occur.MUST_NOT);
       }
       return builder.build();
     }
