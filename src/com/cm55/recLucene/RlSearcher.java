@@ -18,6 +18,9 @@ public abstract class RlSearcher<T> implements Closeable {
   /** 対象とするテーブル */
   protected RlTable<T> table;
 
+  /** Luceneのインデックスリーダ */
+  private IndexReader indexReader;
+  
   /** Luceneのインデックスサーチャ */
   private IndexSearcher indexSearcher;
 
@@ -40,12 +43,7 @@ public abstract class RlSearcher<T> implements Closeable {
    * IndexReaderを取得する。下位クラスで実装する。
    * @return
    */
-  protected abstract IndexReader getIndexReader();
-  
-  /** 
-   * IndexReaderを強制的にクローズする。下位クラスで実装する。
-   */
-  protected abstract void closeIndexReader();
+  protected abstract IndexReader createIndexReader();
 
   /**
    * LuceneのIndexSearcherを取得する。
@@ -61,25 +59,9 @@ public abstract class RlSearcher<T> implements Closeable {
    * @return
    */
   private IndexSearcher getIndexSearcher() {
+    if (indexSearcher != null) return indexSearcher;
+    return indexSearcher = new IndexSearcher(indexReader = createIndexReader());
 
-    // IndexReaderを取得する。
-    IndexReader newIndexReader = getIndexReader();
-
-    // IndexSearcherが取得済みで、そのIndexReaderが新しいものと異なる場合
-    // このIndexSearcherを捨てる。
-    if (indexSearcher != null && indexSearcher.getIndexReader() != newIndexReader) {
-      /*
-       * try { indexSearcher.close(); } catch (IOException ex) { }
-       */
-      indexSearcher = null;
-    }
-
-    // IndexSearcherが無ければ作成する。
-    if (indexSearcher == null) {
-      indexSearcher = new IndexSearcher(newIndexReader);
-    }
-
-    return indexSearcher;
   }
 
   /**
@@ -90,7 +72,7 @@ public abstract class RlSearcher<T> implements Closeable {
    * </p>
    */
   public synchronized void reopen() {
-    closeIndexReader();
+    close();
   }
 
   /** 検索結果最大数の取得 */
@@ -228,14 +210,12 @@ public abstract class RlSearcher<T> implements Closeable {
 
   /** クローズする */
   public synchronized void close() {
-
-    if (indexSearcher != null) {
-      /*
-       * このバージョンではクローズがない try { indexSearcher.close(); } catch (IOException ex)
-       * { }
-       */
-      indexSearcher = null;
+    if (indexReader == null) return;
+    try {
+      indexReader.close();
+    } catch (IOException ex) {
     }
-    closeIndexReader();
+    indexReader = null;
+    indexSearcher = null;
   }
 }

@@ -1,7 +1,5 @@
 package com.cm55.recLucene;
 
-import java.io.*;
-
 import org.apache.lucene.index.*;
 
 /**
@@ -15,38 +13,22 @@ public class RlSearcherForDatabase<T> extends RlSearcher<T> {
 
   /** 検索対象のデータベース */
   private RlDatabase database;
-  
-  /** Luceneのインデックスリーダ */
-  protected IndexReader indexReader;
 
   /** 読み込み用セマフォ */
   protected SemaphoreHandler.Acquisition ac;
 
-  public RlSearcherForDatabase(RlTable<T> fieldSet, RlDatabase  database, SemaphoreHandler.Acquisition ac) {
-    super(fieldSet);
+  public RlSearcherForDatabase(RlTable<T>table, RlDatabase database, SemaphoreHandler.Acquisition ac) {
+    super(table);
     this.database = database;
     this.ac = ac;
   }
   
   /** Luceneのインデックスリーダを取得する */
   @Override
-  protected IndexReader getIndexReader() {
-    if (indexReader != null)
-      return indexReader;
-    return indexReader = database.getIndexReader();
+  protected IndexReader createIndexReader() {
+    return database.getIndexReader();
   }
 
-  @Override
-  protected void closeIndexReader() {
-    if (indexReader != null) {
-      try {
-        indexReader.close();
-      } catch (IOException ex) {
-      }
-      indexReader = null;
-    }
-  }
-  
   /** クローズする */
   @Override
   public void close() {
