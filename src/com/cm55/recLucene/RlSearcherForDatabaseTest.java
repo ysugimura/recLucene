@@ -46,7 +46,7 @@ public class RlSearcherForDatabaseTest {
     // ライタをクローズ。あるいはコミットしてからデータベースサーチャを作成
     // その際、どのテーブルをサーチするのか指定する。
     // テーブル間のjoin 等の機能はない。
-    RlSearcher searcher = database.createSearcher(Foo.class);
+    RlSearcher<Foo> searcher = database.createSearcher(Foo.class);
     
     // 全レコードを取得
     List<Foo>list = searcher.getAllByPk();

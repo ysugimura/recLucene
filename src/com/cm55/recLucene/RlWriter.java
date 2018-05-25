@@ -166,7 +166,8 @@ public class RlWriter implements Closeable {
     Document doc = getLuceneDocument(rec);
 
     // プライマリキータームを作成する
-    RlTable table = database.getTableSet().getTable(rec.getClass());
+    @SuppressWarnings("unchecked")
+    RlTable<T> table = database.getTableSet().getTable((Class<T>)rec.getClass());
     Term pkTerm = table.getPkTerm(rec);
 
     return write(pkTerm, doc);
@@ -181,7 +182,7 @@ public class RlWriter implements Closeable {
    *          値マップ
    * @return このインデックスライタ
    */
-  public synchronized RlWriter write(RlTable table, RlValues values) {
+  public synchronized <T>RlWriter write(RlTable<T> table, RlValues values) {
     return write(table.getPkTerm(values), getLuceneDocument(table, values));
   }
 
@@ -196,7 +197,7 @@ public class RlWriter implements Closeable {
     Class<T> clazz = (Class<T>) rec.getClass();
 
     // クラスのマッピング情報を取得する
-    RlTable table = database.getTableSet().getTable(clazz);
+    RlTable<T> table = database.getTableSet().getTable(clazz);
     if (table == null) {
       throw new RlException(clazz.getName() + "は登録されていません");
     }
@@ -214,7 +215,7 @@ public class RlWriter implements Closeable {
    *          値マップ
    * @return Luceneドキュメント
    */
-  public Document getLuceneDocument(RlTable table, RlValues values) {
+  public <T>Document getLuceneDocument(RlTable<T> table, RlValues values) {
     return table.getFieldMap().getDocument(values);
   }
 
@@ -277,8 +278,8 @@ public class RlWriter implements Closeable {
    * ここで取得されるサーチャはライタの書き込みに即座に追随する。 たとえそれがcommitあるいはcloseされてなくてもよい。
    * </p>
    */
-  public synchronized RlSearcher getSearcher(Class<?> recordClass) {
-    RlTable table = database.getTableSet().getTable(recordClass);
+  public synchronized <T>RlSearcher<T> getSearcher(Class<T> recordClass) {
+    RlTable<T> table = database.getTableSet().getTable(recordClass);
     if (table == null)
       throw new RlException("テーブルがありません：" + recordClass);
     return getSearcher(table);
@@ -290,10 +291,10 @@ public class RlWriter implements Closeable {
    * ここで取得されるサーチャはライタの書き込みに即座に追随する。 たとえそれがcommitあるいはcloseされてなくてもよい。
    * </p>
    */
-  public synchronized RlSearcher getSearcher(RlTable table) {
+  public synchronized <T>RlSearcher<T> getSearcher(RlTable<T> table) {
     if (table == null)
       throw new NullPointerException();
-    return new RlSearcherForWriter(table, this);
+    return new RlSearcherForWriter<T>(table, this);
   }
 
   /**

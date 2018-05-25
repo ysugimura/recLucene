@@ -46,7 +46,7 @@ public class RlWriterTest {
     // ライタをクローズ。あるいはコミットしてからデータベースサーチャを作成
     // その際、どのテーブルをサーチするのか指定する。
     // テーブル間のjoin 等の機能はない。
-    RlSearcher searcher = database.createSearcher(Foo.class);
+    RlSearcher<Foo> searcher = database.createSearcher(Foo.class);
     
     // 全レコードを取得
     List<Foo>list = searcher.getAllByPk();
@@ -118,7 +118,7 @@ public class RlWriterTest {
     
     writer.commit();
     
-    RlSearcher s = database.createSearcher(FooBar.class);
+    RlSearcher<FooBar> s = database.createSearcher(FooBar.class);
 
     assertEquals(3, s.getAllByField("id3").size());
     
@@ -188,9 +188,9 @@ public class RlWriterTest {
     writer.write(new FooBar(1, "foobar3"));
     writer.commit();
  
-    RlSearcher fooSearcher;
-    RlSearcher barSearcher;
-    RlSearcher fooBarSearcher;
+    RlSearcher<Foo> fooSearcher;
+    RlSearcher<Bar> barSearcher;
+    RlSearcher<FooBar> fooBarSearcher;
     
     
     fooSearcher =  this.database.createSearcher(Foo.class);

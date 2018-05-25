@@ -43,9 +43,4 @@ public class RlSortField {
   public boolean getDesc() {
     return desc;
   }
-  
-  /** このフィールドのテーブル定義を取得する */
-  public RlTable getTableDef() {
-    return field.getTable();
-  }
 }

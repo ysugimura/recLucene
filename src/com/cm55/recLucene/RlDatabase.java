@@ -82,6 +82,7 @@ public abstract class RlDatabase {
    * @param classes
    * @return
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public RlDatabase add(Class<?>...classes) {
     Arrays.stream(classes).map(c->new RlTable(c)).forEach(this::add);
     return this;
@@ -92,7 +93,7 @@ public abstract class RlDatabase {
    * @param tables
    * @return
    */
-  public RlDatabase add(RlTable...tables) {
+  public RlDatabase add(RlTable<?>...tables) {
     SemaphoreHandler.Acquisition ac = this.writeSemaphore.acquire();    
     try {
       Arrays.stream(tables).forEach(tableSet::add);
@@ -153,8 +154,8 @@ public abstract class RlDatabase {
    * @param recordClass レコードクラス
    * @return サーチャ
    */
-  public synchronized RlSearcher createSearcher(Class<?> recordClass) {
-    RlTable table = tableSet.getTable(recordClass);
+  public synchronized <T>RlSearcher<T> createSearcher(Class<T> recordClass) {
+    RlTable<T> table = tableSet.getTable(recordClass);
     if (table == null)
       throw new RlException("no table for " + recordClass);
     return createSearcher(table);
@@ -171,9 +172,9 @@ public abstract class RlDatabase {
    *          テーブル
    * @return サーチャ
    */
-  public synchronized RlSearcher createSearcher(RlTable table) {
+  public synchronized <T>RlSearcher<T> createSearcher(RlTable<T> table) {
     SemaphoreHandler.Acquisition ac = searchSemaphore.acquire();
-    return new RlSearcherForDatabase(table, this, ac);
+    return new RlSearcherForDatabase<T>(table, this, ac);
   }
 
   /** このデータベースに対するリセッタを取得する */

@@ -14,7 +14,7 @@ public class RlResetterTest {
     writer.write(new Sample());
     writer.commit();
     writer.close();
-    RlSearcher searcher = database.createSearcher(Sample.class);
+    RlSearcher<Sample> searcher = database.createSearcher(Sample.class);
     List<Sample>list = searcher.search(new RlQuery.Word("test", "abc"));
     assertEquals(1, list.size());
     searcher.close();
@@ -34,7 +34,7 @@ public class RlResetterTest {
     writer.write(new Sample());
     writer.commit();
     writer.close();
-    RlSearcher searcher = database.createSearcher(Sample.class);
+    RlSearcher<Sample> searcher = database.createSearcher(Sample.class);
     List<Sample>list = searcher.search(new RlQuery.Word("test", "abc"));
     assertEquals(1, list.size());
     searcher.close();

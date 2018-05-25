@@ -43,7 +43,7 @@ public class SampleMain {
   }
   
   static void show(RlDatabase db) {
-    RlSearcher searcher = db.createSearcher(FooRecord.class);
+    RlSearcher<FooRecord> searcher = db.createSearcher(FooRecord.class);
     {
       List<FooRecord>list = searcher.search(new RlQuery.Word("content", "人間"));
       System.out.println("first");

@@ -63,15 +63,6 @@ public class RlField {
   }
 
   /**
-   * このフィールドの所属するテーブルを返す。
-   * 
-   * @return このフィールドの所属する{@link RlTable}
-   */
-  public RlTable getTable() {
-    throw new RuntimeException();
-  }
-
-  /**
    * プライマリーキーであるか
    * 
    * @return true:プライマリキー、false:プライマリキーでない。

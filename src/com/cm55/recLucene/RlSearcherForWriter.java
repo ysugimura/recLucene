@@ -9,7 +9,7 @@ import org.apache.lucene.index.*;
 /**
  * ライタ用のニアリアルタイムサーチャ
  */
-public class RlSearcherForWriter extends RlSearcher {
+public class RlSearcherForWriter<T> extends RlSearcher<T> {
 
   /** このサーチャーを取得した元のライター */
   private RlWriter writer;
@@ -20,7 +20,7 @@ public class RlSearcherForWriter extends RlSearcher {
   /** Luceneのインデックスリーダ */
   private IndexReader indexReader;
   
-  public RlSearcherForWriter(RlTable table, RlWriter writer) {
+  public RlSearcherForWriter(RlTable<T> table, RlWriter writer) {
     super(table);
     this.writer = writer;   
   }

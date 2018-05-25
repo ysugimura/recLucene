@@ -23,10 +23,10 @@ import org.apache.lucene.search.*;
  * </p>
  * @author ysugimura
  */
-public abstract class RlSearcher implements Closeable {
+public abstract class RlSearcher<T> implements Closeable {
 
   /** 対象とするテーブル */
-  protected RlTable table;
+  protected RlTable<T> table;
 
   /** Luceneのインデックスサーチャ */
   private IndexSearcher indexSearcher;
@@ -39,12 +39,12 @@ public abstract class RlSearcher implements Closeable {
    * このサーチャー対象とするテーブルを指定する
    * @param table
    */
-  protected RlSearcher(RlTable table) {
+  protected RlSearcher(RlTable<T> table) {
     this.table = table;
   }
 
   /** 対象とするテーブルを取得する */
-  public RlTable getTable() {
+  public RlTable<T> getTable() {
     return table;
   }
   
@@ -111,7 +111,7 @@ public abstract class RlSearcher implements Closeable {
   }
 
   /** 検索結果最大数の設定 */
-  public synchronized RlSearcher setMaxCount(int value) {
+  public synchronized RlSearcher<T> setMaxCount(int value) {
     maxCount = value;
     return this;
   }
@@ -123,7 +123,7 @@ public abstract class RlSearcher implements Closeable {
    * @param query クエリ
    * @return 検索結果レコードリスト
    */
-  public synchronized <T> List<T> search(RlQuery query) {
+  public synchronized List<T> search(RlQuery query) {
     return search(query, new RlSortFields());
   }
 
@@ -170,7 +170,7 @@ public abstract class RlSearcher implements Closeable {
   }
 
   /** 検索する。ソート指定あり */
-  public synchronized <T> List<T> search(RlQuery query, RlSortFields sorts) {
+  public synchronized List<T> search(RlQuery query, RlSortFields sorts) {
 
     try {
       TopDocs hits = searchHits(query, sorts);
@@ -204,21 +204,21 @@ public abstract class RlSearcher implements Closeable {
     }
   }
 
-  public synchronized <T> List<T> getAllByPk() {
+  public synchronized List<T> getAllByPk() {
     RlField field = table.getPkField();
     if (field == null)
       throw new RlException("プライマリキーフィールドがありません");
     return getAllByField(field);
   }
 
-  public <T> List<T> getAllByField(String fieldName) {
+  public List<T> getAllByField(String fieldName) {
     RlField field = table.getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません：" + fieldName);
     return getAllByField(field);
   }
 
-  <T> List<T> getAllByField(RlField field) {
+  List<T> getAllByField(RlField field) {
     if (field.isTokenized()) {
       throw new RlException("トークン化フィールドは指定できません");
     }
@@ -231,7 +231,7 @@ public abstract class RlSearcher implements Closeable {
     }
   }
 
-  public <T> List<T> getObjects(TopDocs hits) throws IOException {
+  public List<T> getObjects(TopDocs hits) throws IOException {
     List<T> result = new ArrayList<T>();
     for (ScoreDoc scoreDoc : hits.scoreDocs) {
       Document doc = getIndexSearcher().doc(scoreDoc.doc);

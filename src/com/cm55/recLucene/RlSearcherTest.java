@@ -22,7 +22,7 @@ public class RlSearcherTest {
     }
     writer.close();
     
-    RlSearcher searcher = database.createSearcher(BookData.class);
+    RlSearcher<BookData> searcher = database.createSearcher(BookData.class);
     
     // プライマリキーでの検索
     {

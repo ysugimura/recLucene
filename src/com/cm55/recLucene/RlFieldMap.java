@@ -14,6 +14,10 @@ public class RlFieldMap {
   /** プライマリキーフィールド 。プライマリキーの無い場合にはnull */
   private RlField pkField;
   
+  public RlFieldMap(Collection<RlField>fields) {
+    this(fields.toArray(new RlField[0]));
+  }
+  
   public RlFieldMap(RlField... fields) {
 
     for (RlField field : fields) {

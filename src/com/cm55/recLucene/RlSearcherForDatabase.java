@@ -11,7 +11,7 @@ import org.apache.lucene.index.*;
  * いったんサーチャーをクローズして、再度作成する必要がある。
  * </p>
  */
-public class RlSearcherForDatabase extends RlSearcher {
+public class RlSearcherForDatabase<T> extends RlSearcher<T> {
 
   /** 検索対象のデータベース */
   private RlDatabase database;
@@ -22,7 +22,7 @@ public class RlSearcherForDatabase extends RlSearcher {
   /** 読み込み用セマフォ */
   protected SemaphoreHandler.Acquisition ac;
 
-  public RlSearcherForDatabase(RlTable table, RlDatabase  database, SemaphoreHandler.Acquisition ac) {
+  public RlSearcherForDatabase(RlTable<T> table, RlDatabase  database, SemaphoreHandler.Acquisition ac) {
     super(table);
     this.database = database;
     this.ac = ac;

@@ -37,10 +37,10 @@ import org.apache.lucene.index.*;
  * </p>
  * @author ysugimura
  */
-public class RlTable {
+public class RlTable<T> {
 
   /** 対象とするレコードクラス。ただし、自由フィールドの場合はnull */
-  private Class<?> recordClass;
+  private Class<T> recordClass;
 
   /** フィールド名/{@link RlField}マップ */
   private RlFieldMap fieldMap = new RlFieldMap();
@@ -49,7 +49,7 @@ public class RlTable {
    * クラスを指定してマッピングを作成する
    * @param clazz マッピング対象クラス
    */
-  public RlTable(Class<?> recordClass) {
+  public RlTable(Class<T> recordClass) {
 
     this.recordClass = recordClass;
 
@@ -148,13 +148,12 @@ public class RlTable {
   }
 
   /** レコードオブジェクトから{@link Document}オブジェクトを作成 */
-  public <T>Document getDocument(T object) {
+  public Document getDocument(T object) {
     return fieldMap.getDocument(convertToValues(object));
   }
 
   /** {@link Document}オブジェクトからレコードオブジェクトを作成 */
-  @SuppressWarnings("unchecked")
-  public <T>T fromDocument(Document doc) {
+  public T fromDocument(Document doc) {
     return (T)convertFromValues(fieldMap.fromDocument(doc));    
   }
 
@@ -174,7 +173,7 @@ public class RlTable {
 
   /** {@link RlValues}オブジェクトからレコードオブジェクトを作成 */
   @SuppressWarnings("unchecked")
-  private<T> T convertFromValues(RlValues values) {
+  private T convertFromValues(RlValues values) {
     if (recordClass == null)
       return (T) values;
     try {
