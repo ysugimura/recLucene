@@ -182,7 +182,7 @@ public class RlWriter implements Closeable {
    *          値マップ
    * @return このインデックスライタ
    */
-  public synchronized <T>RlWriter write(RlTable<T> table, RlValues values) {
+  public synchronized RlWriter write(RlFieldMap table, RlValues values) {
     return write(table.getPkTerm(values), getLuceneDocument(table, values));
   }
 
@@ -215,8 +215,8 @@ public class RlWriter implements Closeable {
    *          値マップ
    * @return Luceneドキュメント
    */
-  public <T>Document getLuceneDocument(RlTable<T> table, RlValues values) {
-    return table.getFieldMap().getDocument(values);
+  public Document getLuceneDocument(RlFieldMap table, RlValues values) {
+    return table.getDocument(values);
   }
 
   /**
