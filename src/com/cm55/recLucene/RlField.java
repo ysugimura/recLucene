@@ -125,17 +125,13 @@ public class RlField<T> {
 
   /**
    * フィールド値をLucene格納用のStringに変換する
-   * 
    * @param value
    * @return
    */
-  @SuppressWarnings("unchecked")
   public String toString(T value) {
-    if (value == null)
-      return null;
-    if (getFieldConverter() == null)
-      return (String) value;
-    return getFieldConverter().toString(value);
+    if (value == null) return null;
+    if (fieldConverter == null) return (String)value;
+    return fieldConverter.toString(value);
   }
 
   /** Lucene格納用のStringからフィールド値を取得する */
@@ -143,9 +139,9 @@ public class RlField<T> {
   public T fromString(String string) {
     if (string == null)
       return null;
-    if (getFieldConverter() == null)
+    if (fieldConverter == null)
       return (T)string;
-    return (T)getFieldConverter().fromString(string);
+    return (T)fieldConverter.fromString(string);
   }
 
   /**
@@ -159,11 +155,8 @@ public class RlField<T> {
   
   /**
    * 指定されたオブジェクトの、このフィールドの値を設定する。 現在のところ値はString型のみをサポートしている。
-   * 
-   * @param values
-   *          オブジェクト
-   * @param value
-   *          値
+   * @param values  オブジェクト
+   * @param value  値
    */  
   public void setStringValue(RlValues values, String value) {
     values.put(name, fromString(value));
@@ -187,12 +180,6 @@ public class RlField<T> {
       throw new RuntimeException();
     }
   }
-
-  /** フィールドコンバータを取得する */
-  @SuppressWarnings("rawtypes")
-  private RlFieldConverter getFieldConverter() {
-    return fieldConverter;
-  }
   
   /**
    * 文字列化。デバッグ用
@@ -205,7 +192,7 @@ public class RlField<T> {
   }
 
 
-  /////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /**
    * {@link RlField}のビルダ
