@@ -25,8 +25,8 @@ import org.apache.lucene.search.*;
  */
 public abstract class RlSearcher<T> implements Closeable {
 
-  /** 対象とするテーブル */
-  protected RlFieldSet<T> table;
+  /** 対象とするフィールドセット */
+  protected RlFieldSet<T> fieldSet;
 
   /** Luceneのインデックスサーチャ */
   private IndexSearcher indexSearcher;
@@ -34,18 +34,17 @@ public abstract class RlSearcher<T> implements Closeable {
   /** 最大出力結果数。初期値は実質無制限 */
   private int maxCount = Integer.MAX_VALUE / 2;
 
-
   /**
    * このサーチャー対象とするテーブルを指定する
    * @param table
    */
-  protected RlSearcher(RlFieldSet<T> table) {
-    this.table = table;
+  protected RlSearcher(RlFieldSet<T>fieldSet) {
+    this.fieldSet = fieldSet;
   }
 
-  /** 対象とするテーブルを取得する */
-  public RlFieldSet<T> getTable() {
-    return table;
+  /** 対象とするフィールドセットを取得する */
+  public RlFieldSet<T> getFieldSet() {
+    return fieldSet;
   }
   
   /**
@@ -131,14 +130,14 @@ public abstract class RlSearcher<T> implements Closeable {
    * 検索してプライマリキーセットを取得する
    */
   public <P> Set<P> searchPkSet(RlQuery query) {
-    RlField field = table.getPkField();
+    RlField field = fieldSet.getPkField();
     if (field == null)
       throw new RlException("プライマリキーフィールドがありません");
     return searchFieldSet(field, query);
   }
 
   public <P> Set<P> searchFieldSet(String fieldName, RlQuery query) {
-    RlField field = table.getFieldByName(fieldName);
+    RlField field = fieldSet.getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません：" + fieldName);
     return searchFieldSet(field, query);
@@ -178,7 +177,7 @@ public abstract class RlSearcher<T> implements Closeable {
       List<T> result = new ArrayList<T>();
       for (ScoreDoc scoreDoc : hits.scoreDocs) {
         Document doc = getIndexSearcher().doc(scoreDoc.doc);
-        result.add(table.fromDocument(doc));
+        result.add(fieldSet.fromDocument(doc));
       }
 
       return result;
@@ -191,7 +190,7 @@ public abstract class RlSearcher<T> implements Closeable {
   private synchronized TopDocs searchHits(RlQuery query, RlSortFields sorts) {
     try {
       TopDocs hits;
-      Query luceneQuery = query.getLuceneQuery(table);
+      Query luceneQuery = query.getLuceneQuery(fieldSet);
       if (sorts == null || sorts.rlSortFields.length == 0) {
         hits = getIndexSearcher().search(luceneQuery, maxCount);
       } else {
@@ -205,14 +204,14 @@ public abstract class RlSearcher<T> implements Closeable {
   }
 
   public synchronized List<T> getAllByPk() {
-    RlField field = table.getPkField();
+    RlField field = fieldSet.getPkField();
     if (field == null)
       throw new RlException("プライマリキーフィールドがありません");
     return getAllByField(field);
   }
 
   public List<T> getAllByField(String fieldName) {
-    RlField field = table.getFieldByName(fieldName);
+    RlField field = fieldSet.getFieldByName(fieldName);
     if (field == null)
       throw new RlException("フィールドがありません：" + fieldName);
     return getAllByField(field);
@@ -235,7 +234,7 @@ public abstract class RlSearcher<T> implements Closeable {
     List<T> result = new ArrayList<T>();
     for (ScoreDoc scoreDoc : hits.scoreDocs) {
       Document doc = getIndexSearcher().doc(scoreDoc.doc);
-      result.add(table.fromDocument(doc));
+      result.add(fieldSet.fromDocument(doc));
     }
     return result;
   }

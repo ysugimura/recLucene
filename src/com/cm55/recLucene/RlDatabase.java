@@ -172,9 +172,9 @@ public abstract class RlDatabase {
    *          テーブル
    * @return サーチャ
    */
-  public synchronized <T>RlSearcher<T> createSearcher(RlTable<T> table) {
+  public synchronized <T>RlSearcher<T> createSearcher(RlFieldSet<T> fieldSet) {
     SemaphoreHandler.Acquisition ac = searchSemaphore.acquire();
-    return new RlSearcherForDatabase<T>(table, this, ac);
+    return new RlSearcherForDatabase<T>(fieldSet, this, ac);
   }
 
   /** このデータベースに対するリセッタを取得する */
