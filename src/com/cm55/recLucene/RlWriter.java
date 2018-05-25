@@ -202,7 +202,7 @@ public class RlWriter implements Closeable {
     }
 
     // ドキュメントを作成する
-    return table.getDocumentFromRecord(rec);
+    return table.getDocument(rec);
   }
 
   /**
@@ -215,7 +215,7 @@ public class RlWriter implements Closeable {
    * @return Luceneドキュメント
    */
   public Document getLuceneDocument(RlTable table, RlValues values) {
-    return table.getDocumentFromValues(values);
+    return table.getFieldMap().getDocument(values);
   }
 
   /**

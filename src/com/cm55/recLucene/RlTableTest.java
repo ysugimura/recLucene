@@ -72,7 +72,7 @@ public class RlTableTest {
     Table4 object = new Table4();
     object.id = "ID";
     object.fld1 = "FLD1";
-    Document doc = table.getDocumentFromRecord(object);
+    Document doc = table.getDocument(object);
     assertEquals(2, doc.getFields().size());
     assertEquals("ID", doc.get("id"));
     assertEquals("FLD1", doc.get("fld1"));
@@ -95,7 +95,7 @@ public class RlTableTest {
     doc.add(new TextField("fld3", "FLD2", Field.Store.NO));
     
     RlTable table = new RlTable(Table4.class);
-    Table4 object = table.recordFromDocument(doc);
+    Table4 object = table.fromDocument(doc);
     
     assertEquals("id:ID,fld1:null,fld2:null", object.toString());
   }
@@ -117,7 +117,7 @@ public class RlTableTest {
   @Test
   public void test6() {
     RlField aField, bField;
-    RlTable table = new RlTable(
+    RlFieldMap table = new RlFieldMap(
       aField = new RlField("a", new RlFieldAttr.Default() {
         @Override
         public boolean pk() {
@@ -135,11 +135,11 @@ public class RlTableTest {
     values.put("a",  123);
     values.put("b",  "abc");
     
-    Document document = table.getDocumentFromValues(values);
+    Document document = table.getDocument(values);
     assertEquals("123", document.get("a")); // 文字列に変換されていることに注意
     assertEquals("abc", document.get("b"));
     
-    RlValues dup = table.recordFromDocument(document);
+    RlValues dup = table.fromDocument(document);
     assertEquals(123, (int)dup.get("a"));
     assertEquals("abc", dup.get("b"));
    

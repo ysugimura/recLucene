@@ -178,7 +178,7 @@ public abstract class RlSearcher implements Closeable {
       List<T> result = new ArrayList<T>();
       for (ScoreDoc scoreDoc : hits.scoreDocs) {
         Document doc = getIndexSearcher().doc(scoreDoc.doc);
-        result.add(table.recordFromDocument(doc));
+        result.add(table.fromDocument(doc));
       }
 
       return result;
@@ -235,7 +235,7 @@ public abstract class RlSearcher implements Closeable {
     List<T> result = new ArrayList<T>();
     for (ScoreDoc scoreDoc : hits.scoreDocs) {
       Document doc = getIndexSearcher().doc(scoreDoc.doc);
-      result.add(table.recordFromDocument(doc));
+      result.add(table.fromDocument(doc));
     }
     return result;
   }

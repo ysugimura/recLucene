@@ -139,57 +139,27 @@ public class RlTable {
   }
   
   /**
-   * 指定されたオブジェクトのプライマリキー{@link Term}を取得する。
-   * @param rec
-   * @return
+   * 指定されたレコードオブジェクトのプライマリキー{@link Term}を取得する。
    */
   public Term getPkTerm(Object object) {
     RlField pkField = fieldMap.getPkField();
-    if (pkField == null)
-      return null;
-    
-    RlValues values;
-    if (recordClass == null) {
-      // 自由形式
-      if (object == null || !(object instanceof RlValues)) {
-        throw new RlException("getPkTermの引数オブジェクトのクラスが違います");
-      }
-      values = (RlValues)object;
-    } else {
-      // レコード形式
-      if (object == null || object.getClass() != recordClass) {
-        throw new RlException("getPkTermの引数オブジェクトのクラスが違います");
-      }
-      values = this.convertToValues(object);
-    }
-    String value = pkField.getStringValue(values);
-    if (value == null) {
-      throw new RlException("プライマリキーがnullです");
-    }
-    Term pkTerm = new Term(pkField.getName(), value);
-    return pkTerm;
+    if (pkField == null) return null;
+    return fieldMap.getPkTerm(convertToValues(object));
   }
 
-  public <T>Document getDocumentFromRecord(T object) {
+  /** レコードオブジェクトから{@link Document}オブジェクトを作成 */
+  public <T>Document getDocument(T object) {
     return fieldMap.getDocument(convertToValues(object));
   }
-  
-  public Document getDocumentFromValues(RlValues values) {
-    return fieldMap.getDocument(values);
-  }
 
-
+  /** {@link Document}オブジェクトからレコードオブジェクトを作成 */
   @SuppressWarnings("unchecked")
-  public <T>T recordFromDocument(Document doc) {
+  public <T>T fromDocument(Document doc) {
     return (T)convertFromValues(fieldMap.fromDocument(doc));    
   }
 
-  public RlValues valuesFromDocument(Document doc) {
-    return fieldMap.fromDocument(doc);
-  }
-
-  
-  public RlValues convertToValues(Object o) {
+  /** レコードオブジェクトから{@link RlValue}オブジェクトを作成 */
+  private RlValues convertToValues(Object o) {
     if (o instanceof RlValues) return (RlValues)o;
     RlValues result = new RlValues();
     fieldMap.getFields().forEach(f-> {
@@ -201,9 +171,10 @@ public class RlTable {
     });
     return result;
   }
-  
+
+  /** {@link RlValues}オブジェクトからレコードオブジェクトを作成 */
   @SuppressWarnings("unchecked")
-  public <T> T convertFromValues(RlValues values) {
+  private<T> T convertFromValues(RlValues values) {
     if (recordClass == null)
       return (T) values;
     try {

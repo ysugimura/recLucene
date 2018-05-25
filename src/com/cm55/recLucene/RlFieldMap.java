@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.stream.*;
 
 import org.apache.lucene.document.*;
+import org.apache.lucene.index.*;
 
 public class RlFieldMap {
 
@@ -78,4 +79,24 @@ public class RlFieldMap {
     
     return result;
   }
+  
+  /**
+   * 指定されたオブジェクトのプライマリキー{@link Term}を取得する。
+   * @param rec
+   * @return
+   */
+  public Term getPkTerm(RlValues values) {
+
+    if (pkField == null)
+      return null;
+    
+
+    String value = pkField.getStringValue(values);
+    if (value == null) {
+      throw new RlException("プライマリキーがnullです");
+    }
+    Term pkTerm = new Term(pkField.getName(), value);
+    return pkTerm;
+  }
+  
 }
