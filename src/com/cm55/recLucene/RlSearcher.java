@@ -13,7 +13,7 @@ import org.apache.lucene.search.*;
  *
  * @param <T> 検索対象のテーブルオブジェクトの型
  */
-public abstract class RlSearcher<T> implements Closeable {
+public class RlSearcher<T> implements Closeable {
 
   /** 対象とするテーブル */
   protected RlTable<T> table;
@@ -24,30 +24,20 @@ public abstract class RlSearcher<T> implements Closeable {
   /** 最大出力結果数。初期値は実質無制限 */
   private int maxCount = Integer.MAX_VALUE / 2;
 
+  SemaphoreHandler.Acquisition ac;
   /**
    * このサーチャー対象とするテーブルを指定する
    */
-  protected RlSearcher(RlTable<T>table) {
+  protected RlSearcher(RlTable<T>table, IndexReader indexReader, SemaphoreHandler.Acquisition ac) {
     this.table = table;
+    indexSearcher = new IndexSearcher(indexReader);
+    
+    this.ac = ac;
   }
 
   /** 対象とするテーブルを取得する */
   public RlTable<T> getTable() {
     return table;
-  }
-  
-  /**
-   * IndexReaderを取得する。下位クラスで実装する。
-   * @return
-   */
-  protected abstract IndexReader createIndexReader();
-
-  /**
-   * @return
-   */
-  private synchronized IndexSearcher getIndexSearcher() {
-    if (indexSearcher != null) return indexSearcher;
-    return indexSearcher = new IndexSearcher(createIndexReader());
   }
 
   /**
@@ -58,7 +48,7 @@ public abstract class RlSearcher<T> implements Closeable {
    * </p>
    */
   public synchronized void reopen() {
-    closeSearcher();
+
   }
 
   /** 検索結果最大数の取得 */
@@ -71,21 +61,11 @@ public abstract class RlSearcher<T> implements Closeable {
     maxCount = value;
     return this;
   }
-  
-  private synchronized void closeSearcher() {
-    if (indexSearcher == null) return;
-    try {
-      indexSearcher.getIndexReader().close();
-    } catch (IOException ex) {
-    }
-    indexSearcher = null;  
-    
-    
-  }
+
   
   /** クローズする */
   public synchronized void close() {
-    closeSearcher();
+    ac.release();
   }
 
   /////////////////////////////////////////////////////////////////
@@ -128,7 +108,7 @@ public abstract class RlSearcher<T> implements Closeable {
      */
     TopDocs hits = searchHits(query, null);
     Set<P> set = new HashSet<P>();
-    IndexSearcher indexSearcher = getIndexSearcher();
+
     try {
       for (ScoreDoc scoreDoc : hits.scoreDocs) {
         Document doc = indexSearcher.doc(scoreDoc.doc);
@@ -149,7 +129,7 @@ public abstract class RlSearcher<T> implements Closeable {
       TopDocs hits = searchHits(query, sorts);
       List<T> result = new ArrayList<T>();
       for (ScoreDoc scoreDoc : hits.scoreDocs) {
-        Document doc = getIndexSearcher().doc(scoreDoc.doc);
+        Document doc = indexSearcher.doc(scoreDoc.doc);
         result.add(table.fromDocument(doc));
       }
       return result;
@@ -163,9 +143,9 @@ public abstract class RlSearcher<T> implements Closeable {
       TopDocs hits;
       Query luceneQuery = query.getLuceneQuery(table);
       if (sorts == null || sorts.rlSortFields.length == 0) {
-        hits = getIndexSearcher().search(luceneQuery, maxCount);
+        hits = indexSearcher.search(luceneQuery, maxCount);
       } else {
-        hits = getIndexSearcher().search(luceneQuery, maxCount, sorts.getSort());
+        hits = indexSearcher.search(luceneQuery, maxCount, sorts.getSort());
       }
       return hits;
 
@@ -194,7 +174,7 @@ public abstract class RlSearcher<T> implements Closeable {
     }
     try {
       Term pkWildTerm = new Term(field.getName(), "*");
-      TopDocs hits = getIndexSearcher().search(new WildcardQuery(pkWildTerm), maxCount);
+      TopDocs hits = indexSearcher.search(new WildcardQuery(pkWildTerm), maxCount);
       return getObjects(hits);
     } catch (IOException ex) {
       throw new RlException.IO(ex);
@@ -204,7 +184,7 @@ public abstract class RlSearcher<T> implements Closeable {
   public List<T> getObjects(TopDocs hits) throws IOException {
     List<T> result = new ArrayList<T>();
     for (ScoreDoc scoreDoc : hits.scoreDocs) {
-      Document doc = getIndexSearcher().doc(scoreDoc.doc);
+      Document doc = indexSearcher.doc(scoreDoc.doc);
       result.add(table.fromDocument(doc));
     }
     return result;

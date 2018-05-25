@@ -14,8 +14,7 @@ import org.junit.runners.Suite.*;
   RlFieldTest.class,
   RlQueryTest.class,
   RlSearcherTest.class,
-  RlSearcherForDatabaseTest.class,
-  RlSearcherForWriterTest.class,
+
   RlTableTest.class,
   RlTableSetTest.class, 
   RlValuesTest.class,

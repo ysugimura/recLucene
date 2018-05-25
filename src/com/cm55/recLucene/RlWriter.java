@@ -57,23 +57,11 @@ public class RlWriter implements Closeable {
   private SemaphoreHandler.Acquisition acquisition;
   
   /** 初期化 */
-  public RlWriter(RlDatabase database, SemaphoreHandler.Acquisition acquisition
-      , IndexWriterConfig config) {
+  public RlWriter(RlDatabase database, IndexWriter indexWriter, SemaphoreHandler.Acquisition acquisition) {
 
     this.database = database;
+    this.indexWriter = indexWriter;
     this.acquisition = acquisition;
-    try {
-
-
-      indexWriter = new IndexWriter(database.getDirectory(), config);
-
-      // setMaxFieldLengthもdeprecatedとなり、その代わりにLimitTokenCountAnalyzer
-      // を使えとドキュメントにあるが、使い方がわからない。
-      // indexWriter.setMaxFieldLength(MaxFieldLength.UNLIMITED.getLimit());
-
-    } catch (IOException ex) {
-      throw new RlException.IO(ex);
-    }
   }
 
   /**
@@ -254,32 +242,6 @@ public class RlWriter implements Closeable {
     return this;
   }
 
-
-  /**
-   * サーチャを取得する。
-   * <p>
-   * ここで取得されるサーチャはライタの書き込みに即座に追随する。 たとえそれがcommitあるいはcloseされてなくてもよい。
-   * </p>
-   */
-  public synchronized <T>RlSearcher<T> getSearcher(Class<T> recordClass) {
-    RlClassTable<T> table = database.getTableSet().getTable(recordClass);
-    if (table == null)
-      throw new RlException("テーブルがありません：" + recordClass);
-    return getSearcher(table);
-  }
-
-  /**
-   * サーチャを取得する。
-   * <p>
-   * ここで取得されるサーチャはライタの書き込みに即座に追随する。 たとえそれがcommitあるいはcloseされてなくてもよい。
-   * </p>
-   */
-  public synchronized <T>RlSearcher<T> getSearcher(RlClassTable<T> table) {
-    if (table == null)
-      throw new NullPointerException();
-    return new RlSearcherForWriter<T>(table, this);
-  }
-
   /**
    * コミットする。
    * <p>
@@ -305,14 +267,7 @@ public class RlWriter implements Closeable {
    */
   @Override
   public synchronized void close() {
-    if (indexWriter == null) return;
-    try {
-      indexWriter.close();
-      indexWriter = null;
       acquisition.release();
-    } catch (IOException ex) {
-      throw new RlException.IO(ex);
-    }
   }
 
   /**

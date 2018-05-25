@@ -30,8 +30,8 @@ public abstract class RlDatabase {
   /** テーブルセット */
   protected RlTableSet tableSet = new RlTableSet();
   
-  /** 現在のテーブルセットの全tokenizedフィールドのアナライザ */
-  protected Analyzer analyzer = null;
+  protected RlWriterReader writerReader;
+  
 
   /** ライタ取得セマフォ。ライターはただ一つしか取得することはできない */
   protected SemaphoreHandler writeSemaphore = new SemaphoreHandler(1);
@@ -97,7 +97,12 @@ public abstract class RlDatabase {
     SemaphoreHandler.Acquisition ac = this.writeSemaphore.acquire();    
     try {
       Arrays.stream(tables).forEach(tableSet::add);
-      analyzer = null;
+      if (writerReader != null) {        
+      
+        writerReader.close();
+        writerReader = null;
+      }
+      
     } finally {
       ac.release();
     }
@@ -133,16 +138,12 @@ public abstract class RlDatabase {
   private RlWriter newWriter(SemaphoreHandler.Acquisition ac) {
     
     // アナライザがまだなければ作成する。既にライタセマフォを取得しているため、synchronizedは不要
-    if (analyzer == null) analyzer = tableSet.getPerFieldAnalyzer();
-    
-    // コンフィギュレーションを作成。これは使い回せるものなのだろうか？
-    IndexWriterConfig config = new IndexWriterConfig(analyzer);
-
-    // クローズ時にコミットするモードになっていることを確認
-    assert config.getCommitOnClose();
+    if (writerReader == null) {
+      writerReader = new RlWriterReader(getDirectory(), tableSet);
+    }
     
     // ライタを作成
-    return new RlWriter(this, ac, config);    
+    return new RlWriter(this, writerReader.indexWriter, ac);    
   }
   
   /**
@@ -173,8 +174,11 @@ public abstract class RlDatabase {
    * @return サーチャ
    */
   public synchronized <T>RlSearcher<T> createSearcher(RlTable<T>table) {
+    if (writerReader == null) {
+      writerReader = new RlWriterReader(getDirectory(), tableSet);
+    }
     SemaphoreHandler.Acquisition ac = searchSemaphore.acquire();
-    return new RlSearcherForDatabase<T>(table, this, ac);
+    return new RlSearcher<T>(table, writerReader.indexReader, ac);
   }
 
   /** このデータベースをリセットする */
