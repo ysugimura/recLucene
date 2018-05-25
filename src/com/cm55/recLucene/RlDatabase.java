@@ -4,7 +4,6 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
-import org.apache.lucene.analysis.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.*;
 
@@ -61,14 +60,14 @@ public abstract class RlDatabase {
 
   /** データベースをクローズする */
   public void close() {
-    RlSemaphoreMulti.Holder ac = allSemaphore.acquireAll();
+    RlSemaphoreMulti.Holder holder = allSemaphore.acquireAll();
     try {
       writerHolder.close();
       directory.close();
     } catch (IOException ex) {
       throw new RlException(ex);
     }
-    ac.release();
+    holder.release();
     directory = null;
   }
 
@@ -89,12 +88,12 @@ public abstract class RlDatabase {
    * @return
    */
   public RlDatabase add(RlTable<?>...tables) {
-    RlSemaphoreMulti.Holder ac = allSemaphore.acquireAll();    
+    RlSemaphoreMulti.Holder holder = allSemaphore.acquireAll();    
     try {
       Arrays.stream(tables).forEach(tableSet::add);
       writerHolder.reset(directory, tableSet);
     } finally {
-      ac.release();
+      holder.release();
     }
     return this;
   }
@@ -105,8 +104,8 @@ public abstract class RlDatabase {
    * @return 新たなライタ
    */
   public RlWriter createWriter() {
-    RlSemaphore.Holder ac = writeｒSemaphore.acquire();
-    return new RlWriter(tableSet, writerHolder.getIndexWriter(), ac); 
+    RlSemaphore.Holder holder = writeｒSemaphore.acquire();
+    return new RlWriter(tableSet, writerHolder.getIndexWriter(), holder); 
   }
 
   /**
@@ -115,9 +114,9 @@ public abstract class RlDatabase {
    * @return
    */
   public RlWriter tryCreateWriter() {
-    RlSemaphore.Holder ac = writeｒSemaphore.tryAcquire();
-    if (ac == null) return null;
-    return new RlWriter(tableSet, writerHolder.getIndexWriter(), ac); 
+    RlSemaphore.Holder holder = writeｒSemaphore.tryAcquire();
+    if (holder == null) return null;
+    return new RlWriter(tableSet, writerHolder.getIndexWriter(), holder); 
   }
   
   /**
@@ -148,23 +147,22 @@ public abstract class RlDatabase {
    * @return サーチャ
    */
   public synchronized <T>RlSearcher<T> createSearcher(RlTable<T>table) {
-
-    RlSemaphore.Holder ac = searcherSemaphore.acquire();
-    return new RlSearcher<T>(table, writerHolder.getSearcherManager(), ac);
+    RlSemaphore.Holder holder = searcherSemaphore.acquire();
+    return new RlSearcher<T>(table, writerHolder.getSearcherManager(), holder);
   }
 
   /** このデータベースをリセットする */
   public synchronized void reset() {
-    RlSemaphoreMulti.Holder ac = allSemaphore.acquireAll();
+    RlSemaphoreMulti.Holder holder = allSemaphore.acquireAll();
     doReset();
-    ac.release();
+    holder.release();
   }
 
   public synchronized boolean tryReset() {
-    RlSemaphoreMulti.Holder ac = allSemaphore.tryAcquireAll();
-    if (ac == null) return false;
+    RlSemaphoreMulti.Holder holder = allSemaphore.tryAcquireAll();
+    if (holder == null) return false;
     doReset();
-    ac.release();
+    holder.release();
     return true;
   }
 

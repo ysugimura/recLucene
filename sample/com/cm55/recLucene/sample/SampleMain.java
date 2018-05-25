@@ -28,7 +28,7 @@ public class SampleMain {
   };
   
   @Test
-  public void test() throws Exception {
+  public void test()  {
 
     // デフォルトの日本語アナライザを3gramにする
     RlDefaults.analyzerClass = JpnStandard3.class;
