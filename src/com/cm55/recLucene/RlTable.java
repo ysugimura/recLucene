@@ -66,30 +66,7 @@ public class RlTable<T> {
       .map(javaField->new RlField(javaField))
       .collect(Collectors.toList());
 
-    init(fieldsFromClass.toArray(new RlField[0]));
-  }
-
-  /**
-   * フィールドを指定する
-   * 
-   * @param fields フィールド指定
-   * @return
-   */
-  public RlTable(RlField... fields) {
-    init(fields);
-  }
-
-  /**
-   * フィールドリストを指定する
-   * @param fields フィールド指定
-   */
-  public RlTable(List<RlField> fields) {
-    init(fields.toArray(new RlField[0]));
-  }
-
-  /** 作成時の初期化 */
-  private void init(RlField... fields) {
-    fieldMap = new RlFieldMap(fields);
+    fieldMap = new RlFieldMap(fieldsFromClass);
   }
 
  public RlFieldMap getFieldMap() {
