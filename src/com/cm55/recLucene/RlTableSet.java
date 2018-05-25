@@ -24,7 +24,6 @@ class RlTableSet {
 
   /** レコードクラス/テーブルマップ */
   Map<Class<?>, RlTable<?>> recordToTable = new HashMap<>();
-
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   RlTableSet add(Class<?>...classes) {
@@ -54,16 +53,6 @@ class RlTableSet {
       }
     });
     return this;
-  }
-  
-  public Analyzer getPerFieldAnalyzer() {
-    return new PerFieldAnalyzerWrapper(null, 
-        getFieldAnalyzers().collect(Collectors.toMap(e->e.getKey(), e->e.getValue()))
-     );
-  }
-
-  public Stream<Map.Entry<String, Analyzer>>getFieldAnalyzers() {
-    return tables.stream().flatMap(table->table.getFieldAnalyzers());
   }
   
   /**
@@ -100,5 +89,23 @@ class RlTableSet {
    */
   Stream<RlTable<?>> getTables() {
     return tables.stream();
+  }
+  
+  /**
+   * このテーブルセット中の全テーブルの「各フィールドAnalyzer}オブジェクトを取得する。
+   * @return
+   */
+  public Analyzer getPerFieldAnalyzer() {
+    return new PerFieldAnalyzerWrapper(null, 
+        getFieldAnalyzers().collect(Collectors.toMap(e->e.getKey(), e->e.getValue()))
+     );
+  }
+
+  /**
+   * このテーブルセット中の全テーブルのトークン化されるフィールドの{@link Analyzer}のマップストリームを取得する
+   * @return
+   */
+  public Stream<Map.Entry<String, Analyzer>>getFieldAnalyzers() {
+    return tables.stream().flatMap(table->table.getFieldAnalyzers());
   }
 }

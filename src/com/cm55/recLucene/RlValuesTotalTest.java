@@ -1,9 +1,10 @@
 package com.cm55.recLucene;
 
+import static org.junit.Assert.*;
+
 import java.util.*;
 
 import org.junit.*;
-import static org.junit.Assert.*;
 
 import com.cm55.recLucene.RlQuery.*;
 
@@ -27,12 +28,12 @@ public class RlValuesTotalTest {
     
     List<RlField>fields = new ArrayList<RlField>();
 
-    fields.add(new RlField("id", idAttr));
+    fields.add(new RlField.Builder("id", idAttr).build());
     for (int i = 0; i < 2; i++) {
-      fields.add(new RlField("match" + i, matchAttr));
+      fields.add(new RlField.Builder("match" + i, matchAttr).build());
     }
     for (int i = 0; i < 2; i++) {
-      fields.add(new RlField("token" + i, tokenAttr));
+      fields.add(new RlField.Builder("token" + i, tokenAttr).build());
     }
     
     table = new RlAnyTable(fields);

@@ -10,7 +10,7 @@ public class RlValuesTest {
   
   @Test
   public void test1() {
-    RlField field = new RlField("test",  null);
+    RlField field = new RlField.Builder("test",  null).build();
     RlValues values = new RlValues();
     values.put("test",  "abc123");
     assertEquals("abc123", values.get("test"));    
@@ -20,11 +20,11 @@ public class RlValuesTest {
   
   @Test
   public void test2() {
-    RlField field = new RlField("test",  new RlFieldAttr.Default() {
+    RlField field = new RlField.Builder("test",  new RlFieldAttr.Default() {
       public Class<? extends RlFieldConverter<?>> converter() {
         return RlFieldConverter.LongConv.class;
       }
-    });
+    }).build();
     RlValues values = new RlValues();
     values.put("test",  111L);
     assertEquals((Long)111L, (Long)values.get("test"));    

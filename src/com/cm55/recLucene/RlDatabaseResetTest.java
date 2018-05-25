@@ -1,11 +1,12 @@
 package com.cm55.recLucene;
 
+import static org.junit.Assert.*;
+
 import java.util.*;
 
 import org.junit.*;
-import static org.junit.Assert.*;
 
-public class RlResetterTest {
+public class RlDatabaseResetTest {
 
   @Test
   public void testRam() {
