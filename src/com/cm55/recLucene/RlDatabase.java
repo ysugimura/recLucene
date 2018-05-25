@@ -133,7 +133,7 @@ public abstract class RlDatabase {
   private RlWriter newWriter(SemaphoreHandler.Acquisition ac) {
     
     // アナライザがまだなければ作成する。既にライタセマフォを取得しているため、synchronizedは不要
-    if (analyzer == null) analyzer = PerFieldAnalyzerCreator.create(tableSet);
+    if (analyzer == null) analyzer = tableSet.getPerFieldAnalyzer();
     
     // コンフィギュレーションを作成。これは使い回せるものなのだろうか？
     IndexWriterConfig config = new IndexWriterConfig(analyzer);

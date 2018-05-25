@@ -4,6 +4,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.*;
 
+import org.apache.lucene.analysis.*;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 
@@ -40,6 +41,10 @@ public class RlClassTable<T> implements RlTable<T> {
       .collect(Collectors.toList());
 
     anyTable = new RlAnyTable(fieldsFromClass);
+  }
+  
+  public Stream<Map.Entry<String, Analyzer>>getFieldAnalyzers() {
+    return anyTable.getFieldAnalyzers();
   }
   
   /**

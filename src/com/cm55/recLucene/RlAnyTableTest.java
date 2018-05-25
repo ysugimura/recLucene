@@ -1,25 +1,27 @@
 package com.cm55.recLucene;
 
+import static org.junit.Assert.*;
+
 import java.util.*;
 import java.util.stream.*;
 
 import org.apache.lucene.analysis.*;
 import org.junit.*;
-import static org.junit.Assert.*;
 
-public class PerFieldAnalyzerCreatorTest {
+public class RlAnyTableTest {
+
 
   @Test
   public void testForTable() {
     RlClassTable<Foo> table = new RlClassTable<Foo>(Foo.class);
-    Stream<Map.Entry<String, Analyzer>>stream = PerFieldAnalyzerCreator.createStream(table);    
+    Stream<Map.Entry<String, Analyzer>>stream = table.getFieldAnalyzers();    
     assertEquals("a=Analyzer\nb=Analyzer", stream.map(s->s.toString()).sorted().collect(Collectors.joining("\n")));    
   }
   
   @Test
   public void testForTableSet() {
     RlTableSet set = new RlTableSet().add(Foo.class, Bar.class);
-    Stream<Map.Entry<String, Analyzer>>stream = PerFieldAnalyzerCreator.createStream(set);
+    Stream<Map.Entry<String, Analyzer>>stream = set.getFieldAnalyzers();
     assertEquals(
       "a=Analyzer\n" + 
       "b=Analyzer\n" + 

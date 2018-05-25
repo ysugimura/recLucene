@@ -3,16 +3,20 @@ package com.cm55.recLucene;
 import java.util.*;
 import java.util.stream.*;
 
+import org.apache.lucene.analysis.*;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 
 public class RlAnyTable implements RlTable<RlValues> {
 
   /** フィールド名/{@link RlField}マップ */
-  private Map<String, RlField> fieldMap = new HashMap<>();
+  private final Map<String, RlField> fieldMap = new HashMap<>();
   
   /** プライマリキーフィールド 。プライマリキーの無い場合にはnull */
-  private RlField pkField;
+  private final RlField pkField;
+  
+  private final Map<String, Analyzer>fieldAnalyzers;
+  
   
   public RlAnyTable(Collection<RlField>fields) {
     this(fields.toArray(new RlField[0]));
@@ -20,6 +24,8 @@ public class RlAnyTable implements RlTable<RlValues> {
   
   public RlAnyTable(RlField... fields) {
 
+    RlField _pkField = null;
+    
     for (RlField field : fields) {
 
       // フィールド名重複チェック
@@ -32,12 +38,19 @@ public class RlAnyTable implements RlTable<RlValues> {
       if (field.isPk()) {
 
         // プライマリキーフィールドの重複チェック
-        if (pkField != null) {
+        if (_pkField != null) {
           throw new RlException("プライマリキー指定が複数あります");
         }
-        pkField = field;
+        _pkField = field;
       }
     }
+    
+    pkField = _pkField;
+    fieldAnalyzers = createFieldAnalyzers(fieldMap.values());
+  }
+  
+  public Stream<Map.Entry<String, Analyzer>>getFieldAnalyzers() {
+    return fieldAnalyzers.entrySet().stream();
   }
   
   public RlField getPkField() {
@@ -106,4 +119,21 @@ public class RlAnyTable implements RlTable<RlValues> {
     return pkTerm;
   }
   
+  /** {@link RlClassTable}からフィールド名/{@link Analyzer}のマップエントリストリームを作成する */
+  static Map<String, Analyzer>createFieldAnalyzers(Collection<RlField>fields) {
+    return fields.stream()
+      .filter(f->f.isTokenized())
+      .collect(Collectors.toMap(
+        f->f.getName(),
+        f->(Analyzer)new Analyzer() {
+          protected TokenStreamComponents createComponents(String fieldName) {                  
+            return f.getAnalyzer().createComponents();
+          }
+          @Override
+          public String toString() {
+            return "Analyzer";
+          }
+        }
+      ));
+  }
 }

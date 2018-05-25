@@ -3,6 +3,9 @@ package com.cm55.recLucene;
 import java.util.*;
 import java.util.stream.*;
 
+import org.apache.lucene.analysis.*;
+import org.apache.lucene.analysis.miscellaneous.*;
+
 /**
  * テーブルの集合を扱う。
  * <p>
@@ -51,6 +54,16 @@ class RlTableSet {
       }
     });
     return this;
+  }
+  
+  public Analyzer getPerFieldAnalyzer() {
+    return new PerFieldAnalyzerWrapper(null, 
+        getFieldAnalyzers().collect(Collectors.toMap(e->e.getKey(), e->e.getValue()))
+     );
+  }
+
+  public Stream<Map.Entry<String, Analyzer>>getFieldAnalyzers() {
+    return tables.stream().flatMap(table->table.getFieldAnalyzers());
   }
   
   /**

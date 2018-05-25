@@ -7,8 +7,8 @@ import org.junit.runners.Suite.*;
 @RunWith(Suite.class) 
 @SuiteClasses( { 
   DuplicatedIdTest.class,
-  PerFieldAnalyzerCreatorTest.class,
   RlAnalyzerTest.class,
+  RlAnyTableTest.class,
   RlDatabaseTest.class,
   RlFieldConverterTest.class,
   RlFieldTest.class,
