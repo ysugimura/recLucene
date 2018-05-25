@@ -9,80 +9,57 @@ import org.apache.lucene.search.*;
 /**
  * クエリを構築するオブジェクト
  * <p>
- * LuceneのQueryとはまったく別の方法でクエリを構築し、最後にgetQuery() でLuceneのQueryを取り出す。
- * </p>
+ * LuceneのQueryとはまったく別の方法でクエリを構築し、{@link #getLuceneQuery(RlTable)}でLucene検索用のクエリを取得する
  * 
+ * </p>
  * @author ysugimura
  */
 public abstract class RlQuery {
 
   /**
    * LuceneのSearcherに与えるQueryを取得する。
-   * @param table TODO
+   * @param table 対象とすうテーブル
    * @return Lucene用のクエリオブジェクト
    */
   public abstract Query getLuceneQuery(RlTable table);
   
-  @Override
-  public boolean equals(Object o) {
-    return checkEquals((RlQuery)o);
-  }
-  
-  /**
-   * オブジェクトクラスの同一性のチェック
-   * @param that
-   * @return
-   */
-  protected boolean checkEquals(RlQuery that) {
-    if (!this.getClass().equals(that.getClass())) return false;
-
-    return true;
-  }
-  
   /**
    * フィールド名を指定するクエリ
-   * @author ysugimura
    */
   public static abstract class AbstractTerm extends RlQuery {
 
-    /** フィールド名 */
+    /** 対象とするフィールド名 */
     protected String fieldName;
 
-    /** フィールド名を与えて初期化する */
+    /** 対象とするフィールド名を与える */
     protected AbstractTerm(String fieldName) {
       if (fieldName == null) {
-        throw new NullPointerException("field name or value is null");
+        throw new NullPointerException();
       }
       this.fieldName = fieldName;
     }
 
-    /** 上位のチェックに加え、フィールド名の同一性をチェックする */
+    /** 同一性チェック。フィールド名の照合のみ */
     @Override
-    protected boolean checkEquals(RlQuery that) {
-      if (!super.checkEquals(that)) return false;
-      AbstractTerm ft = (AbstractTerm)that;
-      if (!this.fieldName.equals(ft.fieldName)) {
-        return false;
-      }
-      return true;
+    public boolean equals(Object o) {
+      if (!getClass().isInstance(o)) return false;
+      AbstractTerm ft = (AbstractTerm)o;
+      return this.fieldName.equals(ft.fieldName);
     }
   }
   
   /**
    * フィールドに対する値が単一のクエリ
-   * @author ysugimura
    */
   public static abstract class SingleValue extends AbstractTerm {
 
-    protected  Object value;
+    /** 単一値 */
+    protected Object value;
 
     /** フィールド名と文字列を与えて初期化する */
     protected SingleValue(String fieldName, Object value) {
       super(fieldName);
-      if (value == null) {
-        throw new NullPointerException("field name or value is null");
-      }
-      this.fieldName = fieldName;
+      if (value == null) throw new NullPointerException();      
       this.value = value;
     }
 
@@ -90,9 +67,9 @@ public abstract class RlQuery {
      * 単一の値の同一性のチェック
      */
     @Override
-    protected boolean checkEquals(RlQuery that) {
-      if (!super.checkEquals(that)) return false;
-      return this.value.equals(((SingleValue)that).value);
+    public boolean equals(Object o) {
+      if (!super.equals(o)) return false;
+      return this.value.equals(((SingleValue)o).value);
     }
 
     /** 文字列化。デバッグ用 */
@@ -103,8 +80,7 @@ public abstract class RlQuery {
   }
 
   /**
-   * 抽象レンジクラス
-   * @author ysugimura
+   * 抽象レンジクラス。最小値、最大値を指定する
    */
   public static abstract class AbstractRange extends AbstractTerm {
 
@@ -124,7 +100,7 @@ public abstract class RlQuery {
         boolean incMax) {
       super(fieldName);
       if (min == null || max == null) {
-        throw new NullPointerException("field name or min/max value is null");
+        throw new NullPointerException();
       }
       this.min = min;
       this.max = max;
@@ -133,11 +109,11 @@ public abstract class RlQuery {
     }
 
     /**
-     * 上位の同一性チェックに加え、レンジ値等の同一性チェック
+     * オブジェクト同一性のチェック
      */
     @Override
-    protected boolean checkEquals(RlQuery o) {
-      if (!super.checkEquals(o)) return false;
+    public boolean equals(Object o) {
+      if (!super.equals(o)) return false;
       AbstractRange that = (AbstractRange)o;
       return 
         this.min.equals(that.min) &&
@@ -174,12 +150,10 @@ public abstract class RlQuery {
       if (field.isTokenized()) {
         throw new RlException("tokenized=trueのフィールドにMatchクエリは使用できません:" + field.getName());
       }
-      
-      
+            
       // フィールドタイプがint型で、valueタイプがInteger型の場合がありうるので参照型に統一
       Class<?>fieldType = Misc.getReferenceClass(field.getType());
       Class<?>valueType = Misc.getReferenceClass(value.getClass());
-      
       
       // このフィールドにvalue値を格納可能か
       if (!fieldType.isAssignableFrom(valueType)) {
@@ -211,8 +185,7 @@ public abstract class RlQuery {
     @Override
     public String toString() {
       return "Prefix:" + super.toString();
-    }
-    
+    }    
   }
 
   /** 文字列クエリの実装 */
@@ -279,8 +252,7 @@ public abstract class RlQuery {
   }
   
   /** 複合クエリ抽象クラス */
-  public abstract static class Compound<T extends Compound<T>>
-      extends RlQuery {
+  public abstract static class Compound<T extends Compound<T>> extends RlQuery {
     
     java.util.List<RlQuery> queryList = new ArrayList<RlQuery>();
 
@@ -310,8 +282,8 @@ public abstract class RlQuery {
     protected abstract BooleanClause.Occur getOccur();
     
     @Override
-    protected boolean checkEquals(RlQuery o) {
-      if (!super.checkEquals(o)) return false;
+    public boolean equals(Object o) {
+      if (!getClass().isInstance(o)) return false;
       Compound<?> that = (Compound<?>)o;
       if (this.queryList.size() != that.queryList.size()) return false;
       for (int i = 0; i < this.queryList.size(); i++) {
