@@ -10,10 +10,6 @@ import com.cm55.recLucene.RlQuery.*;
 
 public class RlValuesTotalTest {
 
-  
-
-
-
   RlAnyTable table;
   RlDatabase database;
   

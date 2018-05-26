@@ -3,32 +3,50 @@ package com.cm55.recLucene;
 import java.util.*;
 import java.util.stream.*;
 
+/**
+ * 複数のセマフォについてそのすべてを獲得するためのオブジェクト
+ * @author ysugimura
+ */
 public class RlSemaphoreMulti {
 
-  List<RlSemaphore>handlers;
-  public RlSemaphoreMulti(RlSemaphore...handlers) {
-    this.handlers = Arrays.asList(handlers);
+  List<RlSemaphore>semaphores;
+  
+  /** 対象のセマフォを指定する */
+  public RlSemaphoreMulti(RlSemaphore...semaphores) {
+    this.semaphores = Arrays.asList(semaphores);
   }
   
+  /** 
+   * すべてを取得する。すべてを獲得できるまで待つ
+   * {@link Holder}を返すので、{@link Holder#release()}を呼ぶことを解放する。
+   * @return セマフォのホルダー
+   */
   Holder acquireAll() {
-    return new Holder(handlers.stream().map(h->h.acquireAll()).collect(Collectors.toList()));
+    return new Holder(semaphores.stream().map(h->h.acquireAll()).collect(Collectors.toList()));
   }
 
+  /**
+   * すべてを取得すべく試すが、できない場合はnullを返す。
+   * @return
+   */
   Holder tryAcquireAll() {
     List<RlSemaphore.Holder>acs = 
-      handlers.stream().map(h->h.acquireAll()).filter(ac->ac != null).collect(Collectors.toList());
-    if (acs.size() == handlers.size()) return new Holder(acs);
+      semaphores.stream().map(h->h.acquireAll()).filter(ac->ac != null).collect(Collectors.toList());
+    if (acs.size() == semaphores.size()) return new Holder(acs);
     acs.forEach(ac->ac.release());
     return null;
   }
   
+  /**
+   * セマフォのホルダ
+   */
   class Holder {
-    List<RlSemaphore.Holder>acs;
-    public Holder(List<RlSemaphore.Holder>acs) {
-      this.acs = acs;
+    List<RlSemaphore.Holder>subHolders;
+    public Holder(List<RlSemaphore.Holder>subHolders) {
+      this.subHolders = subHolders;
     }
     public void release() {
-      acs.forEach(ac->ac.release());
+      subHolders.forEach(ac->ac.release());
     }
   }
 }

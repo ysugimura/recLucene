@@ -2,6 +2,12 @@ package com.cm55.recLucene;
 
 import java.util.concurrent.*;
 
+/**
+ * Javaの{@link Semaphore}をラップしたもの。
+ * セマフォを取得するとそのホルダーである{@link Holder}を返すので、その{@link Holder#release()}を呼び出すことにより
+ * セマフォを解放することができる。
+ * @author ysugimura
+ */
 class RlSemaphore {
 
   /** Javaのセマフォ */
@@ -10,27 +16,18 @@ class RlSemaphore {
   /** 最大許可数 */
   private int permits;
 
+  /**
+   * 最大許可数を指定する
+   * @param permits 最大許可数
+   */
   RlSemaphore(int permits) {
     this.permits = permits;
     semaphore = new Semaphore(permits);
   }
 
   /**
-   * セマフォを取得する。取得できた場合は{@link Holder}オブジェクトを返す。 できない場合はnullを返す。
-   * 
-   * @return セマフォを取得した場合は{@link Holder}、そうでなければnull
-   */
-  Holder tryAcquire() {
-    if (!semaphore.tryAcquire())
-      return null;
-    return new Holder(semaphore, 1);
-  }
-
-  /**
    * セマフォを取得する。取得するまで待つ。
-   * 
-   * @return
-   * @throws InterruptedException
+   * @return {@link Holder}を返すので、解放する場合は{@link Holder#release()}を呼ぶこと。
    */
   Holder acquire() {
     try {
@@ -40,17 +37,15 @@ class RlSemaphore {
     }
     return new Holder(semaphore, 1);
   }
-
+  
   /**
-   * 全セマフォを取得してみる。できなければただちにnullを返す。
-   * 
-   * @return
+   * セマフォを取得する。取得できた場合は{@link Holder}オブジェクトを返す。 できない場合はnullを返す。
+   * @return セマフォを取得した場合は{@link Holder}、そうでなければnull
    */
-  Holder tryAcquireAll() {
-    if (!semaphore.tryAcquire(permits)) {
+  Holder tryAcquire() {
+    if (!semaphore.tryAcquire())
       return null;
-    }
-    return new Holder(semaphore, permits);
+    return new Holder(semaphore, 1);
   }
 
   /**
@@ -68,20 +63,28 @@ class RlSemaphore {
   }
 
   /**
-   * セマフォの獲得標識オブジェクト。リリースを一度だけ行うことができる。
+   * 全セマフォを取得してみる。できなければただちにnullを返す。
    * 
+   * @return
+   */
+  Holder tryAcquireAll() {
+    if (!semaphore.tryAcquire(permits)) {
+      return null;
+    }
+    return new Holder(semaphore, permits);
+  }
+
+  /**
+   * セマフォのホルダオブジェクト。リリースを一度だけ行うことができる。
    * @author ysugimura
    */
   class Holder {
 
     /** セマフォ */
-    private final Semaphore semaphore;
+    private Semaphore semaphore;
 
     /** 許可数 */
     private final int permits;
-
-    /** リリース済フラグ */
-    private boolean released;
 
     private Holder(Semaphore semaphore, int permits) {
       this.semaphore = semaphore;
@@ -92,20 +95,9 @@ class RlSemaphore {
      * セマフォをリリースする どのように呼び出されても一度しかリリースしない。
      */
     synchronized void release() {
-      if (released)
-        return;
+      if (semaphore == null) return;
       semaphore.release(permits);
-      released = true;
-    }
-
-    /**
-     * リリースされていないことを確認
-     * 
-     * @return
-     */
-    synchronized boolean notReleased() {
-      return !released;
+      semaphore = null;
     }
   }
-
 }

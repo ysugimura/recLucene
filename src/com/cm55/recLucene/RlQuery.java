@@ -189,10 +189,13 @@ public abstract class RlQuery {
     }    
   }
 
-  /** 文字列クエリの実装 */
+  /**
+   * 一つのフィールドについて、引数文字列が含まれるかを検索するためのクエリ。
+   * ここで指定するフィールドはtokenized=trueに限る。引数文字列は、フィールドに適用されたと同じアナライザが適用される。
+   */
   public static class Word extends SingleValue  {
 
-    /** フィールド名と文字列を与えて初期化する */
+    /** フィールド名と文字列を与える */
     public Word(String fieldName, String value) {
       super(fieldName, value);
     }
@@ -253,11 +256,14 @@ public abstract class RlQuery {
     }
   }
   
-  /** 複合クエリ抽象クラス */
+  /** 
+   * 複合クエリ抽象クラス
+   * 複数のクエリを格納するクラス。下位クラスとして{@link And}、{@link Or}がある
+   * @param <T>
+   */
   public abstract static class Compound<T extends Compound<T>> extends RlQuery {
     
     java.util.List<RlQuery> queryList = new ArrayList<RlQuery>();
-
     
     /** クエリを追加する */
     @SuppressWarnings("unchecked")

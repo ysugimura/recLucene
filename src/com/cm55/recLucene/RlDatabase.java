@@ -142,8 +142,7 @@ public abstract class RlDatabase {
    * 反映するには、新たなサーチャをリオープンする必要がある。
    * </p>
    * 
-   * @param table
-   *          テーブル
+   * @param table テーブル
    * @return サーチャ
    */
   public synchronized <T>RlSearcher<T> createSearcher(RlTable<T>table) {

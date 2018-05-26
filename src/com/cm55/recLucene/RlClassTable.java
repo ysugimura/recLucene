@@ -21,7 +21,7 @@ public class RlClassTable<T> implements RlTable<T> {
 
   /**
    * クラスを指定してマッピングを作成する
-   * @param clazz マッピング対象クラス
+   * @param recordClass マッピング対象クラス
    */
   public RlClassTable(Class<T> recordClass) {
 

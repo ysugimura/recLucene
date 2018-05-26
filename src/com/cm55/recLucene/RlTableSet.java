@@ -7,32 +7,47 @@ import org.apache.lucene.analysis.*;
 import org.apache.lucene.analysis.miscellaneous.*;
 
 /**
- * テーブルの集合を扱う。
+ * データベース内でテーブルの集合を保持する
  * <p>
- * 通常のRDBとは異なり、異なるテーブル内に同じフィールド名が存在してはならない.
+ * 特に注意が必要な点は、通常のRDBとは異なり、一つのデータベース全体において、同じフィールド名があってはなならない。
+ * たとえ異なるテーブルであっても同じフィールド名は許されない。
+ * このため、フィールド名からテーブルを特定できる。
  * </p>
- * 
  * @author ysugimura
  */
 class RlTableSet {
 
-  /** 全テーブル */
+  /** 全テーブルのリスト */
   List<RlTable<?>>tables = new ArrayList<>();
 
-  /** フィールド名/テーブルマップ */
+  /** フィールド名からテーブルを特定するためのマップ */
   Map<String, RlTable<?>> fieldToTable = new HashMap<>();
 
-  /** レコードクラス/テーブルマップ */
+  /** 
+   * Javaのレコードクラスからテーブルを特定するためのマップ。
+   * これは{@link RlClassTable}についてしか作成されない。 
+   * {@link AnyTable}にはJavaのレコードクラスが存在しない
+   */
   Map<Class<?>, RlTable<?>> recordToTable = new HashMap<>();
-  
+
+  /**
+   * Javaクラスを指定してテーブルを追加する。
+   * @param classes Javaクラス配列
+   * @return このオブジェクト
+   */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   RlTableSet add(Class<?>...classes) {
     Arrays.stream(classes).map(c->new RlClassTable(c)).forEach(this::add);
     return this;
   }
   
-  RlTableSet add(RlTable<?>... _tables) {
-    Arrays.stream(_tables).forEach(table -> {
+  /**
+   * テーブルを追加する
+   * @param tableArray テーブル配列
+   * @return このオブジェクト
+   */
+  RlTableSet add(RlTable<?>... tableArray) {
+    Arrays.stream(tableArray).forEach(table -> {
       tables.add(table);
 
       // フィールド名/テーブル名マップを作成
@@ -56,10 +71,9 @@ class RlTableSet {
   }
   
   /**
-   * 指定クラスのマッピングを取得する。存在しなければnullを返す。 自由形式の場合はレコードクラス自体が存在しないことに注意
-   * 
-   * @param clazz
-   *          レコードクラス
+   * 指定クラスに対応する{@link RlClassTable}を返す。
+   * 存在しなければnullを返す。{@link AnyTable}の場合はレコードクラス自体が存在しないことに注意
+   * @param clazz レコードクラス
    * @return {@link RlClassTable}
    */
    @SuppressWarnings("unchecked")
@@ -69,11 +83,9 @@ class RlTableSet {
 
   /**
    * フィールド名からRlFieldを取得する。存在しなければnullを返す。
-   * {@link RlTableSet}中のすべてのテーブルのフィールドは一意名称であるため、フィールド名を
-   * 指定すれば、テーブルが決まり、フィールドも決まる。\
-   * 
-   * @param fieldName
-   * @return
+   * {@link RlTableSet}中のすべてのテーブルのフィールドは一意名称であるため、フィールド名を指定すればテーブルが特定される。
+   * @param fieldName フィールド名称
+   * @return {@link RlField}
    */
    RlField<?> getFieldByName(String fieldName) {
     RlTable<?> table = fieldToTable.get(fieldName);
@@ -83,19 +95,18 @@ class RlTableSet {
   }
 
   /**
-   * テーブルコレクションを取得する
-   * 
-   * @return
+   * 全テーブルのストリームを取得する
+   * @return 全テーブルのストリーム
    */
   Stream<RlTable<?>> getTables() {
     return tables.stream();
   }
   
   /**
-   * このテーブルセット中の全テーブルの「各フィールドAnalyzer}オブジェクトを取得する。
+   * このテーブルセット中の全テーブルの「各フィールドAnalyzer」オブジェクトを取得する。
    * @return
    */
-  public Analyzer getPerFieldAnalyzer() {
+  Analyzer getPerFieldAnalyzer() {
     return new PerFieldAnalyzerWrapper(null, 
         getFieldAnalyzers().collect(Collectors.toMap(e->e.getKey(), e->e.getValue()))
      );
@@ -105,7 +116,7 @@ class RlTableSet {
    * このテーブルセット中の全テーブルのトークン化されるフィールドの{@link Analyzer}のマップストリームを取得する
    * @return
    */
-  public Stream<Map.Entry<String, Analyzer>>getFieldAnalyzers() {
+  Stream<Map.Entry<String, Analyzer>>getFieldAnalyzers() {
     return tables.stream().flatMap(table->table.getFieldAnalyzers());
   }
 }
