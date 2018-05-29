@@ -222,7 +222,8 @@ public abstract class RlDatabase {
     
     public Dir(File folder) {
       try {
-        setDirectory(FSDirectory.open(folder.toPath()));
+        path = folder.toPath();
+        setDirectory(FSDirectory.open(path));
       } catch (IOException ex) {
         throw new RlException.IO(ex);
       }

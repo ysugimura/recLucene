@@ -169,6 +169,11 @@ public abstract class RlQuery {
     }
   }
 
+  /** {@link Match}クエリを作成する */
+  public static <T>RlQuery match(String fieldName, T value) {
+    return new Match(fieldName, value);
+  }
+  
   /** 前方検索クエリの実装。正規化はされるが解析はされない。 */
   public static class Prefix extends SingleValue {
 
@@ -187,6 +192,11 @@ public abstract class RlQuery {
     public String toString() {
       return "Prefix:" + super.toString();
     }    
+  }
+
+  /** {@link Prefix}クエリを作成する */
+  public static RlQuery prefix(String fieldName, String value) {
+    return new Prefix(fieldName, value);
   }
 
   /**
@@ -219,6 +229,11 @@ public abstract class RlQuery {
     }
   }
 
+  /** {@link Word}クエリを作成する */
+  public static RlQuery word(String fieldName, String value) {
+    return new Word(fieldName, value);
+  }
+  
   /** 範囲クエリ */
   public static class Range extends AbstractRange {
     
@@ -254,6 +269,44 @@ public abstract class RlQuery {
     public String toString() {
       return "Range:" + fieldName + "=" + min + "," + max + "," + incMin + "," + incMax;
     }
+  }
+
+  /** {@link Range}クエリを作成する */
+  public static <T>RlQuery range(String fieldName, T min, T max, boolean incMin,
+      boolean incMax) {
+    return new Range(fieldName, min, max, incMin, incMax);
+  }
+
+  /**
+   * NOTクエリ
+   */
+  public static class Not extends RlQuery {
+
+    RlQuery subQuery;
+    
+    public Not(RlQuery subQuery) {
+      this.subQuery = subQuery;      
+    }
+
+    /** クエリを取得する */
+    @Override
+    public <T>Query getLuceneQuery(RlTable<T> fieldmap) {
+      BooleanQuery.Builder builder = new BooleanQuery.Builder();
+      builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);     
+      builder.add(subQuery.getLuceneQuery(fieldmap), BooleanClause.Occur.MUST_NOT);      
+      return builder.build();
+    }
+    
+    /** 文字列化。デバッグ用 */
+    @Override
+    public String toString() {
+      return "not:(" + subQuery + ")";
+    }
+  }
+
+  /** {@link Not}クエリを作成する */
+  public static RlQuery not(RlQuery subQuery) {
+    return new Not(subQuery);
   }
   
   /** 
@@ -349,6 +402,11 @@ public abstract class RlQuery {
     }
   }
 
+  /** {@link And}クエリを作成する */
+  public static RlQuery and(RlQuery...queries) {
+    return new And(queries);
+  }
+  
   /**
    * 複合ORクエリ
    */
@@ -370,35 +428,9 @@ public abstract class RlQuery {
     }
   }
 
-  /**
-   * 複合NOTクエリ
-   */
-  public static class Not extends Compound<Not> {
-
-    public Not(RlQuery... queries) {
-      add(queries);
-    }
-    
-    @Override
-    protected BooleanClause.Occur getOccur() {
-      return BooleanClause.Occur.MUST_NOT;
-    }
-
-    /** クエリを取得する */
-    @Override
-    public <T>Query getLuceneQuery(RlTable<T> fieldmap) {
-      BooleanQuery.Builder builder = new BooleanQuery.Builder();
-      builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
-      for (RlQuery query : queryList) {
-        builder.add(query.getLuceneQuery(fieldmap), BooleanClause.Occur.MUST_NOT);
-      }
-      return builder.build();
-    }
-    
-    /** 文字列化。デバッグ用 */
-    @Override
-    public String toString() {
-      return "not:" + super.toString();
-    }
+  /** {@link Or}クエリを作成する */
+  public static Or or(RlQuery...queries) {
+    return new Or(queries);
   }
+  
 }
