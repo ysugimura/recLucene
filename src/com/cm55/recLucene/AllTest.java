@@ -9,6 +9,8 @@ import org.junit.runners.Suite.*;
   DuplicatedIdTest.class,
   RlAnalyzerTest.class,
   RlAnyTableTest.class,
+  RlDatabaseDirTest.class,
+  RlDatabaseResetTest.class,
   RlDatabaseTest.class,
   RlFieldConverterTest.class,
   RlFieldTest.class,

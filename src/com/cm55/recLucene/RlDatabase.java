@@ -150,21 +150,43 @@ public abstract class RlDatabase {
     return new RlSearcher<T>(table, writerHolder.getSearcherManager(), holder);
   }
 
-  /** このデータベースをリセットする */
+  /** 
+   * このデータベースをリセットする。いったんすべてのデータを削除する。 
+   * ライター・サーチャーのすべてのセマフォが取得できるまで待つ。
+   */  
   public synchronized void reset() {
     RlSemaphoreMulti.Holder holder = allSemaphore.acquireAll();
-    doReset();
-    holder.release();
+    doingReset(holder);
   }
 
+  /**
+   * このデータベースをリセットする。いったんすべてのデータを削除する。
+   * ライター・サーチャーのすべてのセマフォが取得できない場合はfalseを返す。
+   * @return
+   */
   public synchronized boolean tryReset() {
     RlSemaphoreMulti.Holder holder = allSemaphore.tryAcquireAll();
     if (holder == null) return false;
-    doReset();
-    holder.release();
+    doingReset(holder);
     return true;
   }
 
+  /** 
+   * リセットを行う。すべてのセマフォが取得できているので、
+   * RlWriterHolderをいったん閉じてからデータベースリセットを行う 
+   */
+  private void doingReset(RlSemaphoreMulti.Holder holder) {
+    try {
+      writerHolder.close();
+      doReset();
+    } finally {
+      holder.release();    
+    }
+  }
+  
+  /** 下位の実装でデータベースリセットを行う */
+  protected abstract void doReset();
+  
   /** IndexReaderを取得する */
   synchronized IndexReader getIndexReader() {
     try {
@@ -178,8 +200,6 @@ public abstract class RlDatabase {
   public Directory getDirectory() {
     return directory;
   }
-
-  protected abstract void doReset();
 
   /**
    * RAM上に作成されるデータベース
@@ -245,6 +265,7 @@ public abstract class RlDatabase {
       
     }
 
+    /** 指定されたファイル、あるいはフォルダ以下すべてを完全に削除する */
     public boolean delete(File file) {
       return new Object() {
         boolean delete(File file) {
