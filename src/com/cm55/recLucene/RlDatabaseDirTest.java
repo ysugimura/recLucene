@@ -4,8 +4,6 @@ import java.io.*;
 
 import org.junit.*;
 
-import com.cm55.recLucene.RlQuery.*;
-
 public class RlDatabaseDirTest {
 
   @Before
