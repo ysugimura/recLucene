@@ -21,7 +21,7 @@ public abstract class RlQuery {
    * @param fieldmap 対象とすうテーブル
    * @return Lucene用のクエリオブジェクト
    */
-  public abstract <T> Query getLuceneQuery(RlTable<T> fieldmap);
+  public abstract <T> Query getLuceneQuery(RlTable<T>table);
   
   /**
    * フィールド名を指定するクエリ
@@ -139,10 +139,11 @@ public abstract class RlQuery {
 
     /** Lucene用Queryを取得する */
     @Override
-    public <T>Query getLuceneQuery(RlTable<T> fieldmap) {    
+    public <T>Query getLuceneQuery(RlTable<T> table) {    
       @SuppressWarnings("unchecked")
-      RlField<Object> field = (RlField<Object>)fieldmap.getFieldByName(fieldName);
-      if (field == null) throw new NullPointerException();
+      RlField<Object> field = (RlField<Object>)table.getFieldByName(fieldName);
+      if (field == null) 
+        throw new RlException("Match field not found: " + fieldName + " in " + table.getTableName());
       checkValidity(field);
       return new TermQuery(new Term(fieldName, field.toString(value)));
     }
@@ -183,7 +184,7 @@ public abstract class RlQuery {
 
     /** Lucene用Queryを取得する */
     @Override
-    public <T>Query getLuceneQuery(RlTable<T> fieldmap) {
+    public <T>Query getLuceneQuery(RlTable<T> table) {
       return new PrefixQuery(new Term(fieldName, "" + value));
     }
 
@@ -211,9 +212,10 @@ public abstract class RlQuery {
     }
 
     @Override
-    public <T> Query getLuceneQuery(RlTable<T> fieldmap) {              
-      RlField<?> field = fieldmap.getFieldByName(fieldName);
-      if (field == null) throw new RlException("field not found:" + fieldName);
+    public <T> Query getLuceneQuery(RlTable<T> table) {              
+      RlField<?> field = table.getFieldByName(fieldName);
+      if (field == null) 
+        throw new RlException("Word field not found: " + fieldName + " in " + table.getTableName());
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (String s: field.getAnalyzer().expandString(new StringReader("" + value))) {
         builder.add(
@@ -248,9 +250,9 @@ public abstract class RlQuery {
     }
     
     @Override
-    public <T>Query getLuceneQuery(RlTable<T> fieldmap) {   
+    public <T>Query getLuceneQuery(RlTable<T> table) {   
       @SuppressWarnings("unchecked")
-      RlField<Object> field = (RlField<Object>)fieldmap.getFieldByName(fieldName);
+      RlField<Object> field = (RlField<Object>)table.getFieldByName(fieldName);
       if (field == null) throw new RlException("field not found:" + fieldName);
       checkValidity(field);
       Query query = TermRangeQuery.newStringRange(fieldName, 
@@ -290,10 +292,10 @@ public abstract class RlQuery {
 
     /** クエリを取得する */
     @Override
-    public <T>Query getLuceneQuery(RlTable<T> fieldmap) {
+    public <T>Query getLuceneQuery(RlTable<T> table) {
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);     
-      builder.add(subQuery.getLuceneQuery(fieldmap), BooleanClause.Occur.MUST_NOT);      
+      builder.add(subQuery.getLuceneQuery(table), BooleanClause.Occur.MUST_NOT);      
       return builder.build();
     }
     
@@ -332,10 +334,10 @@ public abstract class RlQuery {
     
     /** Lucene用のQueryを取得する */
     @Override
-    public <S> Query getLuceneQuery(RlTable<S> fieldmap) {
+    public <S> Query getLuceneQuery(RlTable<S> table) {
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (RlQuery query : queryList) {
-        builder.add(query.getLuceneQuery(fieldmap), getOccur());
+        builder.add(query.getLuceneQuery(table), getOccur());
       }
       return builder.build();
     }

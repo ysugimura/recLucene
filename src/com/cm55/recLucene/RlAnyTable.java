@@ -136,4 +136,11 @@ public class RlAnyTable implements RlTable<RlValues> {
         }
       ));
   }
+  
+  /** テーブル名称を取得する */
+  @Override
+  public String getTableName() {
+    return RlAnyTable.class.getSimpleName() + 
+      this.fieldMap.keySet().stream().collect(Collectors.joining(","));
+  }
 }

@@ -148,4 +148,10 @@ public class RlClassTable<T> implements RlTable<T> {
       throw new RlException(ex);
     }
   }
+  
+  /** テーブル名称を取得する */
+  @Override
+  public String getTableName() {
+    return recordClass.getName();
+  }
 }

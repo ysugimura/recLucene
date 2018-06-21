@@ -59,4 +59,6 @@ public interface RlTable<T> {
    */
   public Stream<Map.Entry<String, Analyzer>>getFieldAnalyzers();
   
+  /** デバッグ用のテーブル名称。クラステーブルの場合はクラス名称 */
+  public String getTableName();
 }

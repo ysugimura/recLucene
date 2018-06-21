@@ -14,6 +14,36 @@ public class RlQueryTest {
   }
   
   @Test
+  public void fieldNameTest() {
+    RlDatabase database = new RlDatabase.Ram().add(Sample.class);
+    try (RlSearcher<Sample> searcher = database.createSearcher(Sample.class)) {
+      try {
+        searcher.search(new RlQuery.Match("test", "test"));
+        fail();
+      } catch (RlException ex) {
+        assertEquals("Match field not found: test in com.cm55.recLucene.RlQueryTest$Sample", 
+            ex.getMessage());
+      }      
+      try {
+        searcher.search(new RlQuery.Word("test", "test"));
+        fail();
+      } catch (RlException ex) {
+        assertEquals(
+            "Word field not found: test in com.cm55.recLucene.RlQueryTest$Sample"
+            , ex.getMessage());
+      } 
+    }
+  }
+  
+  public static class Sample {
+    @RlFieldAttr(tokenized=true)
+    public String field0;
+    
+    @RlFieldAttr(tokenized=false)
+    public String field1;
+  }
+  
+  @Test
   public void test0() {
     assertEquals(
         new Match("field1", "1234"),
