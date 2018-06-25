@@ -257,6 +257,11 @@ public abstract class RlDatabase {
       if (dir.exists()) {
         System.err.println("!!! DIRECTORY LEFT !!!!");
       }
+      // なぜかフォルダ削除直後に再度セットアップしようとするとエラーになる。１秒待機する。
+      try {
+        Thread.sleep(1000);
+      } catch (Exception ex) {        
+      }
       try {
         setDirectory(FSDirectory.open(path));
       } catch (IOException ex) {

@@ -31,7 +31,7 @@ publishing {
     target(MavenPublication) {
       groupId  'com.cm55'
       artifactId 'recLucene'
-      version '1.0.9'    
+      version '1.0.10'    
       from components.java   
       artifact sourceJar
     }
